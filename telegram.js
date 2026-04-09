@@ -5,7 +5,7 @@ if (tg) {
   tg.expand();
 
   try {
-    tg.setHeaderColor("#0b0b0d");
+    tg.setHeaderColor("#0f0f10");
     tg.setBackgroundColor("#0b0b0d");
-  } catch (e) {}
+  } catch (_error) {}
 }
