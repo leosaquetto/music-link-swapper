@@ -1,3 +1,4 @@
+/* Reset & Base Styles */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -34,7 +35,7 @@ body {
 
 body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background:
+  background: 
     radial-gradient(circle at top left, rgba(52, 199, 89, 0.14), transparent 26%),
     radial-gradient(circle at bottom right, rgba(86, 145, 255, 0.16), transparent 22%),
     var(--bg);
@@ -57,6 +58,7 @@ a {
   text-decoration: none;
 }
 
+/* Background Elements */
 .bg-orb {
   position: fixed;
   z-index: 0;
@@ -83,15 +85,13 @@ a {
   animation: driftB 18s ease-in-out infinite;
 }
 
+/* Layout Shell */
 .app-shell {
   position: relative;
   z-index: 1;
   width: min(100%, 720px);
   margin: 0 auto;
-  padding:
-    max(16px, env(safe-area-inset-top))
-    10px
-    max(20px, env(safe-area-inset-bottom));
+  padding: max(16px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
 }
 
 .main-stack {
@@ -99,6 +99,7 @@ a {
   gap: 14px;
 }
 
+/* Common Card Component */
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -108,6 +109,7 @@ a {
   -webkit-backdrop-filter: blur(18px);
 }
 
+/* Hero Section */
 .hero-card {
   display: grid;
   gap: 14px;
@@ -124,21 +126,11 @@ a {
 .app-logo {
   width: 64px;
   height: 64px;
-  object-fit: contain;
   border-radius: 18px;
-  background: transparent;
-}
-
-.app-logo.is-transparent {
-  padding: 4px;
-}
-
-.hero-note-logo {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  flex: 0 0 auto;
-  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  background: #101113;
 }
 
 .eyebrow {
@@ -175,6 +167,12 @@ h1 {
   font-size: 12px;
 }
 
+.hero-note-icon {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* Forms & Inputs */
 .form-card,
 .result-card,
 .status-card {
@@ -211,11 +209,8 @@ h1 {
   background: var(--panel-strong);
   color: var(--text);
   outline: none;
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
   font-size: 16px;
-  font-weight: 500;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
 }
 
 .text-input::placeholder {
@@ -227,14 +222,15 @@ h1 {
   box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.12);
 }
 
+/* Buttons */
 .primary-button,
-.secondary-button {
+.secondary-button,
+.ghost-button {
   border: 0;
   border-radius: var(--radius-lg);
   min-height: 48px;
   padding: 0 16px;
-  font-size: 15px;
-  font-weight: 600;
+  transition: transform 180ms ease, filter 180ms ease, background 180ms ease, color 180ms ease;
 }
 
 .primary-button {
@@ -244,15 +240,21 @@ h1 {
   font-weight: 800;
 }
 
-.secondary-button {
+.secondary-button,
+.ghost-button {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
+}
+
+.ghost-button {
+  white-space: nowrap;
 }
 
 .button-row {
   margin-top: 10px;
 }
 
+/* Status Messages */
 .status-card {
   font-size: 14px;
   line-height: 1.45;
@@ -271,6 +273,7 @@ h1 {
   background: rgba(21, 76, 33, 0.35);
 }
 
+/* Result Card Specifics */
 .result-header {
   display: flex;
   gap: 14px;
@@ -319,6 +322,7 @@ h2 {
   line-height: 1.45;
 }
 
+/* Platform Items */
 .platform-groups {
   display: grid;
   gap: 18px;
@@ -349,24 +353,33 @@ h2 {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.platform-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 18px;
+  font-weight: 800;
+}
+
 .platform-copy {
   min-width: 0;
 }
 
 .platform-name {
   font-weight: 700;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .platform-note {
-  color: var(--accent-soft);
+  color: var(--muted);
   font-size: 12px;
-  font-weight: 600;
 }
 
-.platform-note.is-found {
-  color: var(--found);
-}
+.platform-note.is-found { color: var(--found); }
+.platform-note.is-verified { color: var(--accent-soft); }
 
 .platform-actions {
   display: flex;
@@ -375,6 +388,8 @@ h2 {
 
 .mini-action {
   border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
   min-height: 38px;
   padding: 0 12px;
   border-radius: 12px;
@@ -382,20 +397,12 @@ h2 {
   font-weight: 700;
 }
 
-.mini-action.copy {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-}
-
 .mini-action.open {
   background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
   color: #071208;
 }
 
-.result-footer-actions {
-  margin-top: 18px;
-}
-
+/* Footer */
 .footer {
   text-align: center;
   font-size: 12px;
@@ -414,21 +421,15 @@ h2 {
   color: rgba(255, 255, 255, 0.45);
 }
 
-.hidden {
-  display: none !important;
-}
+/* Utilities & Animations */
+.hidden { display: none !important; }
 
 .reveal {
   animation: reveal 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.reveal-delay-1 {
-  animation-delay: 80ms;
-}
-
-.reveal-delay-2 {
-  animation-delay: 140ms;
-}
+.reveal-delay-1 { animation-delay: 80ms; }
+.reveal-delay-2 { animation-delay: 140ms; }
 
 @keyframes reveal {
   from {
@@ -442,28 +443,25 @@ h2 {
 }
 
 @keyframes driftA {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-18px, 12px, 0) scale(1.08);
-  }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-18px, 12px, 0) scale(1.08); }
 }
 
 @keyframes driftB {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(22px, -14px, 0) scale(1.05);
-  }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(22px, -14px, 0) scale(1.05); }
 }
 
+/* Media Queries */
 @media (max-width: 640px) {
+  .app-shell {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
   .hero-left,
   .result-header,
+  .input-row,
   .button-row {
     align-items: stretch;
     flex-direction: column;
