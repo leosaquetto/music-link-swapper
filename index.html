@@ -1,103 +1,117 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Music Link Swapper</title>
-  <meta name="theme-color" content="#0b0b0d" />
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>music link swapper</title>
+    <meta name="theme-color" content="#0b0b0d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css" />
-</head>
-
-<body>
-  <div class="bg-orb orb-a"></div>
-  <div class="bg-orb orb-b"></div>
-
-  <div class="app-shell">
-    <header class="hero-card card reveal">
-      <div class="hero-left">
-        <img class="app-logo" src="./assets/logo.svg" alt="logo do app" />
-        <div class="hero-copy">
-          <p class="eyebrow">Telegram Mini App</p>
-          <h1>Music Link Swapper</h1>
-          <p class="hero-subtitle">
-            Converta links de streaming entre plataformas
-          </p>
-        </div>
-      </div>
-
-      <div class="hero-note">
-        <span class="hero-note-icon">♫</span>
-        <span>Feito de music lover para music lover</span>
-      </div>
-    </header>
-
-    <main class="main-stack">
-      <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
-
-      <section class="card form-card reveal reveal-delay-1">
-        <div class="label-row">
-          <label class="label" for="linkInput">Link da música</label>
-        </div>
-
-        <div class="input-row">
-          <input 
-            id="linkInput" 
-            class="text-input" 
-            type="url" 
-            inputmode="url" 
-            placeholder="https://music.apple.com" 
-            autocomplete="off" 
-            autocapitalize="off" 
-            autocorrect="off" 
-            spellcheck="false" 
-          />
-          <button id="pasteButton" class="ghost-button" type="button">Colar</button>
-        </div>
-
-        <div class="button-row">
-          <button id="convertButton" class="primary-button" type="button">Swap</button>
-          <button id="clearButton" class="secondary-button" type="button">Limpar</button>
-        </div>
-      </section>
-
-      <section id="resultCard" class="card result-card hidden reveal reveal-delay-2">
-        <div class="result-header">
-          <img id="coverImage" class="cover-image hidden" alt="capa do conteúdo" />
-          <div class="result-copy">
-            <h2 id="resultTitle">Resultado</h2>
-            <p id="resultArtist" class="result-artist hidden"></p>
-            <p id="resultAlbum" class="result-album hidden"></p>
+    <div class="app-shell">
+      <header class="hero-card card reveal">
+        <div class="hero-left">
+          <img class="app-logo" src="./assets/logo.svg" alt="logo do app" />
+          <div class="hero-copy">
+            <p class="eyebrow">telegram mini app</p>
+            <h1>music link swapper</h1>
+            <p class="hero-subtitle">
+              converta links de streaming entre plataformas
+            </p>
           </div>
         </div>
 
-        <div id="spotifyWarning" class="spotify-warning hidden"></div>
-
-        <div id="platformGroups" class="platform-groups"></div>
-
-        <div class="result-footer-actions hidden" id="resultFooterActions">
-          <button id="copyAllButton" class="secondary-button" type="button">Copiar tudo</button>
+        <div class="hero-note">
+          <span class="hero-note-icon">♫</span>
+          <span>feito de music lover para music lover</span>
         </div>
-      </section>
-    </main>
+      </header>
 
-    <footer class="footer">
-      <a href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer" class="footer-main-link">
-        by leo saquetto
-      </a>
-      <a href="https://idonthavespotify.sjdonado.com/" target="_blank" rel="noopener noreferrer" class="footer-sub-link">
-        powered by idonthavespotify.sjdonado.com
-      </a>
-    </footer>
-  </div>
+      <main class="main-stack">
+        <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./telegram.js"></script>
-  <script src="./app.js"></script>
-</body>
+        <section class="card form-card reveal reveal-delay-1">
+          <div class="label-row">
+            <label class="label" for="linkInput">link da música</label>
+          </div>
+
+          <div class="input-row">
+            <input
+              id="linkInput"
+              class="text-input"
+              type="url"
+              inputmode="url"
+              placeholder="https://music.apple.com"
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+            <button id="pasteButton" class="ghost-button" type="button">colar</button>
+          </div>
+
+          <div class="button-row">
+            <button id="convertButton" class="primary-button" type="button">swap</button>
+            <button id="clearButton" class="secondary-button" type="button">limpar</button>
+          </div>
+        </section>
+
+        <section id="resultCard" class="card result-card hidden reveal reveal-delay-2">
+          <div class="result-header">
+            <img id="coverImage" class="cover-image hidden" alt="capa do conteúdo" />
+            <div class="result-copy">
+              <h2 id="resultTitle">resultado</h2>
+              <p id="resultArtist" class="result-artist hidden"></p>
+              <p id="resultAlbum" class="result-album hidden"></p>
+            </div>
+          </div>
+
+          <div id="spotifyWarning" class="spotify-warning hidden"></div>
+
+          <div id="platformGroups" class="platform-groups"></div>
+
+          <div class="result-footer-actions hidden" id="resultFooterActions">
+            <button id="copyAllButton" class="secondary-button" type="button">copiar tudo</button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <a
+          href="https://leosaquetto.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-main-link"
+        >
+          by leo saquetto
+        </a>
+        <a
+          href="https://idonthavespotify.sjdonado.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="footer-sub-link"
+        >
+          powered by idonthavespotify.sjdonado.com
+        </a>
+      </footer>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="./telegram.js"></script>
+    <script src="./app.js"></script>
+  </body>
 </html>
