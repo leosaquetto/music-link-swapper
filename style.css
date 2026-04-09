@@ -1,4 +1,3 @@
-/* Reset & Base Styles */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -35,7 +34,7 @@ body {
 
 body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: 
+  background:
     radial-gradient(circle at top left, rgba(52, 199, 89, 0.14), transparent 26%),
     radial-gradient(circle at bottom right, rgba(86, 145, 255, 0.16), transparent 22%),
     var(--bg);
@@ -58,7 +57,6 @@ a {
   text-decoration: none;
 }
 
-/* Background Elements */
 .bg-orb {
   position: fixed;
   z-index: 0;
@@ -85,13 +83,15 @@ a {
   animation: driftB 18s ease-in-out infinite;
 }
 
-/* Layout Shell */
 .app-shell {
   position: relative;
   z-index: 1;
   width: min(100%, 720px);
   margin: 0 auto;
-  padding: max(16px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom));
+  padding:
+    max(16px, env(safe-area-inset-top))
+    10px
+    max(20px, env(safe-area-inset-bottom));
 }
 
 .main-stack {
@@ -99,7 +99,6 @@ a {
   gap: 14px;
 }
 
-/* Common Card Component */
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -109,7 +108,6 @@ a {
   -webkit-backdrop-filter: blur(18px);
 }
 
-/* Hero Section */
 .hero-card {
   display: grid;
   gap: 14px;
@@ -126,11 +124,9 @@ a {
 .app-logo {
   width: 64px;
   height: 64px;
+  object-fit: contain;
   border-radius: 18px;
-  object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
-  background: #101113;
+  background: transparent;
 }
 
 .eyebrow {
@@ -172,7 +168,6 @@ h1 {
   font-weight: 800;
 }
 
-/* Forms & Inputs */
 .form-card,
 .result-card,
 .status-card {
@@ -194,10 +189,16 @@ h1 {
   letter-spacing: 0.02em;
 }
 
-.input-row,
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .button-row {
   display: flex;
   gap: 10px;
+  margin-top: 10px;
 }
 
 .text-input {
@@ -209,8 +210,11 @@ h1 {
   background: var(--panel-strong);
   color: var(--text);
   outline: none;
-  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
   font-size: 16px;
+  font-weight: 500;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .text-input::placeholder {
@@ -222,7 +226,6 @@ h1 {
   box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.12);
 }
 
-/* Buttons */
 .primary-button,
 .secondary-button,
 .ghost-button {
@@ -230,7 +233,8 @@ h1 {
   border-radius: var(--radius-lg);
   min-height: 48px;
   padding: 0 16px;
-  transition: transform 180ms ease, filter 180ms ease, background 180ms ease, color 180ms ease;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .primary-button {
@@ -246,15 +250,16 @@ h1 {
   color: var(--text);
 }
 
+.secondary-button {
+  flex: 1;
+}
+
 .ghost-button {
+  flex: 0 0 auto;
+  min-width: 96px;
   white-space: nowrap;
 }
 
-.button-row {
-  margin-top: 10px;
-}
-
-/* Status Messages */
 .status-card {
   font-size: 14px;
   line-height: 1.45;
@@ -273,7 +278,6 @@ h1 {
   background: rgba(21, 76, 33, 0.35);
 }
 
-/* Result Card Specifics */
 .result-header {
   display: flex;
   gap: 14px;
@@ -322,7 +326,6 @@ h2 {
   line-height: 1.45;
 }
 
-/* Platform Items */
 .platform-groups {
   display: grid;
   gap: 18px;
@@ -344,7 +347,7 @@ h2 {
 
 .platform-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   padding: 14px;
@@ -362,6 +365,7 @@ h2 {
   background: rgba(255, 255, 255, 0.07);
   font-size: 18px;
   font-weight: 800;
+  flex: 0 0 auto;
 }
 
 .platform-copy {
@@ -370,31 +374,43 @@ h2 {
 
 .platform-name {
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .platform-note {
-  color: var(--muted);
   font-size: 12px;
+  font-weight: 600;
 }
 
-.platform-note.is-found { color: var(--found); }
-.platform-note.is-verified { color: var(--accent-soft); }
+.platform-note.is-found {
+  color: var(--found);
+}
+
+.platform-note.is-verified {
+  color: var(--accent-soft);
+}
 
 .platform-actions {
-  display: flex;
+  display: inline-flex;
   gap: 8px;
+  align-items: center;
+  justify-self: end;
+  flex-wrap: nowrap;
 }
 
 .mini-action {
   border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
   min-height: 38px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.mini-action.copy {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
 }
 
 .mini-action.open {
@@ -402,7 +418,10 @@ h2 {
   color: #071208;
 }
 
-/* Footer */
+.result-footer-actions {
+  margin-top: 18px;
+}
+
 .footer {
   text-align: center;
   font-size: 12px;
@@ -421,15 +440,21 @@ h2 {
   color: rgba(255, 255, 255, 0.45);
 }
 
-/* Utilities & Animations */
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 .reveal {
   animation: reveal 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.reveal-delay-1 { animation-delay: 80ms; }
-.reveal-delay-2 { animation-delay: 140ms; }
+.reveal-delay-1 {
+  animation-delay: 80ms;
+}
+
+.reveal-delay-2 {
+  animation-delay: 140ms;
+}
 
 @keyframes reveal {
   from {
@@ -443,25 +468,28 @@ h2 {
 }
 
 @keyframes driftA {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-18px, 12px, 0) scale(1.08); }
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-18px, 12px, 0) scale(1.08);
+  }
 }
 
 @keyframes driftB {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(22px, -14px, 0) scale(1.05); }
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(22px, -14px, 0) scale(1.05);
+  }
 }
 
-/* Media Queries */
 @media (max-width: 640px) {
-  .app-shell {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
   .hero-left,
   .result-header,
-  .input-row,
   .button-row {
     align-items: stretch;
     flex-direction: column;
@@ -473,6 +501,12 @@ h2 {
 
   .platform-actions {
     grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .mini-action {
+    flex: 1;
   }
 
   .cover-image,
