@@ -41,21 +41,15 @@ export default async function handler(req, res) {
     }
 
     if (!upstream.ok) {
-      const message =
+      const upstreamMessage =
         data?.message ||
         data?.error ||
+        data?.details ||
         "erro ao consultar a api externa";
-
-      if (String(message).toLowerCase().includes("spotify metadata not found")) {
-        return res.status(upstream.status).json({
-          ok: false,
-          error: "não consegui buscar os metadados desse link no spotify agora. tente outro link ou tente novamente depois."
-        });
-      }
 
       return res.status(upstream.status).json({
         ok: false,
-        error: message
+        error: normalizeUpstreamError(upstreamMessage)
       });
     }
 
@@ -69,4 +63,14 @@ export default async function handler(req, res) {
       error: "erro interno ao converter"
     });
   }
+}
+
+function normalizeUpstreamError(message) {
+  const text = String(message || "").toLowerCase();
+
+  if (text.includes("spotify metadata not found")) {
+    return "não consegui buscar os metadados desse link no spotify agora. tente outro link ou tente novamente depois.";
+  }
+
+  return String(message || "erro ao consultar a api externa");
 }
