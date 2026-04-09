@@ -2,56 +2,74 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  />
   <title>music link swapper</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
 
+  <link rel="stylesheet" href="./style.css" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
-  <div class="app">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
 
-    <!-- LOGO -->
-    <div class="header">
-      <img src="assets/logo.png" class="logo" />
-      <p class="subtitle">feito de music lover para music lover</p>
-    </div>
+  <div class="app-shell">
+    <header class="hero-card card">
+      <img src="./assets/logo.png" class="app-logo" alt="music link swapper logo" />
 
-    <!-- INPUT -->
-    <div class="input-area">
-      <input 
-        id="linkInput"
-        type="text"
-        placeholder="https://music.apple.com"
-      />
-
-      <div class="buttons">
-        <button id="convertBtn">converter</button>
-        <button id="clearBtn">limpar</button>
+      <div class="hero-copy">
+        <h1>music link swapper</h1>
+        <p class="hero-subtitle">converta links de streaming entre plataformas</p>
       </div>
-    </div>
 
-    <!-- STATUS -->
-    <div id="status" class="status"></div>
+      <div class="hero-note">
+        feito de music lover para music lover
+      </div>
+    </header>
 
-    <!-- RESULT -->
-    <div id="result" class="result"></div>
+    <main class="main-stack">
+      <section class="card form-card">
+        <label class="label" for="linkInput">link da música</label>
 
-    <!-- FOOTER -->
-    <div class="footer">
-      <a href="https://leosaquetto.com" target="_blank" class="by">
+        <input
+          id="linkInput"
+          type="text"
+          placeholder="https://music.apple.com"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+
+        <div class="buttons">
+          <button id="convertBtn" class="convert-btn">converter</button>
+          <button id="clearBtn" class="clear-btn">limpar</button>
+        </div>
+      </section>
+
+      <div id="status" class="status"></div>
+
+      <section id="result" class="result hidden"></section>
+    </main>
+
+    <footer class="footer">
+      <a href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer" class="by">
         by leo saquetto
       </a>
-      <div class="powered">
-        powered by idonthavespotify.sjdonado.com
-      </div>
-    </div>
-
+      <div class="powered">powered by idonthavespotify.sjdonado.com</div>
+    </footer>
   </div>
 
-  <script src="telegram.js"></script>
-  <script src="app.js"></script>
+  <script src="./telegram.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
