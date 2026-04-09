@@ -257,4 +257,210 @@ h1 {
   width: 84px;
   height: 84px;
   border-radius: 18px;
-  object-fit
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+}
+
+.result-copy {
+  min-width: 0;
+}
+
+h2 {
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.result-artist,
+.result-album {
+  color: var(--muted);
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.result-album {
+  color: var(--soft);
+}
+
+.spotify-warning {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-line);
+  color: var(--danger-text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.platform-groups {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.group-title {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.platform-list {
+  display: grid;
+  gap: 10px;
+}
+
+.platform-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.platform-copy {
+  min-width: 0;
+}
+
+.platform-name {
+  font-weight: 700;
+  margin-bottom: 5px;
+  font-size: 17px;
+}
+
+.platform-note {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.platform-note.is-found {
+  color: var(--found);
+}
+
+.platform-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-action {
+  border: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mini-action.copy {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.mini-action.open {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+}
+
+.result-footer-actions {
+  margin-top: 18px;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.8;
+  padding: 18px 0 8px;
+}
+
+.footer-main-link {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: underline;
+}
+
+.footer-sub-link {
+  display: block;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.reveal {
+  animation: reveal 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.reveal-delay-1 {
+  animation-delay: 80ms;
+}
+
+.reveal-delay-2 {
+  animation-delay: 140ms;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes driftA {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-18px, 12px, 0) scale(1.08);
+  }
+}
+
+@keyframes driftB {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(22px, -14px, 0) scale(1.05);
+  }
+}
+
+@media (max-width: 640px) {
+  .result-header,
+  .button-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .platform-item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .platform-actions {
+    width: 100%;
+  }
+
+  .mini-action {
+    flex: 1;
+  }
+
+  .cover-image,
+  .app-logo {
+    width: 72px;
+    height: 72px;
+  }
+}
