@@ -25,23 +25,22 @@
     <div class="app-shell">
       <header class="hero-card card reveal">
         <div class="hero-left">
-          <img class="app-logo" src="./assets/logo.svg" alt="logo do app" />
+          <img class="app-logo is-transparent" src="./assets/logo-transparent.svg" alt="logo do app" />
           <div class="hero-copy">
             <p class="eyebrow">telegram mini app</p>
             <h1>music link swapper</h1>
-            <p class="hero-subtitle">
-              cole um link de streaming e descubra versões em outras plataformas em poucos toques.
-            </p>
+            <p class="hero-subtitle">converta links de streaming entre plataformas</p>
           </div>
         </div>
+
         <div class="hero-note">
-          <span class="hero-note-icon">♫</span>
-          <span>feito para abrir lisinho no telegram</span>
+          <img class="hero-note-logo" src="./assets/logo-transparent.svg" alt="" />
+          <span>feito de music lover para music lover</span>
         </div>
       </header>
 
       <main class="main-stack">
-        <section id="accessGate" class="card status-card hidden" aria-live="polite"></section>
+        <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
 
         <section class="card form-card reveal reveal-delay-1">
           <div class="label-row">
@@ -55,7 +54,6 @@
               class="text-input"
               type="url"
               inputmode="url"
-              placeholder="https://open.spotify.com/track/..."
               autocomplete="off"
               autocapitalize="off"
               autocorrect="off"
@@ -70,39 +68,39 @@
           </div>
 
           <div class="supported-chips" id="supportedChips"></div>
-          <p class="hint">
-            aceita links de apple music, spotify, youtube music, deezer, soundcloud, pandora,
-            qobuz, bandcamp e tidal.
-          </p>
         </section>
-
-        <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
 
         <section id="resultCard" class="card result-card hidden reveal reveal-delay-2">
           <div class="result-header">
             <img id="coverImage" class="cover-image hidden" alt="capa do conteúdo" />
             <div class="result-copy">
-              <p id="resultDescription" class="result-description hidden"></p>
               <h2 id="resultTitle">resultado</h2>
-              <p id="resultMeta" class="result-meta"></p>
+              <p id="resultArtist" class="result-artist hidden"></p>
+              <p id="resultAlbum" class="result-album hidden"></p>
             </div>
           </div>
 
-          <div class="result-actions hidden" id="resultActions">
-            <button id="copyAllButton" class="secondary-button" type="button">copiar tudo</button>
-            <button id="copyOriginalButton" class="secondary-button" type="button">
-              copiar original
-            </button>
-            <button id="copyUniversalButton" class="secondary-button hidden" type="button">
-              copiar universal
-            </button>
-          </div>
+          <div id="spotifyWarning" class="spotify-warning hidden"></div>
 
           <div id="platformGroups" class="platform-groups"></div>
+
+          <div class="result-footer-actions hidden" id="resultFooterActions">
+            <button id="copyAllButton" class="secondary-button" type="button">copiar tudo</button>
+          </div>
         </section>
       </main>
 
-      <footer class="footer">by leo saquetto</footer>
+      <footer class="footer">
+        <a href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer">by leo saquetto</a>
+        <span class="footer-sep">•</span>
+        <a
+          href="https://idonthavespotify.sjdonado.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          powered by idonthavespotify.sjdonado.com
+        </a>
+      </footer>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
