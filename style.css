@@ -1,517 +1,57 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-:root {
-  --bg: #0b0b0d;
-  --panel: rgba(28, 28, 30, 0.84);
-  --panel-strong: rgba(34, 34, 38, 0.96);
-  --line: rgba(255, 255, 255, 0.08);
-  --text: #ffffff;
-  --muted: #a4a7b0;
-  --soft: #7b8190;
-  --accent: #34c759;
-  --accent-soft: #8ef0a7;
-  --danger-bg: rgba(78, 17, 17, 0.62);
-  --danger-line: rgba(255, 120, 120, 0.18);
-  --danger-text: #ffd5d5;
-  --shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-  --radius-xl: 24px;
-  --radius-lg: 18px;
-  --radius-md: 14px;
-}
-
-html,
-body {
-  min-height: 100%;
-  overflow-x: hidden;
-  touch-action: manipulation;
-}
-
-body {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(52, 199, 89, 0.14), transparent 26%),
-    radial-gradient(circle at bottom right, rgba(86, 145, 255, 0.16), transparent 22%),
-    var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-button,
-input {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.bg-orb {
-  position: fixed;
-  z-index: 0;
-  filter: blur(72px);
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-.orb-a {
-  width: 200px;
-  height: 200px;
-  top: 10px;
-  right: -50px;
-  background: rgba(52, 199, 89, 0.22);
-  animation: driftA 14s ease-in-out infinite;
-}
-
-.orb-b {
-  width: 240px;
-  height: 240px;
-  bottom: 40px;
-  left: -80px;
-  background: rgba(75, 135, 255, 0.2);
-  animation: driftB 18s ease-in-out infinite;
-}
-
-.app-shell {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 720px);
-  margin: 0 auto;
-  padding:
-    max(16px, env(safe-area-inset-top))
-    10px
-    max(20px, env(safe-area-inset-bottom));
-}
-
-.main-stack {
-  display: grid;
-  gap: 14px;
-}
-
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-}
-
-.hero-card {
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  margin-bottom: 14px;
-}
-
-.hero-left {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.app-logo {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  border-radius: 18px;
-  background: transparent;
-}
-
-.app-logo.is-transparent {
-  padding: 4px;
-}
-
-.hero-note-logo {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  flex: 0 0 auto;
-}
-
-.eyebrow {
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-h1 {
-  font-size: clamp(24px, 5vw, 32px);
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.hero-subtitle {
-  color: var(--muted);
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.hero-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  min-height: 36px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.form-card,
-.result-card,
-.status-card {
-  padding: 14px;
-}
-
-.label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.label {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.tiny-button {
-  border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--muted);
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-}
-
-.input-row,
-.button-row {
-  display: flex;
-  gap: 10px;
-}
-
-.text-input {
-  width: 100%;
-  min-width: 0;
-  padding: 15px 16px;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: var(--panel-strong);
-  color: var(--text);
-  outline: none;
-  font-size: 16px;
-  font-weight: 500;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.text-input:focus {
-  border-color: rgba(52, 199, 89, 0.6);
-  box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.12);
-}
-
-.primary-button,
-.secondary-button,
-.ghost-button {
-  border: 0;
-  border-radius: var(--radius-lg);
-  min-height: 48px;
-  padding: 0 16px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.primary-button {
-  flex: 1;
-  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
-  color: #071208;
-  font-weight: 800;
-}
-
-.secondary-button,
-.ghost-button {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-}
-
-.ghost-button {
-  white-space: nowrap;
-}
-
-.button-row {
-  margin-top: 10px;
-}
-
-.supported-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.chip {
-  padding: 8px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.status-card {
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.status-card.is-error {
-  color: #ffd5d5;
-  border-color: rgba(255, 107, 107, 0.18);
-  background: rgba(110, 28, 28, 0.34);
-}
-
-.status-card.is-success {
-  color: #dbffe4;
-  border-color: rgba(52, 199, 89, 0.22);
-  background: rgba(21, 76, 33, 0.35);
-}
-
-.result-header {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.cover-image {
-  width: 84px;
-  height: 84px;
-  border-radius: 18px;
-  object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
-}
-
-.result-copy {
-  min-width: 0;
-}
-
-h2 {
-  font-size: 22px;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-}
-
-.result-artist,
-.result-album {
-  color: var(--muted);
-  margin-top: 7px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.result-album {
-  color: var(--soft);
-}
-
-.spotify-warning {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-line);
-  color: var(--danger-text);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.platform-groups {
-  display: grid;
-  gap: 18px;
-  margin-top: 18px;
-}
-
-.group-title {
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 10px;
-}
-
-.platform-list {
-  display: grid;
-  gap: 10px;
-}
-
-.platform-item {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 14px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.platform-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.07);
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.platform-copy {
-  min-width: 0;
-}
-
-.platform-name {
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.platform-note {
-  color: var(--accent-soft);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.platform-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.mini-action {
-  border: 0;
-  min-height: 38px;
-  padding: 0 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.mini-action.copy {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-}
-
-.mini-action.open {
-  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
-  color: #071208;
-}
-
-.result-footer-actions {
-  margin-top: 18px;
-}
-
-.footer {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-  line-height: 1.7;
-  padding: 18px 0 8px;
-}
-
-.footer a {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.footer-sep {
-  margin: 0 6px;
-  color: rgba(255, 255, 255, 0.25);
-}
-
-.hidden {
-  display: none !important;
-}
-
-.reveal {
-  animation: reveal 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.reveal-delay-1 {
-  animation-delay: 80ms;
-}
-
-.reveal-delay-2 {
-  animation-delay: 140ms;
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes driftA {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-18px, 12px, 0) scale(1.08);
-  }
-}
-
-@keyframes driftB {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(22px, -14px, 0) scale(1.05);
-  }
-}
-
-@media (max-width: 640px) {
-  .hero-left,
-  .result-header,
-  .input-row,
-  .button-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .platform-item {
-    grid-template-columns: auto 1fr;
-  }
-
-  .platform-actions {
-    grid-column: 1 / -1;
-  }
-
-  .cover-image,
-  .app-logo {
-    width: 72px;
-    height: 72px;
-  }
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>music link swapper</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- LOGO -->
+    <div class="header">
+      <img src="assets/logo.png" class="logo" />
+      <p class="subtitle">feito de music lover para music lover</p>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-area">
+      <input 
+        id="linkInput"
+        type="text"
+        placeholder="https://music.apple.com"
+      />
+
+      <div class="buttons">
+        <button id="convertBtn">converter</button>
+        <button id="clearBtn">limpar</button>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div id="status" class="status"></div>
+
+    <!-- RESULT -->
+    <div id="result" class="result"></div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <a href="https://leosaquetto.com" target="_blank" class="by">
+        by leo saquetto
+      </a>
+      <div class="powered">
+        powered by idonthavespotify.sjdonado.com
+      </div>
+    </div>
+
+  </div>
+
+  <script src="telegram.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
