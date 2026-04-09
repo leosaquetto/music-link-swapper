@@ -14,7 +14,8 @@
   --muted: #a4a7b0;
   --soft: #7b8190;
   --accent: #34c759;
-  --found: #c7cad1;
+  --accent-soft: #8ef0a7;
+  --found: #c9ccd3;
   --danger-bg: rgba(78, 17, 17, 0.62);
   --danger-line: rgba(255, 120, 120, 0.18);
   --danger-text: #ffd5d5;
@@ -44,8 +45,7 @@ body {
 
 button,
 input {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 16px;
+  font: inherit;
 }
 
 button {
@@ -111,55 +111,73 @@ a {
 .hero-card {
   display: grid;
   gap: 14px;
-  padding: 18px 16px;
+  padding: 16px;
   margin-bottom: 14px;
 }
 
-.hero-center {
-  display: grid;
-  justify-items: center;
-  text-align: center;
+.hero-left {
+  display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .app-logo {
-  width: 84px;
-  height: 84px;
-  object-fit: cover;
-  border-radius: 22px;
-  background: #0f1012;
-  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.32);
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.app-logo.is-transparent {
+  padding: 4px;
+}
+
+.hero-note-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: 6px;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 h1 {
-  font-size: clamp(30px, 6vw, 48px);
-  line-height: 0.95;
-  letter-spacing: -0.05em;
+  font-size: clamp(24px, 5vw, 32px);
+  line-height: 1;
+  letter-spacing: -0.04em;
 }
 
 .hero-subtitle {
   color: var(--muted);
-  margin-top: 10px;
-  font-size: 14px;
+  margin-top: 8px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
 .hero-note {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 100%;
+  gap: 8px;
+  width: fit-content;
   min-height: 36px;
   padding: 10px 12px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
   color: var(--muted);
-  font-size: 13px;
-  text-align: center;
+  font-size: 12px;
 }
 
 .form-card,
-.result-card {
+.result-card,
+.status-card {
   padding: 14px;
 }
 
@@ -190,9 +208,10 @@ h1 {
   padding: 15px 16px;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #ffffff;
-  color: #111111;
+  background: var(--panel-strong);
+  color: var(--text);
   outline: none;
+  font-size: 16px;
   font-weight: 500;
   transition:
     border-color 180ms ease,
@@ -200,7 +219,7 @@ h1 {
 }
 
 .text-input::placeholder {
-  color: #9ba3af;
+  color: var(--soft);
 }
 
 .text-input:focus {
@@ -212,19 +231,21 @@ h1 {
 .secondary-button {
   border: 0;
   border-radius: var(--radius-lg);
-  min-height: 52px;
+  min-height: 48px;
   padding: 0 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .primary-button {
   flex: 1;
   background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
   color: #071208;
+  font-weight: 800;
 }
 
 .secondary-button {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
 
@@ -232,19 +253,22 @@ h1 {
   margin-top: 10px;
 }
 
-.status-inline {
-  font-size: 15px;
+.status-card {
+  font-size: 14px;
   line-height: 1.45;
-  padding: 2px 6px 0;
   color: var(--muted);
 }
 
-.status-inline.is-error {
+.status-card.is-error {
   color: #ffd5d5;
+  border-color: rgba(255, 107, 107, 0.18);
+  background: rgba(110, 28, 28, 0.34);
 }
 
-.status-inline.is-success {
-  color: var(--accent);
+.status-card.is-success {
+  color: #dbffe4;
+  border-color: rgba(52, 199, 89, 0.22);
+  background: rgba(21, 76, 33, 0.35);
 }
 
 .result-header {
@@ -332,12 +356,11 @@ h2 {
 .platform-name {
   font-weight: 700;
   margin-bottom: 5px;
-  font-size: 17px;
 }
 
 .platform-note {
-  color: var(--accent);
-  font-size: 13px;
+  color: var(--accent-soft);
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -352,15 +375,15 @@ h2 {
 
 .mini-action {
   border: 0;
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 38px;
+  padding: 0 12px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .mini-action.copy {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
 
@@ -439,6 +462,7 @@ h2 {
 }
 
 @media (max-width: 640px) {
+  .hero-left,
   .result-header,
   .button-row {
     align-items: stretch;
@@ -446,16 +470,11 @@ h2 {
   }
 
   .platform-item {
-    grid-template-columns: 1fr;
-    align-items: stretch;
+    grid-template-columns: auto 1fr;
   }
 
   .platform-actions {
-    width: 100%;
-  }
-
-  .mini-action {
-    flex: 1;
+    grid-column: 1 / -1;
   }
 
   .cover-image,
