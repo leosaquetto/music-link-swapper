@@ -62,8 +62,6 @@ const els = {
   spotifyWarning: document.getElementById("spotifyWarning")
 };
 
-// --- Initialization ---
-
 bootstrap();
 
 function bootstrap() {
@@ -76,14 +74,31 @@ function bindEvents() {
   els.clearButton.addEventListener("click", resetForm);
 
   els.pasteButton.addEventListener("click", async () => {
-    els.input.focus();
-    if (!navigator.clipboard?.readText) return;
+    const manualPaste = () => {
+      els.input.focus();
+      els.input.select?.();
+    };
+
+    if (window.Telegram?.WebApp) {
+      manualPaste();
+      return;
+    }
+
+    if (!navigator.clipboard?.readText) {
+      manualPaste();
+      return;
+    }
+
     try {
       const text = await navigator.clipboard.readText();
       const url = extractUrl(text);
-      if (url) els.input.value = url;
+      if (url) {
+        els.input.value = url;
+        return;
+      }
+      manualPaste();
     } catch (_error) {
-      console.error("Erro ao colar:", _error);
+      manualPaste();
     }
   });
 
@@ -93,7 +108,7 @@ function bindEvents() {
     showStatus("lista completa copiada.", "success");
   });
 
-  els.input.addEventListener("keydown", (event) => {
+  els.input.addEventListener("keydown", event => {
     if (event.key === "Enter") {
       event.preventDefault();
       onConvert();
@@ -108,8 +123,6 @@ function hydrateFromQuery() {
     els.input.value = incomingUrl;
   }
 }
-
-// --- Core Logic ---
 
 async function onConvert() {
   const link = extractUrl(els.input.value.trim());
@@ -126,12 +139,14 @@ async function onConvert() {
 
   setLoading(true);
   hideResult();
-  showStatus("convertendo link...");
+  showStatus("swapando...");
 
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         link,
         adapters: REQUESTED_ADAPTERS
@@ -141,7 +156,9 @@ async function onConvert() {
     const payload = await response.json();
 
     if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.links)) {
-      const msg = payload?.error || "não consegui converter esse link agora.";
+      const msg =
+        payload?.error ||
+        "não consegui converter esse link agora. tente outro link ou tente novamente depois.";
       showStatus(msg, "error");
       return;
     }
@@ -165,8 +182,6 @@ async function onConvert() {
   }
 }
 
-// --- Data Normalization ---
-
 function normalizeApiPayload(data, originalUrl) {
   const links = normalizeLinks(data.links);
   if (!links.length) return null;
@@ -176,7 +191,7 @@ function normalizeApiPayload(data, originalUrl) {
   const parsed = splitDescription(description);
 
   const spotifyMissing =
-    !links.some((item) => item.key === "spotify") &&
+    !links.some(item => item.key === "spotify") &&
     !originalUrl.toLowerCase().includes("open.spotify.com");
 
   return {
@@ -189,52 +204,33 @@ function normalizeApiPayload(data, originalUrl) {
   };
 }
 
-function normalizeLinks(links) {
-  const seen = new Set();
-  const normalized = [];
+function splitDescription(description) {
+  if (!description) return { artist: "", album: "" };
 
-  for (const item of links) {
-    if (!item || !item.url || item.notAvailable) continue;
+  const parts = description
+    .split(/[-–•|]/)
+    .map(part => cleanText(part))
+    .filter(Boolean);
 
-    const type = normalizePlatformKey(item.type);
-    const meta = PLATFORM_META[type] || {
-      name: prettifyPlatform(type),
-      icon: "•",
-      section: "extras",
-      order: 999
+  if (parts.length >= 2) {
+    return {
+      artist: parts[0],
+      album: parts.slice(1).join(" • ")
     };
-
-    const dedupe = `${type}|${item.url}`;
-    if (seen.has(dedupe)) continue;
-    seen.add(dedupe);
-
-    normalized.push({
-      key: type,
-      name: meta.name,
-      icon: meta.icon,
-      section: meta.section,
-      order: meta.order,
-      url: item.url,
-      isVerified: !!item.isVerified
-    });
   }
 
-  return normalized.sort((a, b) => {
-    if (a.order !== b.order) return a.order - b.order;
-    if (a.isVerified && !b.isVerified) return -1;
-    if (!a.isVerified && b.isVerified) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  return {
+    artist: description,
+    album: ""
+  };
 }
-
-// --- UI Rendering ---
 
 function renderResult(result) {
   els.resultCard.classList.remove("hidden");
   els.platformGroups.innerHTML = "";
+
   els.resultTitle.textContent = result.title || "resultado";
 
-  // Artist & Album Display
   if (result.artist) {
     els.resultArtist.textContent = result.artist;
     els.resultArtist.classList.remove("hidden");
@@ -249,7 +245,6 @@ function renderResult(result) {
     els.resultAlbum.classList.add("hidden");
   }
 
-  // Cover Image
   if (result.image) {
     els.coverImage.src = result.image;
     els.coverImage.classList.remove("hidden");
@@ -258,7 +253,6 @@ function renderResult(result) {
     els.coverImage.removeAttribute("src");
   }
 
-  // Spotify Warning
   if (result.spotifyMissing) {
     els.spotifyWarning.textContent = "spotify indisponível agora para este conteúdo.";
     els.spotifyWarning.classList.remove("hidden");
@@ -266,10 +260,9 @@ function renderResult(result) {
     els.spotifyWarning.classList.add("hidden");
   }
 
-  // Group Rendering
   const groups = ["principais", "outras", "extras"];
   for (const groupName of groups) {
-    const items = result.links.filter((item) => item.section === groupName);
+    const items = result.links.filter(item => item.section === groupName);
     if (!items.length) continue;
 
     const section = document.createElement("section");
@@ -280,8 +273,8 @@ function renderResult(result) {
 
     const list = document.createElement("div");
     list.className = "platform-list";
-    items.forEach((item) => list.appendChild(createPlatformItem(item)));
-    
+
+    items.forEach(item => list.appendChild(createPlatformItem(item)));
     section.appendChild(list);
     els.platformGroups.appendChild(section);
   }
@@ -320,7 +313,12 @@ function createPlatformItem(item) {
   return row;
 }
 
-// --- Helper Functions ---
+function hideResult() {
+  els.resultCard.classList.add("hidden");
+  els.platformGroups.innerHTML = "";
+  els.resultFooterActions.classList.add("hidden");
+  els.spotifyWarning.classList.add("hidden");
+}
 
 function showStatus(message, tone = "default") {
   els.statusCard.textContent = message;
@@ -331,7 +329,7 @@ function showStatus(message, tone = "default") {
 
 function setLoading(loading) {
   els.convertButton.disabled = loading;
-  els.convertButton.textContent = loading ? "convertendo..." : "converter";
+  els.convertButton.textContent = loading ? "swapando..." : "swap";
 }
 
 function resetForm() {
@@ -341,45 +339,62 @@ function resetForm() {
   state.currentResult = null;
 }
 
-function hideResult() {
-  els.resultCard.classList.add("hidden");
-  els.platformGroups.innerHTML = "";
-  els.resultFooterActions.classList.add("hidden");
-  els.spotifyWarning.classList.add("hidden");
-}
+function normalizeLinks(links) {
+  const seen = new Set();
+  const normalized = [];
 
-function extractUrl(text) {
-  if (typeof text !== "string") return null;
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  const match = trimmed.match(/https?:\/\/[^\s]+/i);
-  return match ? match[0] : null;
-}
+  for (const item of links) {
+    if (!item || !item.url || item.notAvailable) continue;
 
-function isSupportedStreamingUrl(url) {
-  if (!url) return false;
-  const lower = url.toLowerCase();
-  return STREAMING_HOST_HINTS.some((hint) => lower.includes(hint));
-}
+    const type = normalizePlatformKey(item.type);
+    const meta = PLATFORM_META[type] || {
+      name: prettifyPlatform(type),
+      icon: "•",
+      section: "extras",
+      order: 999
+    };
 
-function splitDescription(description) {
-  if (!description) return { artist: "", album: "" };
-  const parts = description.split(/[-–•|]/).map(p => cleanText(p)).filter(Boolean);
-  return parts.length >= 2 
-    ? { artist: parts[0], album: parts.slice(1).join(" • ") }
-    : { artist: description, album: "" };
+    const dedupe = `${type}|${item.url}`;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
+
+    normalized.push({
+      key: type,
+      name: meta.name,
+      icon: meta.icon,
+      section: meta.section,
+      order: meta.order,
+      url: item.url,
+      isVerified: !!item.isVerified
+    });
+  }
+
+  normalized.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    if (a.isVerified && !b.isVerified) return -1;
+    if (!a.isVerified && b.isVerified) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return normalized;
 }
 
 function normalizePlatformKey(key) {
-  return (key === "youtube" || key === "youtubeMusic") ? "youTube" : key;
+  if (!key) return "";
+  if (key === "youtube" || key === "youtubeMusic") return "youTube";
+  return key;
 }
 
 function prettifyPlatform(key) {
-  return String(key || "").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase().trim();
+  return String(key || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .trim()
+    .toLowerCase();
 }
 
 function buildAllLinksText(result) {
-  const lines = [result.title];
+  const lines = [];
+  lines.push(result.title);
   if (result.artist) lines.push(`artista: ${result.artist}`);
   if (result.album) lines.push(`álbum: ${result.album}`);
   lines.push("");
@@ -387,21 +402,39 @@ function buildAllLinksText(result) {
   return lines.join("\n");
 }
 
+function extractUrl(text) {
+  if (typeof text !== "string") return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const direct = trimmed.match(/^https?:\/\/\S+$/i);
+  if (direct) return direct[0];
+  const embedded = trimmed.match(/https?:\/\/[^\s]+/i);
+  if (embedded) return embedded[0];
+  return null;
+}
+
+function isSupportedStreamingUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const lower = url.toLowerCase();
+  return STREAMING_HOST_HINTS.some(hint => lower.includes(hint));
+}
+
+function cleanText(str) {
+  return String(str || "").replace(/\s+/g, " ").trim();
+}
+
 async function copyText(text) {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text);
     return;
   }
+
   const temp = document.createElement("textarea");
   temp.value = text;
   document.body.appendChild(temp);
   temp.select();
   document.execCommand("copy");
   temp.remove();
-}
-
-function cleanText(str) {
-  return String(str || "").replace(/\s+/g, " ").trim();
 }
 
 function escapeHtml(value) {
