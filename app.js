@@ -4,9 +4,9 @@ const clearBtn = document.getElementById("clearBtn");
 const result = document.getElementById("result");
 const status = document.getElementById("status");
 
-// suporta ?url=
 const params = new URLSearchParams(window.location.search);
 const urlParam = params.get("url");
+
 if (urlParam) {
   input.value = decodeURIComponent(urlParam);
   convert();
@@ -35,24 +35,30 @@ async function convert() {
     const res = await fetch(`/api/convert?url=${encodeURIComponent(url)}`);
     const data = await res.json();
 
-    if (!data || !data.linksByPlatform) {
+    if (!data || !Array.isArray(data.links)) {
       status.innerHTML = "não foi possível converter esse link";
       return;
     }
 
-    status.innerHTML = `<span class="badge verificado">● verificado</span>`;
+    status.innerHTML = `<span class="badge verificado">● convertido</span>`;
 
-    Object.entries(data.linksByPlatform).forEach(([platform, link]) => {
+    data.links.forEach((item) => {
+      if (!item?.url) return;
+
       const div = document.createElement("div");
       div.className = "platform";
 
-      if (platform === "spotify" && !link) {
+      if (item.type === "spotify" && item.notAvailable) {
         div.classList.add("spotify", "off");
       }
 
+      const badgeClass = item.isVerified ? "verificado" : "encontrado";
+      const badgeText = item.isVerified ? "● verificado" : "● encontrado";
+
       div.innerHTML = `
-        <strong>${platform}</strong><br/>
-        <a href="${link}" target="_blank">abrir</a>
+        <strong>${item.type}</strong><br/>
+        <span class="badge ${badgeClass}">${badgeText}</span><br/><br/>
+        <a href="${item.url}" target="_blank">abrir</a>
       `;
 
       result.appendChild(div);
