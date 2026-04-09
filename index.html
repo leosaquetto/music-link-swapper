@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>music link swapper</title>
+  <title>Music Link Swapper</title>
   <meta name="theme-color" content="#0b0b0d" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,15 +23,17 @@
       <div class="hero-left">
         <img class="app-logo" src="./assets/logo.svg" alt="logo do app" />
         <div class="hero-copy">
-          <p class="eyebrow">telegram mini app</p>
-          <h1>music link swapper</h1>
-          <p class="hero-subtitle">converta links de streaming entre plataformas</p>
+          <p class="eyebrow">Telegram Mini App</p>
+          <h1>Music Link Swapper</h1>
+          <p class="hero-subtitle">
+            Converta links de streaming entre plataformas
+          </p>
         </div>
       </div>
 
       <div class="hero-note">
         <span class="hero-note-icon">♫</span>
-        <span>feito de music lover para music lover</span>
+        <span>Feito de music lover para music lover</span>
       </div>
     </header>
 
@@ -40,7 +42,7 @@
 
       <section class="card form-card reveal reveal-delay-1">
         <div class="label-row">
-          <label class="label" for="linkInput">link da música</label>
+          <label class="label" for="linkInput">Link da música</label>
         </div>
 
         <div class="input-row">
@@ -55,12 +57,12 @@
             autocorrect="off" 
             spellcheck="false" 
           />
-          <button id="pasteButton" class="ghost-button" type="button">colar</button>
+          <button id="pasteButton" class="ghost-button" type="button">Colar</button>
         </div>
 
         <div class="button-row">
-          <button id="convertButton" class="primary-button" type="button">converter</button>
-          <button id="clearButton" class="secondary-button" type="button">limpar</button>
+          <button id="convertButton" class="primary-button" type="button">Swap</button>
+          <button id="clearButton" class="secondary-button" type="button">Limpar</button>
         </div>
       </section>
 
@@ -68,17 +70,18 @@
         <div class="result-header">
           <img id="coverImage" class="cover-image hidden" alt="capa do conteúdo" />
           <div class="result-copy">
-            <h2 id="resultTitle">resultado</h2>
+            <h2 id="resultTitle">Resultado</h2>
             <p id="resultArtist" class="result-artist hidden"></p>
             <p id="resultAlbum" class="result-album hidden"></p>
           </div>
         </div>
 
         <div id="spotifyWarning" class="spotify-warning hidden"></div>
+
         <div id="platformGroups" class="platform-groups"></div>
 
         <div class="result-footer-actions hidden" id="resultFooterActions">
-          <button id="copyAllButton" class="secondary-button" type="button">copiar tudo</button>
+          <button id="copyAllButton" class="secondary-button" type="button">Copiar tudo</button>
         </div>
       </section>
     </main>
