@@ -1,4 +1,5 @@
 const API_URL = "/api/convert";
+const SAMPLE_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT";
 
 const REQUESTED_ADAPTERS = [
   "appleMusic",
@@ -42,7 +43,8 @@ const PLATFORM_META = {
 };
 
 const state = {
-  currentResult: null
+  currentResult: null,
+  currentOriginalUrl: null
 };
 
 const els = {
@@ -50,6 +52,8 @@ const els = {
   convertButton: document.getElementById("convertButton"),
   clearButton: document.getElementById("clearButton"),
   pasteButton: document.getElementById("pasteButton"),
+  useSampleButton: document.getElementById("useSampleButton"),
+  supportedChips: document.getElementById("supportedChips"),
   statusCard: document.getElementById("statusCard"),
   resultCard: document.getElementById("resultCard"),
   coverImage: document.getElementById("coverImage"),
@@ -58,13 +62,18 @@ const els = {
   resultAlbum: document.getElementById("resultAlbum"),
   platformGroups: document.getElementById("platformGroups"),
   copyAllButton: document.getElementById("copyAllButton"),
-  resultFooterActions: document.getElementById("resultFooterActions"),
-  spotifyWarning: document.getElementById("spotifyWarning")
+  resultFooterActions: document.getElementById("resultActions"),
+  spotifyWarning: document.getElementById("spotifyWarning"),
+  resultDescription: document.getElementById("resultDescription"),
+  resultMeta: document.getElementById("resultMeta"),
+  copyOriginalButton: document.getElementById("copyOriginalButton"),
+  copyUniversalButton: document.getElementById("copyUniversalButton")
 };
 
 bootstrap();
 
 function bootstrap() {
+  renderSupportedChips();
   bindEvents();
   hydrateFromQuery();
 }
@@ -73,40 +82,70 @@ function bindEvents() {
   els.convertButton.addEventListener("click", onConvert);
   els.clearButton.addEventListener("click", resetForm);
 
-  els.pasteButton.addEventListener("click", async () => {
-    const manualPaste = () => {
-      els.input.focus();
-      els.input.select?.();
-    };
+  if (els.pasteButton) {
+    els.pasteButton.addEventListener("click", async () => {
+      const manualPaste = () => {
+        els.input.focus();
+        els.input.select?.();
+      };
 
-    if (window.Telegram?.WebApp) {
-      manualPaste();
-      return;
-    }
-
-    if (!navigator.clipboard?.readText) {
-      manualPaste();
-      return;
-    }
-
-    try {
-      const text = await navigator.clipboard.readText();
-      const url = extractUrl(text);
-      if (url) {
-        els.input.value = url;
+      if (window.Telegram?.WebApp) {
+        manualPaste();
         return;
       }
-      manualPaste();
-    } catch (_error) {
-      manualPaste();
-    }
-  });
 
-  els.copyAllButton.addEventListener("click", async () => {
-    if (!state.currentResult) return;
-    await copyText(buildAllLinksText(state.currentResult));
-    showStatus("lista completa copiada.", "success");
-  });
+      if (!navigator.clipboard?.readText) {
+        manualPaste();
+        return;
+      }
+
+      try {
+        const text = await navigator.clipboard.readText();
+        const url = extractUrl(text);
+        if (url) {
+          els.input.value = url;
+          return;
+        }
+        manualPaste();
+      } catch (_error) {
+        manualPaste();
+      }
+    });
+  }
+
+  if (els.useSampleButton) {
+    els.useSampleButton.addEventListener("click", () => {
+      els.input.value = SAMPLE_URL;
+      hideStatus();
+      els.input.focus();
+    });
+  }
+
+  if (els.copyAllButton) {
+    els.copyAllButton.addEventListener("click", async () => {
+      if (!state.currentResult) return;
+      await copyText(buildAllLinksText(state.currentResult));
+      showStatus("lista completa copiada.", "success");
+    });
+  }
+
+  if (els.copyOriginalButton) {
+    els.copyOriginalButton.addEventListener("click", async () => {
+      if (!state.currentOriginalUrl) return;
+      await copyText(state.currentOriginalUrl);
+      showStatus("link original copiado.", "success");
+    });
+  }
+
+  if (els.copyUniversalButton) {
+    els.copyUniversalButton.addEventListener("click", async () => {
+      if (!state.currentResult?.links?.length) return;
+      const firstVerified =
+        state.currentResult.links.find(item => item.isVerified) || state.currentResult.links[0];
+      await copyText(firstVerified.url);
+      showStatus("link copiado.", "success");
+    });
+  }
 
   els.input.addEventListener("keydown", event => {
     if (event.key === "Enter") {
@@ -139,7 +178,7 @@ async function onConvert() {
 
   setLoading(true);
   hideResult();
-  showStatus("swapando...");
+  showStatus("swapando...", "default");
 
   try {
     const response = await fetch(API_URL, {
@@ -169,6 +208,7 @@ async function onConvert() {
       return;
     }
 
+    state.currentOriginalUrl = link;
     state.currentResult = result;
     renderResult(result);
     showStatus(
@@ -198,6 +238,7 @@ function normalizeApiPayload(data, originalUrl) {
     title,
     artist: parsed.artist,
     album: parsed.album,
+    description,
     image: data.image || null,
     links,
     spotifyMissing
@@ -225,24 +266,46 @@ function splitDescription(description) {
   };
 }
 
+function renderSupportedChips() {
+  if (!els.supportedChips) return;
+  const names = ["apple music", "spotify", "youtube music", "deezer", "soundcloud", "tidal"];
+  els.supportedChips.innerHTML = names.map(name => `<span class="chip">${name}</span>`).join("");
+}
+
 function renderResult(result) {
   els.resultCard.classList.remove("hidden");
   els.platformGroups.innerHTML = "";
 
-  els.resultTitle.textContent = result.title || "resultado";
-
-  if (result.artist) {
-    els.resultArtist.textContent = result.artist;
-    els.resultArtist.classList.remove("hidden");
-  } else {
-    els.resultArtist.classList.add("hidden");
+  if (els.resultDescription) {
+    els.resultDescription.textContent = result.artist ? result.artist : "";
+    els.resultDescription.classList.toggle("hidden", !result.artist);
   }
 
-  if (result.album) {
-    els.resultAlbum.textContent = `álbum: ${result.album}`;
-    els.resultAlbum.classList.remove("hidden");
-  } else {
-    els.resultAlbum.classList.add("hidden");
+  els.resultTitle.textContent = result.title || "resultado";
+
+  if (els.resultArtist) {
+    if (result.artist) {
+      els.resultArtist.textContent = result.artist;
+      els.resultArtist.classList.remove("hidden");
+    } else {
+      els.resultArtist.classList.add("hidden");
+    }
+  }
+
+  if (els.resultAlbum) {
+    if (result.album) {
+      els.resultAlbum.textContent = `álbum: ${result.album}`;
+      els.resultAlbum.classList.remove("hidden");
+    } else {
+      els.resultAlbum.classList.add("hidden");
+    }
+  }
+
+  if (els.resultMeta) {
+    const metaParts = [];
+    if (result.artist) metaParts.push(result.artist);
+    if (result.album) metaParts.push(`álbum: ${result.album}`);
+    els.resultMeta.textContent = metaParts.join(" • ");
   }
 
   if (result.image) {
@@ -253,11 +316,13 @@ function renderResult(result) {
     els.coverImage.removeAttribute("src");
   }
 
-  if (result.spotifyMissing) {
-    els.spotifyWarning.textContent = "spotify indisponível agora para este conteúdo.";
-    els.spotifyWarning.classList.remove("hidden");
-  } else {
-    els.spotifyWarning.classList.add("hidden");
+  if (els.spotifyWarning) {
+    if (result.spotifyMissing) {
+      els.spotifyWarning.textContent = "spotify indisponível agora para este conteúdo.";
+      els.spotifyWarning.classList.remove("hidden");
+    } else {
+      els.spotifyWarning.classList.add("hidden");
+    }
   }
 
   const groups = ["principais", "outras", "extras"];
@@ -279,7 +344,14 @@ function renderResult(result) {
     els.platformGroups.appendChild(section);
   }
 
-  els.resultFooterActions.classList.remove("hidden");
+  if (els.resultFooterActions) {
+    els.resultFooterActions.classList.remove("hidden");
+  }
+
+  if (els.copyUniversalButton) {
+    const verifiedLink = result.links.find(item => item.isVerified);
+    els.copyUniversalButton.classList.toggle("hidden", !verifiedLink);
+  }
 }
 
 function createPlatformItem(item) {
@@ -316,8 +388,8 @@ function createPlatformItem(item) {
 function hideResult() {
   els.resultCard.classList.add("hidden");
   els.platformGroups.innerHTML = "";
-  els.resultFooterActions.classList.add("hidden");
-  els.spotifyWarning.classList.add("hidden");
+  if (els.resultFooterActions) els.resultFooterActions.classList.add("hidden");
+  if (els.spotifyWarning) els.spotifyWarning.classList.add("hidden");
 }
 
 function showStatus(message, tone = "default") {
@@ -327,6 +399,10 @@ function showStatus(message, tone = "default") {
   if (tone === "success") els.statusCard.classList.add("is-success");
 }
 
+function hideStatus() {
+  els.statusCard.classList.add("hidden");
+}
+
 function setLoading(loading) {
   els.convertButton.disabled = loading;
   els.convertButton.textContent = loading ? "swapando..." : "swap";
@@ -334,9 +410,10 @@ function setLoading(loading) {
 
 function resetForm() {
   els.input.value = "";
+  hideStatus();
   hideResult();
-  els.statusCard.classList.add("hidden");
   state.currentResult = null;
+  state.currentOriginalUrl = null;
 }
 
 function normalizeLinks(links) {
