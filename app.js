@@ -141,10 +141,7 @@ async function onConvert() {
 
     state.currentResult = result;
     renderResult(result);
-    showStatus(
-      `● convertido`,
-      "success"
-    );
+    showStatus(`encontrei ${result.links.length} plataforma${result.links.length === 1 ? "" : "s"}.`, "success");
   } catch (_error) {
     showStatus("deu erro na conversão. tente novamente em instantes.", "error");
   } finally {
@@ -237,7 +234,6 @@ function renderResult(result) {
     if (!items.length) continue;
 
     const section = document.createElement("section");
-
     const title = document.createElement("p");
     title.className = "group-title";
     title.textContent = groupName;
@@ -291,7 +287,7 @@ function hideResult() {
   els.spotifyWarning.classList.add("hidden");
 }
 
-function showStatus(message, tone = "") {
+function showStatus(message, tone = "default") {
   els.statusCard.textContent = message;
   els.statusCard.classList.remove("hidden", "is-error", "is-success");
   if (tone === "error") els.statusCard.classList.add("is-error");
