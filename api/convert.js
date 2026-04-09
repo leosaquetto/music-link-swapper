@@ -1,38 +1,72 @@
 export default async function handler(req, res) {
-  const url = req.method === "GET" ? req.query.url : req.body?.url;
-
-  if (!url) {
-    return res.status(400).json({ error: "missing url" });
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      ok: false,
+      error: "método não permitido"
+    });
   }
 
   try {
-    const response = await fetch("https://idonthavespotify.sjdonado.com/api/search?v=1", {
+    const { link, adapters } = req.body || {};
+
+    if (!link || typeof link !== "string") {
+      return res.status(400).json({
+        ok: false,
+        error: "link inválido"
+      });
+    }
+
+    const upstream = await fetch("https://idonthavespotify.sjdonado.com/api/search?v=1", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        Accept: "application/json"
       },
       body: JSON.stringify({
-        link: url,
-        adapters: [
-          "appleMusic",
-          "spotify",
-          "youTube",
-          "deezer",
-          "soundCloud",
-          "pandora",
-          "qobuz",
-          "bandcamp",
-          "tidal"
-        ]
+        link,
+        adapters: Array.isArray(adapters) && adapters.length ? adapters : undefined
       })
     });
 
-    const data = await response.json();
-    return res.status(200).json(data);
-  } catch (error) {
+    const text = await upstream.text();
+
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch (_error) {
+      return res.status(502).json({
+        ok: false,
+        error: "a api externa retornou uma resposta inválida"
+      });
+    }
+
+    if (!upstream.ok) {
+      const message =
+        data?.message ||
+        data?.error ||
+        "erro ao consultar a api externa";
+
+      if (String(message).toLowerCase().includes("spotify metadata not found")) {
+        return res.status(upstream.status).json({
+          ok: false,
+          error: "não consegui buscar os metadados desse link no spotify agora. tente outro link ou tente novamente depois."
+        });
+      }
+
+      return res.status(upstream.status).json({
+        ok: false,
+        error: message
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data
+    });
+  } catch (_error) {
     return res.status(500).json({
-      error: "conversion failed",
-      details: error.message
+      ok: false,
+      error: "erro interno ao converter"
     });
   }
 }
