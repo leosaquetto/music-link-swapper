@@ -1,57 +1,97 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>music link swapper</title>
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #0a0a0a;
+  color: white;
+}
 
-  <link rel="stylesheet" href="style.css" />
+.app {
+  padding: 20px;
+}
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-<body>
-  <div class="app">
+.logo {
+  width: 80px;
+  margin-bottom: 10px;
+}
 
-    <!-- LOGO -->
-    <div class="header">
-      <img src="assets/logo.png" class="logo" />
-      <p class="subtitle">feito de music lover para music lover</p>
-    </div>
+.subtitle {
+  font-size: 13px;
+  opacity: 0.6;
+}
 
-    <!-- INPUT -->
-    <div class="input-area">
-      <input 
-        id="linkInput"
-        type="text"
-        placeholder="https://music.apple.com"
-      />
+.input-area input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-family: Inter, system-ui, sans-serif;
+}
 
-      <div class="buttons">
-        <button id="convertBtn">converter</button>
-        <button id="clearBtn">limpar</button>
-      </div>
-    </div>
+.buttons {
+  display: flex;
+  gap: 10px;
+}
 
-    <!-- STATUS -->
-    <div id="status" class="status"></div>
+button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-family: Inter, system-ui, sans-serif;
+  background: #1f1f1f;
+  color: white;
+}
 
-    <!-- RESULT -->
-    <div id="result" class="result"></div>
+#convertBtn {
+  background: #1db954;
+}
 
-    <!-- FOOTER -->
-    <div class="footer">
-      <a href="https://leosaquetto.com" target="_blank" class="by">
-        by leo saquetto
-      </a>
-      <div class="powered">
-        powered by idonthavespotify.sjdonado.com
-      </div>
-    </div>
+.status {
+  margin-top: 15px;
+  font-size: 14px;
+}
 
-  </div>
+.result {
+  margin-top: 20px;
+}
 
-  <script src="telegram.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+.platform {
+  background: #151515;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.platform.spotify.off {
+  background: #2a0f0f;
+}
+
+.badge.verificado {
+  color: #1db954;
+}
+
+.badge.encontrado {
+  color: #aaa;
+}
+
+.footer {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.by {
+  display: block;
+  text-decoration: underline;
+  color: white;
+  margin-bottom: 5px;
+}
