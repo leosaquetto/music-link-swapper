@@ -57,14 +57,13 @@ const els = {
   statusCard: document.getElementById("statusCard"),
   resultCard: document.getElementById("resultCard"),
   coverImage: document.getElementById("coverImage"),
-  resultDescription: document.getElementById("resultDescription"),
   resultTitle: document.getElementById("resultTitle"),
-  resultMeta: document.getElementById("resultMeta"),
-  resultActions: document.getElementById("resultActions"),
+  resultArtist: document.getElementById("resultArtist"),
+  resultAlbum: document.getElementById("resultAlbum"),
   platformGroups: document.getElementById("platformGroups"),
   copyAllButton: document.getElementById("copyAllButton"),
-  copyOriginalButton: document.getElementById("copyOriginalButton"),
-  copyUniversalButton: document.getElementById("copyUniversalButton")
+  resultFooterActions: document.getElementById("resultFooterActions"),
+  spotifyWarning: document.getElementById("spotifyWarning")
 };
 
 bootstrap();
@@ -72,26 +71,15 @@ bootstrap();
 function bootstrap() {
   renderSupportedChips();
   bindEvents();
+  hydrateFromQuery();
 }
 
 function bindEvents() {
   els.convertButton.addEventListener("click", onConvert);
   els.clearButton.addEventListener("click", resetForm);
 
-  els.pasteButton.addEventListener("click", async () => {
+  els.pasteButton.addEventListener("click", () => {
     els.input.focus();
-    showStatus("cole manualmente no campo se o telegram não liberar o clipboard.", "default");
-
-    if (!navigator.clipboard?.readText) return;
-
-    try {
-      const text = await navigator.clipboard.readText();
-      const url = extractUrl(text);
-      if (url) {
-        els.input.value = url;
-        showStatus("link colado no campo.", "success");
-      }
-    } catch (_error) {}
   });
 
   els.useSampleButton.addEventListener("click", () => {
@@ -106,24 +94,20 @@ function bindEvents() {
     showStatus("lista completa copiada.", "success");
   });
 
-  els.copyOriginalButton.addEventListener("click", async () => {
-    if (!state.currentOriginalUrl) return;
-    await copyText(state.currentOriginalUrl);
-    showStatus("link original copiado.", "success");
-  });
-
-  els.copyUniversalButton.addEventListener("click", async () => {
-    if (!state.currentResult?.universalLink) return;
-    await copyText(state.currentResult.universalLink);
-    showStatus("link universal copiado.", "success");
-  });
-
   els.input.addEventListener("keydown", event => {
     if (event.key === "Enter") {
       event.preventDefault();
       onConvert();
     }
   });
+}
+
+function hydrateFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const incomingUrl = extractUrl(params.get("url") || "");
+  if (incomingUrl) {
+    els.input.value = incomingUrl;
+  }
 }
 
 async function onConvert() {
@@ -158,11 +142,14 @@ async function onConvert() {
     const payload = await response.json();
 
     if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.links)) {
-      showStatus(payload?.error || "a conversão não retornou dados válidos.", "error");
+      const msg =
+        payload?.error ||
+        "não consegui converter esse link agora. tente outro link ou tente novamente depois.";
+      showStatus(msg, "error");
       return;
     }
 
-    const result = normalizeApiPayload(payload.data);
+    const result = normalizeApiPayload(payload.data, link);
     if (!result) {
       showStatus("não encontrei plataformas para esse link.", "error");
       return;
@@ -182,16 +169,47 @@ async function onConvert() {
   }
 }
 
-function normalizeApiPayload(data) {
+function normalizeApiPayload(data, originalUrl) {
   const links = normalizeLinks(data.links);
   if (!links.length) return null;
 
+  const title = cleanText(data.title || "música encontrada");
+  const description = cleanText(data.description || "");
+  const parsed = splitDescription(description);
+
+  const spotifyMissing =
+    !links.some(item => item.key === "spotify") &&
+    !originalUrl.toLowerCase().includes("open.spotify.com");
+
   return {
-    title: cleanText(data.title || "música encontrada"),
-    description: cleanText(data.description || ""),
+    title,
+    artist: parsed.artist,
+    album: parsed.album,
+    description,
     image: data.image || null,
-    universalLink: data.universalLink || null,
-    links
+    links,
+    spotifyMissing
+  };
+}
+
+function splitDescription(description) {
+  if (!description) return { artist: "", album: "" };
+
+  const parts = description
+    .split(/[-–•|]/)
+    .map(part => cleanText(part))
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    return {
+      artist: parts[0],
+      album: parts.slice(1).join(" • ")
+    };
+  }
+
+  return {
+    artist: description,
+    album: ""
   };
 }
 
@@ -205,13 +223,19 @@ function renderResult(result) {
   els.platformGroups.innerHTML = "";
 
   els.resultTitle.textContent = result.title || "resultado";
-  els.resultMeta.textContent = buildMeta(result);
 
-  if (result.description) {
-    els.resultDescription.textContent = result.description;
-    els.resultDescription.classList.remove("hidden");
+  if (result.artist) {
+    els.resultArtist.textContent = result.artist;
+    els.resultArtist.classList.remove("hidden");
   } else {
-    els.resultDescription.classList.add("hidden");
+    els.resultArtist.classList.add("hidden");
+  }
+
+  if (result.album) {
+    els.resultAlbum.textContent = `álbum: ${result.album}`;
+    els.resultAlbum.classList.remove("hidden");
+  } else {
+    els.resultAlbum.classList.add("hidden");
   }
 
   if (result.image) {
@@ -222,11 +246,11 @@ function renderResult(result) {
     els.coverImage.removeAttribute("src");
   }
 
-  els.resultActions.classList.remove("hidden");
-  if (result.universalLink) {
-    els.copyUniversalButton.classList.remove("hidden");
+  if (result.spotifyMissing) {
+    els.spotifyWarning.textContent = "spotify indisponível agora para este conteúdo.";
+    els.spotifyWarning.classList.remove("hidden");
   } else {
-    els.copyUniversalButton.classList.add("hidden");
+    els.spotifyWarning.classList.add("hidden");
   }
 
   const groups = ["principais", "outras", "extras"];
@@ -247,21 +271,25 @@ function renderResult(result) {
     section.appendChild(list);
     els.platformGroups.appendChild(section);
   }
+
+  els.resultFooterActions.classList.remove("hidden");
 }
 
 function createPlatformItem(item) {
   const row = document.createElement("article");
   row.className = "platform-item";
 
+  const note = item.isVerified ? "● verificado" : "● encontrado";
+
   row.innerHTML = `
     <div class="platform-icon">${escapeHtml(item.icon)}</div>
     <div class="platform-copy">
       <div class="platform-name">${escapeHtml(item.name)}</div>
-      <div class="platform-note">${item.isVerified ? "link verificado" : "link encontrado"}</div>
+      <div class="platform-note">${note}</div>
     </div>
     <div class="platform-actions">
-      <button class="mini-action" type="button" data-action="copy">copiar</button>
-      <button class="mini-action" type="button" data-action="open">abrir</button>
+      <button class="mini-action copy" type="button" data-action="copy">copiar</button>
+      <button class="mini-action open" type="button" data-action="open">abrir</button>
     </div>
   `;
 
@@ -280,6 +308,8 @@ function createPlatformItem(item) {
 function hideResult() {
   els.resultCard.classList.add("hidden");
   els.platformGroups.innerHTML = "";
+  els.resultFooterActions.classList.add("hidden");
+  els.spotifyWarning.classList.add("hidden");
 }
 
 function showStatus(message, tone = "default") {
@@ -359,16 +389,11 @@ function prettifyPlatform(key) {
     .toLowerCase();
 }
 
-function buildMeta(result) {
-  const pieces = [];
-  if (result.links?.length) pieces.push(`${result.links.length} plataformas`);
-  if (result.universalLink) pieces.push("link universal disponível");
-  return pieces.join(" • ");
-}
-
 function buildAllLinksText(result) {
   const lines = [];
-  lines.push(result.description ? `${result.description} - ${result.title}` : result.title);
+  lines.push(result.title);
+  if (result.artist) lines.push(`artista: ${result.artist}`);
+  if (result.album) lines.push(`álbum: ${result.album}`);
   lines.push("");
   result.links.forEach(item => lines.push(`${item.name}: ${item.url}`));
   return lines.join("\n");
