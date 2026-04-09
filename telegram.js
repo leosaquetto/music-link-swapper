@@ -8,4 +8,9 @@ if (tg) {
     tg.setHeaderColor("#0f0f10");
     tg.setBackgroundColor("#0b0b0d");
   } catch (_error) {}
+
+  document.documentElement.style.setProperty(
+    "--tg-viewport-height",
+    `${tg.viewportHeight || window.innerHeight}px`
+  );
 }
