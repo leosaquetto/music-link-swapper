@@ -40,13 +40,13 @@ const SVG_ICONS = {
   found: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L12.0243 14.3899C11.4586 14.9556 10.5414 14.9556 9.97568 14.3899L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
   spotify: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.9 10.9C14.7 9 9.35 8.8 6.3 9.75c-.5.15-1-.15-1.15-.6c-.15-.5.15-1 .6-1.15c3.55-1.05 9.4-.85 13.1 1.35c.45.25.6.85.35 1.3c-.25.35-.85.5-1.3.25m-.1 2.8c-.25.35-.7.5-1.05.25c-2.7-1.65-6.8-2.15-9.95-1.15c-.4.1-.85-.1-.95-.5c-.1-.4.1-.85.5-.95c3.65-1.1 8.15-.55 11.25 1.35c.3.15.45.65.2 1m-1.2 2.75c-.2.3-.55.4-.85.2c-2.35-1.45-5.3-1.75-8.8-.95c-.35.1-.65-.15-.75-.45c-.1-.35.15-.65.45-.75c3.8-.85 7.1-.5 9.7 1.1c.35.15.4.55.25.85M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></svg>`,
   qobuz: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 25" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 13.4434C12.521 13.4434 12.9434 13.021 12.9434 12.5C12.9434 11.979 12.521 11.5566 12 11.5566C11.479 11.5566 11.0566 11.979 11.0566 12.5C11.0566 13.021 11.479 13.4434 12 13.4434ZM12 15.7075C13.7715 15.7075 15.2075 14.2715 15.2075 12.5C15.2075 10.7285 13.7715 9.29245 12 9.29245C10.2285 9.29245 8.79245 10.7285 8.79245 12.5C8.79245 14.2715 10.2285 15.7075 12 15.7075Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.5C17.5228 2.5 22 6.97715 22 12.5C22 14.8535 21.1869 17.0172 19.8264 18.7254L21.9029 20.8019L20.3019 22.4029L18.2254 20.3264C16.5172 21.6869 14.3535 22.5 12 22.5C6.47715 22.5 2 18.0228 2 12.5C2 6.97715 6.47715 2.5 12 2.5ZM19.7358 12.5C19.7358 8.22761 16.2724 4.76415 12 4.76415C7.72761 4.76415 4.26415 8.22761 4.26415 12.5C4.26415 16.7724 7.72761 20.2358 12 20.2358C13.7278 20.2358 15.3234 19.6694 16.611 18.712L15.1618 17.2628C14.7197 16.8207 14.7197 16.1039 15.1618 15.6618C15.6039 15.2197 16.3207 15.2197 16.7628 15.6618L18.212 17.111C19.1694 15.8234 19.7358 14.2278 19.7358 12.5Z" fill="currentColor"/></svg>`,
-  pandora: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1.882 0v24H8.32a1.085 1.085 0 0 0 1.085-1.085v-4.61h1.612c7.88 0 11.103-4.442 11.103-9.636C22.119 2.257 17.247 0 12.662 0H1.882Z"/></svg>`,
-  soundCloud: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 622" aria-hidden="true"><path fill="currentColor" d="M864 576H512V49Q567 0 640 0q80 0 136 56t56 136q0 37-14 71q25-7 46-7q66 0 113 47t47 113t-47 113t-113 47zm-416 0h-64V132q35 7 64 29v415zM256 161q28-22 64-29v444h-64V161zM128 573V259q16-3 32-3q15 0 32 4v316h-32q-16 0-32-3zM64 289v254q-30-22-47-55.5T0 416t17-71.5T64 289z"/></svg>`,
+  pandora: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M25.401 0h-18.803c-3.599 0-6.599 2.964-6.599 6.599v18.803c0 3.599 2.959 6.599 6.599 6.599h18.803c3.635 0 6.599-2.964 6.599-6.599v-18.803c0-3.599-2.964-6.599-6.599-6.599zM16.5 21.083h-1.64v3.72c0 0.479-0.401 0.859-0.86 0.859h-5.14v-19.317h8.739c4.245 0 7.527 2.197 7.527 7.197 0 4.74-3.641 7.537-8.604 7.537h-0.021z"/></svg>`,
+  soundCloud: `<svg fill="currentColor" viewBox="-271 345.8 256 111.2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g><path d="M-238.4,398.1c-0.8,0-1.4,0.6-1.5,1.5l-2.3,28l2.3,27.1c0.1,0.8,0.7,1.5,1.5,1.5c0.8,0,1.4-0.6,1.5-1.5l2.6-27.1l-2.6-28C-237,398.7-237.7,398.1-238.4,398.1z"/><path d="M-228.2,399.9c-0.9,0-1.7,0.7-1.7,1.7l-2.1,26l2.1,27.3c0.1,1,0.8,1.7,1.7,1.7c0.9,0,1.6-0.7,1.7-1.7l2.4-27.3l-2.4-26C-226.6,400.6-227.3,399.9-228.2,399.9z"/><path d="M-258.6,403.5c-0.5,0-1,0.4-1.1,1l-2.5,23l2.5,22.5c0.1,0.6,0.5,1,1.1,1c0.5,0,1-0.4,1.1-1l2.9-22.5l-2.9-23C-257.7,404-258.1,403.5-258.6,403.5z"/><path d="M-268.1,412.3c-0.5,0-1,0.4-1,1l-1.9,14.3l1.9,14c0.1,0.6,0.5,1,1,1s0.9-0.4,1-1l2.2-14l-2.2-14.2C-267.2,412.8-267.6,412.3-268.1,412.3z"/><path d="M-207.5,373.5c-1.2,0-2.1,0.9-2.2,2.1l-1.9,52l1.9,27.2c0.1,1.2,1,2.1,2.2,2.1s2.1-0.9,2.2-2.1l2.1-27.2l-2.1-52C-205.4,374.4-206.4,373.5-207.5,373.5z"/><path d="M-248.6,399c-0.7,0-1.2,0.5-1.3,1.3l-2.4,27.3l2.4,26.3c0.1,0.7,0.6,1.3,1.3,1.3c0.7,0,1.2-0.5,1.3-1.2l2.7-26.3l-2.7-27.3C-247.4,399.6-247.9,399-248.6,399z"/><path d="M-217.9,383.4c-1,0-1.9,0.8-1.9,1.9l-2,42.3l2,27.3c0.1,1.1,0.9,1.9,1.9,1.9s1.9-0.8,1.9-1.9l2.3-27.3l-2.3-42.3C-216,384.2-216.9,383.4-217.9,383.4z"/><path d="M-154.4,359.3c-1.8,0-3.2,1.4-3.2,3.2l-1.2,65l1.2,26.1c0,1.8,1.5,3.2,3.2,3.2c1.8,0,3.2-1.5,3.2-3.2l1.4-26.1l-1.4-65C-151.1,360.8-152.6,359.3-154.4,359.3z"/><path d="M-197.1,368.9c-1.3,0-2.3,1-2.4,2.4l-1.8,56.3l1.8,26.9c0,1.3,1.1,2.3,2.4,2.3s2.3-1,2.4-2.4l2-26.9l-2-56.3C-194.7,370-195.8,368.9-197.1,368.9z"/><path d="M-46.5,394c-4.3,0-8.4,0.9-12.2,2.4C-61.2,368-85,345.8-114,345.8c-7.1,0-14,1.4-20.1,3.8c-2.4,0.9-3,1.9-3,3.7v99.9c0,1.9,1.5,3.5,3.4,3.7c0.1,0,86.7,0,87.3,0c17.4,0,31.5-14.1,31.5-31.5C-15,408.1-29.1,394-46.5,394z"/><path d="M-143.6,353.2c-1.9,0-3.4,1.6-3.5,3.5l-1.4,70.9l1.4,25.7c0,1.9,1.6,3.4,3.5,3.4c1.9,0,3.4-1.6,3.5-3.5l1.5-25.8l-1.5-70.9C-140.2,354.8-141.7,353.2-143.6,353.2z"/><path d="M-186.5,366.8c-1.4,0-2.5,1.1-2.6,2.6l-1.6,58.2l1.6,26.7c0,1.4,1.2,2.6,2.6,2.6s2.5-1.1,2.6-2.6l1.8-26.7l-1.8-58.2C-184,367.9-185.1,366.8-186.5,366.8z"/><path d="M-175.9,368.1c-1.5,0-2.8,1.2-2.8,2.8l-1.5,56.7l1.5,26.5c0,1.6,1.3,2.8,2.8,2.8s2.8-1.2,2.8-2.8l1.7-26.5l-1.7-56.7C-173.1,369.3-174.3,368.1-175.9,368.1z"/><path d="M-165.2,369.9c-1.7,0-3,1.3-3,3l-1.4,54.7l1.4,26.3c0,1.7,1.4,3,3,3c1.7,0,3-1.3,3-3l1.5-26.3l-1.5-54.7C-162.2,371.3-163.5,369.9-165.2,369.9z"/></g></svg>`,
   appleMusic: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.84 12.15c.03 3.11 2.73 4.15 2.76 4.16c-.02.07-.43 1.5-1.42 2.96c-.86 1.27-1.75 2.54-3.15 2.57c-1.38.03-1.83-.82-3.41-.82s-2.08.79-3.38.85c-1.35.05-2.39-1.35-3.26-2.62c-1.78-2.58-3.14-7.29-1.31-10.47c.91-1.58 2.53-2.58 4.29-2.6c1.34-.03 2.6.9 3.41.9c.81 0 2.34-1.11 3.95-.95c.67.03 2.56.27 3.77 2.04c-.1.06-2.25 1.31-2.23 3.98ZM14.26 4.45c.72-.87 1.2-2.08 1.07-3.28c-1.04.04-2.3.69-3.05 1.56c-.67.77-1.26 2.01-1.1 3.19c1.16.09 2.35-.59 3.08-1.47Z"/></svg>`,
-  youTube: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.58 7.19a2.98 2.98 0 0 0-2.1-2.11C17.62 4.5 12 4.5 12 4.5s-5.62 0-7.48.58a2.98 2.98 0 0 0-2.1 2.11A31.2 31.2 0 0 0 2 12a31.2 31.2 0 0 0 .42 4.81a2.98 2.98 0 0 0 2.1 2.11c1.86.58 7.48.58 7.48.58s5.62 0 7.48-.58a2.98 2.98 0 0 0 2.1-2.11c.28-1.52.42-3.15.42-4.81c0-1.66-.14-3.29-.42-4.81ZM10 15.46V8.54L16 12l-6 3.46Z"/></svg>`,
-  deezer: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 16h4v3H3zm0-5h4v3H3zm0-5h4v3H3zm5 10h4v3H8zm0-5h4v3H8zm5 5h4v3h-4zm0-5h4v3h-4zm0-5h4v3h-4zm5 10h3v3h-3zm0-5h3v3h-3z"/></svg>`,
+  youTube: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g><path fill="currentColor" d="M50,2.5C23.766,2.5,2.5,23.823,2.5,50.126c2.502,63.175,92.507,63.157,95-0.001C97.5,23.823,76.233,2.5,50,2.5z M50,77.399c-15.036,0-27.27-12.233-27.27-27.27c0.74-18.662,14.654-27.134,27.269-27.134c0.001,0,0.001,0,0.002,0c12.616,0.001,26.531,8.473,27.267,27.073C77.27,65.167,65.036,77.399,50,77.399z"/><path fill="currentColor" d="M50.002,26.103c-15.946-0.001-23.704,12.486-24.165,24.088C25.838,63.453,36.677,74.292,50,74.292S74.162,63.453,74.162,50.13C73.705,38.591,65.948,26.105,50.002,26.103z"/><path fill="currentColor" d="M41.055,52.528c-0.001,2.575,0.001,7.867,0,10.46c0,0,21.802-13.417,21.802-13.417L41.055,37.272V52.528z"/></g></svg>`,
+  deezer: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M24.511 22.011v3.785h6.484v-3.786h-6.486zM16.676 22.011v3.785h6.486v-3.786h-6.486zM8.84 22.011v3.785h6.484v-3.786h-6.486zM1.004 22.011v3.785h6.486v-3.786h-6.486zM24.511 16.742v3.783h6.484v-3.783h-6.484zM16.676 16.742v3.783h6.486v-3.783zM8.84 16.742v3.783h6.484v-3.783h-6.484zM24.51 11.476v3.783h6.486v-3.783zM8.84 11.476v3.783h6.484v-3.783h-6.484zM24.51 6.203v3.786h6.486v-3.786z"></path></svg>`,
   bandcamp: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.29 6L2 18h14.71L22 6z"/></svg>`,
-  tidal: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4l3 3l-3 3l-3-3zm-5 5l3 3l-3 3l-3-3zm10 0l3 3l-3 3l-3-3zm-5 5l3 3l-3 3l-3-3z"/></svg>`
+  tidal: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M16.016 5.323l-5.339 5.339-5.339-5.339-5.339 5.339 5.339 5.339 5.339-5.339 5.339 5.339-5.339 5.339 5.339 5.339 5.339-5.339-5.339-5.339 5.339-5.339zM21.391 10.661l5.302-5.307 5.307 5.307-5.307 5.307z"/></svg>`
 };
 
 const PLATFORM_META = {
@@ -79,7 +79,12 @@ const state = {
   currentOriginalUrl: null,
   autoConvertedFromQuery: false,
   statusHideTimer: null,
-  floatingToastTimer: null
+  floatingToastTimer: null,
+  lastClipboardText: "",
+  lastAutoUrl: "",
+  autoPasteInFlight: false,
+  activeButtonResetTimers: new WeakMap(),
+  scrollAfterConvert: false
 };
 
 const els = {
@@ -112,6 +117,7 @@ function bootstrap() {
   bindEvents();
   hydrateFromQuery();
   tryAutoPasteFromClipboard();
+  bindTelegramAutoPaste();
 }
 
 function injectButtonIcons() {
@@ -137,7 +143,10 @@ function injectButtonIcons() {
 }
 
 function bindEvents() {
-  els.convertButton?.addEventListener("click", onConvert);
+  els.convertButton?.addEventListener("click", () => {
+    onConvert({ shouldScrollToStatus: true });
+  });
+
   els.clearButton?.addEventListener("click", resetForm);
 
   els.pasteButton?.addEventListener("click", async () => {
@@ -203,7 +212,7 @@ function bindEvents() {
   els.input?.addEventListener("keydown", event => {
     if (event.key === "Enter") {
       event.preventDefault();
-      onConvert();
+      onConvert({ shouldScrollToStatus: true });
     }
   });
 
@@ -212,7 +221,7 @@ function bindEvents() {
       hideStatus();
       softlyDismissKeyboard();
       if (isSupportedStreamingUrl(extractUrl(els.input.value.trim()) || "")) {
-        await onConvert();
+        await onConvert({ shouldScrollToStatus: false });
       }
     }, 110);
   });
@@ -225,11 +234,12 @@ function hydrateFromQuery() {
   if (incomingUrl) {
     els.input.value = incomingUrl;
     state.autoConvertedFromQuery = true;
+    state.lastAutoUrl = incomingUrl;
     showStatus("link recebido automaticamente.", "success", { autoHide: true });
 
     requestAnimationFrame(() => {
       setTimeout(() => {
-        onConvert();
+        onConvert({ shouldScrollToStatus: false });
       }, 100);
     });
   }
@@ -246,8 +256,74 @@ async function tryAutoPasteFromClipboard() {
 
     if (url && isSupportedStreamingUrl(url)) {
       els.input.value = url;
+      state.lastClipboardText = typeof text === "string" ? text.trim() : "";
+      state.lastAutoUrl = url;
     }
   } catch (_error) {}
+}
+
+function bindTelegramAutoPaste() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+
+  const run = () => {
+    maybeAutoSwapFromTelegramClipboard();
+  };
+
+  run();
+  tg.onEvent?.("activated", run);
+}
+
+async function maybeAutoSwapFromTelegramClipboard() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg?.readTextFromClipboard) return;
+  if (state.autoPasteInFlight) return;
+
+  const startParam = tg?.initDataUnsafe?.start_param || "";
+  const shouldForceAuto = startParam === "auto";
+
+  state.autoPasteInFlight = true;
+
+  const delay = isIOSDevice() ? 500 : 220;
+
+  setTimeout(() => {
+    tg.readTextFromClipboard(async text => {
+      try {
+        const rawText = typeof text === "string" ? text.trim() : "";
+        if (!rawText) return;
+
+        const url = extractUrl(rawText);
+        if (!url || !isSupportedStreamingUrl(url)) return;
+
+        const currentInput = extractUrl(els.input?.value?.trim?.() || "");
+        const isSameAsInput = currentInput && currentInput === url;
+        const isSameAsLastClipboard = state.lastClipboardText === rawText;
+        const isSameAsLastAutoUrl = state.lastAutoUrl === url;
+
+        if (!shouldForceAuto && (isSameAsInput || isSameAsLastClipboard || isSameAsLastAutoUrl)) {
+          return;
+        }
+
+        state.lastClipboardText = rawText;
+        state.lastAutoUrl = url;
+        els.input.value = url;
+
+        try {
+          tg.HapticFeedback?.notificationOccurred?.("success");
+        } catch (_error) {}
+
+        showFloatingToast("link capturado do clipboard.");
+
+        await onConvert({ shouldScrollToStatus: false });
+      } finally {
+        state.autoPasteInFlight = false;
+      }
+    });
+  }, delay);
+}
+
+function isIOSDevice() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent || "");
 }
 
 async function smartPasteIntoInput({ announce = false, autoConvert = false } = {}) {
@@ -259,10 +335,12 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
 
     if (url) {
       els.input.value = url;
+      state.lastClipboardText = typeof text === "string" ? text.trim() : "";
+      state.lastAutoUrl = url;
       softlyDismissKeyboard();
       if (announce) showFloatingToast("link colado no campo.");
       if (autoConvert && isSupportedStreamingUrl(url)) {
-        setTimeout(() => onConvert(), 60);
+        setTimeout(() => onConvert({ shouldScrollToStatus: false }), 60);
       }
       return true;
     }
@@ -273,8 +351,9 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
   }
 }
 
-async function onConvert() {
+async function onConvert({ shouldScrollToStatus = false } = {}) {
   const link = extractUrl(els.input.value.trim());
+  state.scrollAfterConvert = shouldScrollToStatus;
 
   if (!link) {
     showStatus("cole um link válido para continuar.", "error");
@@ -330,17 +409,20 @@ async function onConvert() {
       "success"
     );
 
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        els.statusCard?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, state.autoConvertedFromQuery ? 40 : 100);
-    });
+    if (state.scrollAfterConvert) {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          els.statusCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, state.autoConvertedFromQuery ? 40 : 100);
+      });
+    }
   } catch (_error) {
     stopCoverShimmer();
     showStatus("deu erro na conversão. tente novamente em instantes.", "error");
   } finally {
     setLoading(false);
     state.autoConvertedFromQuery = false;
+    state.scrollAfterConvert = false;
   }
 }
 
@@ -592,9 +674,26 @@ function createPlatformItem(item) {
 
 function pulseActionButton(button, variant = "copy") {
   if (!button) return;
+
+  const pressedClass = variant === "open" ? "is-pressed-open" : "is-pressed-copy";
+  const resetTimers = state.activeButtonResetTimers;
+  const previousTimer = resetTimers.get(button);
+
+  if (previousTimer) {
+    clearTimeout(previousTimer);
+  }
+
   button.classList.remove("is-pressed-copy", "is-pressed-open");
   void button.offsetWidth;
-  button.classList.add(variant === "open" ? "is-pressed-open" : "is-pressed-copy");
+  button.classList.add(pressedClass);
+
+  const timeoutMs = variant === "open" ? 320 : 1000;
+  const timer = setTimeout(() => {
+    button.classList.remove(pressedClass);
+    resetTimers.delete(button);
+  }, timeoutMs);
+
+  resetTimers.set(button, timer);
 }
 
 function triggerHaptic(kind = "light") {
@@ -785,6 +884,7 @@ function resetForm() {
   state.currentResult = null;
   state.currentOriginalUrl = null;
   state.autoConvertedFromQuery = false;
+  state.lastAutoUrl = "";
 }
 
 function normalizeLinks(links) {
