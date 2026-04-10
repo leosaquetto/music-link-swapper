@@ -101,7 +101,7 @@ const els = {
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
-  floatingToast: document.getElementById("floatingToast")
+  floatingToast: document.getElementById("floatingToast"),
 };
 
 bootstrap();
@@ -146,7 +146,7 @@ function bindEvents() {
     if (!pasted) {
       els.input?.focus();
       els.input?.select?.();
-      showFloatingToast("toque e cole o link no campo");
+      showFloatingToast("toque e cole o link no campo.");
     }
   });
 
@@ -161,7 +161,7 @@ function bindEvents() {
     const text = buildPrimaryLinksText(state.currentResult);
     if (!text) return;
     await copyText(text);
-    showFloatingToast("principais copiadas");
+    showFloatingToast("principais copiadas!");
   });
 
   els.sharePrimaryButton?.addEventListener("click", async () => {
@@ -177,19 +177,19 @@ function bindEvents() {
           title: titleBits || "music link swapper",
           text
         });
-        showFloatingToast("principais compartilhadas");
+        showFloatingToast("principais compartilhadas.");
         return;
       } catch (_error) {}
     }
 
     await copyText(text);
-    showFloatingToast("principais copiadas");
+    showFloatingToast("principais copiadas!");
   });
 
   els.copyOriginalButton?.addEventListener("click", async () => {
     if (!state.currentOriginalUrl) return;
     await copyText(state.currentOriginalUrl);
-    showFloatingToast("link original copiado");
+    showFloatingToast("link original copiado!");
   });
 
   els.input?.addEventListener("keydown", event => {
@@ -217,7 +217,7 @@ function hydrateFromQuery() {
   if (incomingUrl) {
     els.input.value = incomingUrl;
     state.autoConvertedFromQuery = true;
-    showStatus("link recebido automaticamente", "success", { autoHide: true });
+    showStatus("link recebido automaticamente.", "success", { autoHide: true });
 
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -252,7 +252,7 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
     if (url) {
       els.input.value = url;
       softlyDismissKeyboard();
-      if (announce) showFloatingToast("link colado no campo");
+      if (announce) showFloatingToast("link colado no campo.");
       if (autoConvert && isSupportedStreamingUrl(url)) {
         setTimeout(() => onConvert(), 60);
       }
@@ -269,18 +269,21 @@ async function onConvert() {
   const link = extractUrl(els.input.value.trim());
 
   if (!link) {
-    showStatus("cole um link válido para continuar", "error");
+    showStatus("cole um link válido para continuar.", "error");
     return;
   }
 
   if (!isSupportedStreamingUrl(link)) {
-    showStatus("isso não parece um link de streaming suportado", "error");
+    showStatus("isso não parece um link de streaming suportado.", "error");
     return;
   }
 
   softlyDismissKeyboard();
   setLoading(true);
-  prepareLoadingState();
+  els.platformGroups.innerHTML = "";
+  els.copyPrimaryButton.classList.add("hidden");
+  els.sharePrimaryButton.classList.add("hidden");
+  els.copyOriginalButton.classList.add("hidden");
   showStatus("swapando...", "default");
   startCoverShimmer();
 
@@ -301,7 +304,7 @@ async function onConvert() {
     if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.links)) {
       stopCoverShimmer();
       showStatus(
-        payload?.error || "não consegui converter esse link agora. tente novamente em instantes",
+        payload?.error || "não consegui converter esse link agora. tente novamente em instantes.",
         "error"
       );
       return;
@@ -310,14 +313,13 @@ async function onConvert() {
     const result = normalizeApiPayload(payload.data);
     if (!result) {
       stopCoverShimmer();
-      showStatus("não encontrei plataformas para esse link", "error");
+      showStatus("não encontrei plataformas para esse link.", "error");
       return;
     }
 
     state.currentOriginalUrl = link;
     state.currentResult = result;
     renderResult(result);
-
     showStatus(
       `${result.links.length} swap${result.links.length === 1 ? "" : "s"} encontrado${result.links.length === 1 ? "" : "s"}!`,
       "success"
@@ -326,27 +328,15 @@ async function onConvert() {
     requestAnimationFrame(() => {
       setTimeout(() => {
         els.statusCard?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, state.autoConvertedFromQuery ? 30 : 70);
+      }, state.autoConvertedFromQuery ? 40 : 100);
     });
   } catch (_error) {
     stopCoverShimmer();
-    showStatus("deu erro na conversão. tente novamente em instantes", "error");
+    showStatus("deu erro na conversão. tente novamente em instantes.", "error");
   } finally {
     setLoading(false);
     state.autoConvertedFromQuery = false;
   }
-}
-
-function prepareLoadingState() {
-  els.platformGroups.innerHTML = "";
-  els.copyPrimaryButton.classList.add("hidden");
-  els.sharePrimaryButton.classList.add("hidden");
-  els.copyOriginalButton.classList.add("hidden");
-  els.resultDescription.textContent = "";
-  els.resultDescription.classList.add("hidden");
-  els.resultTitle.textContent = "";
-  els.resultMeta.textContent = "";
-  state.currentResult = null;
 }
 
 function normalizeApiPayload(data) {
@@ -357,11 +347,13 @@ function normalizeApiPayload(data) {
   const rawDescription = cleanText(data.description || "");
   const preview = parsePreview(rawTitle, rawDescription);
 
+  let image = normalizeArtworkUrl(data.image || null);
+
   return {
     title: preview.title,
     artist: preview.artist,
     album: preview.album || cleanText(data.album || ""),
-    image: normalizeArtworkUrl(data.image || null),
+    image,
     universalLink: data.universalLink || null,
     links
   };
@@ -401,8 +393,9 @@ function parsePreview(title, description) {
     }
   }
 
-  const normalizedTitle = cleanTitle.toLowerCase();
-  const uniqueParts = parts.filter(Boolean).filter(part => part.toLowerCase() !== normalizedTitle);
+  const uniqueParts = parts
+    .filter(Boolean)
+    .filter(part => part.toLowerCase() !== cleanTitle.toLowerCase());
 
   let artist = "";
   let album = "";
@@ -429,11 +422,10 @@ function renderSupportedChips() {
 }
 
 function renderResult(result) {
-  if (els.resultCard.classList.contains("hidden")) {
-    els.resultCard.classList.remove("hidden");
-  }
-
+  els.resultCard.classList.remove("hidden");
+  els.resultCard.classList.add("result-card-live");
   els.platformGroups.innerHTML = "";
+
   els.resultTitle.textContent = result.title || "resultado";
   els.resultMeta.textContent = buildMeta(result);
 
@@ -486,12 +478,9 @@ function renderResult(result) {
     els.platformGroups.appendChild(section);
   }
 
-  requestAnimationFrame(() => {
-    els.resultCard.classList.add("result-card-live");
-    setTimeout(() => {
-      els.resultCard.classList.remove("result-card-live");
-    }, 340);
-  });
+  setTimeout(() => {
+    els.resultCard.classList.remove("result-card-live");
+  }, 520);
 }
 
 function createPlatformItem(item) {
@@ -521,16 +510,16 @@ function createPlatformItem(item) {
 
   row.querySelector('[data-action="copy"]').addEventListener("click", async () => {
     await copyText(item.url);
-    showInlineToast(row, `${item.name} copiado`);
+    showInlineToast(row, `${item.name} copiado!`);
   });
 
   row.querySelector('[data-action="share"]').addEventListener("click", async () => {
     const shared = await shareLink(item);
     if (shared) {
-      showInlineToast(row, `${item.name} compartilhado`);
+      showInlineToast(row, `${item.name} compartilhado!`);
     } else {
       await copyText(item.url);
-      showInlineToast(row, `${item.name} copiado`);
+      showInlineToast(row, `${item.name} copiado!`);
     }
   });
 
@@ -853,50 +842,3 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-// --- Automação Ultra-Resiliente para iOS ---
-
-function handleAutoPaste() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg) return;
-
-  // 1. Só prossegue se o parâmetro for 'auto'
-  const startParam = tg.initDataUnsafe?.start_param;
-  if (startParam !== "auto") return;
-
-  // 2. Aguarda o Mini App estar expandido e pronto
-  tg.ready();
-
-  // 3. O SEGREDO: Delay para compensar o tempo de abertura no iOS
-  // Aumentamos para 800ms para garantir que a animação de abertura acabou
-  setTimeout(() => {
-    if (tg.readTextFromClipboard) {
-      tg.readTextFromClipboard((text) => {
-        if (!text) return;
-        
-        const url = extractUrl(text);
-        if (url && isSupportedStreamingUrl(url)) {
-          const input = document.getElementById("urlInput");
-          const searchButton = document.getElementById("searchButton");
-          
-          if (input && searchButton) {
-            input.value = url;
-            tg.HapticFeedback.notificationOccurred("success");
-            
-            // 4. Dispara a busca com um leve delay após preencher o campo
-            setTimeout(() => searchButton.click(), 100);
-          }
-        }
-      });
-    }
-  }, 800); 
-}
-
-// Garante que rode em qualquer cenário de abertura
-if (document.readyState === "complete") {
-  handleAutoPaste();
-} else {
-  window.addEventListener("load", handleAutoPaste);
-}
-
-// Se o app já estiver aberto e você clicar no atalho de novo
-window.Telegram?.WebApp?.onEvent('activated', handleAutoPaste);
