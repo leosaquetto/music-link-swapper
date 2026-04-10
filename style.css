@@ -93,7 +93,7 @@ button:active {
   min-height: 100dvh;
   margin: 0 auto;
   padding:
-    max(6px, env(safe-area-inset-top))
+    max(22px, calc(env(safe-area-inset-top) + 14px))
     12px
     max(18px, env(safe-area-inset-bottom));
 }
@@ -115,8 +115,8 @@ button:active {
 .hero-card {
   display: grid;
   gap: 12px;
-  padding: 6px 4px 0;
-  margin-bottom: 6px;
+  padding: 18px 14px 6px;
+  margin-bottom: 10px;
 }
 
 .hero-card-transparent {
