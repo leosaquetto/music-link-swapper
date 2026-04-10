@@ -60,6 +60,9 @@ body {
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition:
+    background 260ms ease,
+    color 220ms ease;
 }
 
 button,
@@ -129,6 +132,10 @@ button:active {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
   min-width: 0;
+  transition:
+    background 260ms ease,
+    border-color 220ms ease,
+    box-shadow 260ms ease;
 }
 
 .hero-card {
@@ -275,7 +282,9 @@ h1 {
   transition:
     border-color 180ms ease,
     transform 180ms ease,
-    box-shadow 180ms ease;
+    box-shadow 180ms ease,
+    background 220ms ease,
+    color 220ms ease;
   font-size: 14px;
 }
 
@@ -421,6 +430,7 @@ h1 {
   height: 16px;
   display: block;
   flex: 0 0 auto;
+  transition: color 220ms ease;
 }
 
 .status-card {
@@ -627,6 +637,7 @@ h2 {
   flex: 0 0 auto;
   max-width: 100%;
   max-height: 100%;
+  transition: color 220ms ease;
 }
 
 .platform-copy {
@@ -1091,6 +1102,18 @@ h2 {
 :root:not([data-theme="dark"]) .chip {
   background: rgba(18, 22, 35, 0.04);
   border-color: rgba(18, 22, 35, 0.12);
+}
+
+:root:not([data-theme="dark"]) .icon-chip-youTube,
+:root:not([data-theme="dark"]) .platform-icon-youTube,
+:root:not([data-theme="dark"]) .platform-icon-youtube,
+:root:not([data-theme="dark"]) .platform-icon-youtubeMusic {
+  color: #ed474c;
+}
+
+:root:not([data-theme="dark"]) .icon-chip-appleMusic,
+:root:not([data-theme="dark"]) .platform-icon-appleMusic {
+  color: #101325;
 }
 
 :root[data-theme="dark"] .footer {

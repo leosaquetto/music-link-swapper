@@ -565,7 +565,7 @@ function renderSupportedChips() {
   els.supportedChips.innerHTML = SUPPORTED_PLATFORM_CHIPS
     .map(key => {
       const meta = PLATFORM_META[key];
-      return `<span class="chip icon-chip" title="${escapeHtml(meta.name)}" aria-label="${escapeHtml(meta.name)}">${meta.icon}</span>`;
+      return `<span class="chip icon-chip icon-chip-${escapeHtml(key)}" title="${escapeHtml(meta.name)}" aria-label="${escapeHtml(meta.name)}">${meta.icon}</span>`;
     })
     .join("");
 }
@@ -634,7 +634,7 @@ function createPlatformItem(item) {
   row.className = "platform-item";
 
   row.innerHTML = `
-    <div class="platform-icon">${item.icon}</div>
+    <div class="platform-icon platform-icon-${escapeHtml(item.key)}">${item.icon}</div>
     <div class="platform-copy">
       <div class="platform-name-row">
         <div class="platform-name">${escapeHtml(item.name)}</div>
