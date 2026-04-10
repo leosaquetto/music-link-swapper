@@ -35,11 +35,11 @@ const SVG_ICONS = {
   copy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18.327 7.286h-8.044a1.932 1.932 0 0 0-1.925 1.938v10.088c0 1.07.862 1.938 1.925 1.938h8.044a1.932 1.932 0 0 0 1.925-1.938V9.224c0-1.07-.862-1.938-1.925-1.938"/><path d="M15.642 7.286V4.688c0-.514-.203-1.007-.564-1.37a1.918 1.918 0 0 0-1.361-.568H5.673c-.51 0-1 .204-1.36.568a1.945 1.945 0 0 0-.565 1.37v10.088c0 .514.203 1.007.564 1.37c.361.364.85.568 1.361.568h2.685"/></g></svg>`,
   open: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15" d="M7 17L17 7m0 0H9m8 0v8"/></svg>`,
   share: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 16V4m0 0l-4 4m4-4l4 4"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M5 13.5v3.25A2.25 2.25 0 0 0 7.25 19h9.5A2.25 2.25 0 0 0 19 16.75V13.5"/></svg>`,
-  unlink: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.17 14.83L14.83 9.17m-8.49 8.49l-2.12 2.12m13.44-13.44l2.12-2.12M7.05 11.29L4.93 9.17a3 3 0 0 1 0-4.24l1.41-1.41a3 3 0 0 1 4.24 0l2.12 2.12m-1.41 9.9l2.12 2.12a3 3 0 0 0 4.24 0l1.41-1.41a3 3 0 0 0 0-4.24l-2.12-2.12"/></svg>`,
-  verified: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m11.59 2.22l1.2 1.22c.23.23.57.34.89.29l1.7-.27c.78-.12 1.53.4 1.65 1.18l.27 1.7c.05.32.26.66.49.89l1.22 1.2c.56.55.56 1.46 0 2.01l-1.22 1.2c-.23.23-.34.57-.29.89l.27 1.7c.12.78-.4 1.53-1.18 1.65l-1.7.27c-.32.05-.66.26-.89.49l-1.2 1.22c-.55.56-1.46.56-2.01 0l-1.2-1.22c-.23-.23-.57-.34-.89-.29l-1.7.27c-.78.12-1.53-.4-1.65-1.18l-.27-1.7c-.05-.32-.26-.66-.49-.89l-1.22-1.2a1.42 1.42 0 0 1 0-2.01l1.22-1.2c.23-.23.34-.57.29-.89l-.27-1.7c-.12-.78.4-1.53 1.18-1.65l1.7-.27c.32-.05.66-.26.89-.49l1.2-1.22c.55-.56 1.46-.56 2.01 0Zm3.14 7.1a.75.75 0 0 0-1.06 0l-2.5 2.5l-.84-.84a.75.75 0 0 0-1.06 1.06l1.37 1.37c.29.29.77.29 1.06 0l3.03-3.03a.75.75 0 0 0 0-1.06Z"/></svg>`,
-  found: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3.75A1.25 1.25 0 0 0 3.75 5v14c0 .69.56 1.25 1.25 1.25h14c.69 0 1.25-.56 1.25-1.25V5c0-.69-.56-1.25-1.25-1.25H5Zm0 1.5h14a.25.25 0 0 1 .25.25v14a.25.25 0 0 1-.25.25H5a.25.25 0 0 1-.25-.25V5A.25.25 0 0 1 5 5.25Zm9.78 3.97a.75.75 0 0 0-1.06 0l-3.53 3.53l-1.91-1.91a.75.75 0 1 0-1.06 1.06l2.44 2.44c.29.29.77.29 1.06 0l4.06-4.06a.75.75 0 0 0 0-1.06Z"/></svg>`,
+  unlink: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 54.971 54.971" aria-hidden="true"><g fill="currentColor"><path d="M51.173,3.801c-5.068-5.068-13.315-5.066-18.384,0l-9.192,9.192c-0.781,0.781-0.781,2.047,0,2.828c0.781,0.781,2.047,0.781,2.828,0l9.192-9.192c1.691-1.69,3.951-2.622,6.363-2.622c2.413,0,4.673,0.932,6.364,2.623s2.623,3.951,2.623,6.364c0,2.412-0.932,4.672-2.623,6.363L36.325,31.379c-3.51,3.508-9.219,3.508-12.729,0c-0.781-0.781-2.047-0.781-2.828,0s-0.781,2.048,0,2.828c2.534,2.534,5.863,3.801,9.192,3.801s6.658-1.267,9.192-3.801l12.021-12.021c2.447-2.446,3.795-5.711,3.795-9.192C54.968,9.512,53.62,6.248,51.173,3.801z"/><path d="M27.132,40.57l-7.778,7.778c-1.691,1.691-3.951,2.623-6.364,2.623c-2.412,0-4.673-0.932-6.364-2.623c-3.509-3.509-3.509-9.219,0-12.728L17.94,24.306c1.691-1.69,3.951-2.622,6.364-2.622c2.412,0,4.672,0.932,6.363,2.622c0.781,0.781,2.047,0.781,2.828,0s0.781-2.047,0-2.828c-5.067-5.067-13.314-5.068-18.384,0L3.797,32.793c-2.446,2.446-3.794,5.711-3.794,9.192c0,3.48,1.348,6.745,3.795,9.191c2.446,2.447,5.711,3.795,9.191,3.795c3.481,0,6.746-1.348,9.192-3.795l7.778-7.778c0.781-0.781,0.781-2.047,0-2.828S27.913,39.789,27.132,40.57z"/></g></svg>`,
+  verified: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.55879 3.6972C10.7552 2.02216 13.2447 2.02216 14.4412 3.6972L14.6317 3.96387C14.8422 4.25867 15.1958 4.41652 15.5558 4.37652L16.4048 4.28218C18.3156 4.06988 19.9301 5.68439 19.7178 7.59513L19.6235 8.44415C19.5835 8.8042 19.7413 9.15774 20.0361 9.36831L20.3028 9.55879C21.9778 10.7552 21.9778 13.2447 20.3028 14.4412L20.0361 14.6317C19.7413 14.8422 19.5835 15.1958 19.6235 15.5558L19.7178 16.4048C19.9301 18.3156 18.3156 19.9301 16.4048 19.7178L15.5558 19.6235C15.1958 19.5835 14.8422 19.7413 14.6317 20.0361L14.4412 20.3028C13.2447 21.9778 10.7553 21.9778 9.55879 20.3028L9.36831 20.0361C9.15774 19.7413 8.8042 19.5835 8.44414 19.6235L7.59513 19.7178C5.68439 19.9301 4.06988 18.3156 4.28218 16.4048L4.37652 15.5558C4.41652 15.1958 4.25867 14.8422 3.96387 14.6317L3.6972 14.4412C2.02216 13.2447 2.02216 10.7553 3.6972 9.55879L3.96387 9.36831C4.25867 9.15774 4.41652 8.8042 4.37652 8.44414L4.28218 7.59513C4.06988 5.68439 5.68439 4.06988 7.59513 4.28218L8.44415 4.37652C8.8042 4.41652 9.15774 4.25867 9.36831 3.96387L9.55879 3.6972ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L11.8882 14.526C11.3977 15.0166 10.6023 15.0166 10.1118 14.526L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
+  found: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L12.0243 14.3899C11.4586 14.9556 10.5414 14.9556 9.97568 14.3899L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
   spotify: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.9 10.9C14.7 9 9.35 8.8 6.3 9.75c-.5.15-1-.15-1.15-.6c-.15-.5.15-1 .6-1.15c3.55-1.05 9.4-.85 13.1 1.35c.45.25.6.85.35 1.3c-.25.35-.85.5-1.3.25m-.1 2.8c-.25.35-.7.5-1.05.25c-2.7-1.65-6.8-2.15-9.95-1.15c-.4.1-.85-.1-.95-.5c-.1-.4.1-.85.5-.95c3.65-1.1 8.15-.55 11.25 1.35c.3.15.45.65.2 1m-1.2 2.75c-.2.3-.55.4-.85.2c-2.35-1.45-5.3-1.75-8.8-.95c-.35.1-.65-.15-.75-.45c-.1-.35.15-.65.45-.75c3.8-.85 7.1-.5 9.7 1.1c.35.15.4.55.25.85M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></svg>`,
-  qobuz: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M39.203 39.203A21.433 21.433 0 0 0 45.5 24c0-11.874-9.626-21.5-21.5-21.5S2.5 12.126 2.5 24S12.126 45.5 24 45.5c4.89 0 9.4-1.633 13.012-4.383"/><circle cx="24" cy="24" r="4.873" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M32.944 32.944L45.5 45.5"/></svg>`,
+  qobuz: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 25" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 13.4434C12.521 13.4434 12.9434 13.021 12.9434 12.5C12.9434 11.979 12.521 11.5566 12 11.5566C11.479 11.5566 11.0566 11.979 11.0566 12.5C11.0566 13.021 11.479 13.4434 12 13.4434ZM12 15.7075C13.7715 15.7075 15.2075 14.2715 15.2075 12.5C15.2075 10.7285 13.7715 9.29245 12 9.29245C10.2285 9.29245 8.79245 10.7285 8.79245 12.5C8.79245 14.2715 10.2285 15.7075 12 15.7075Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.5C17.5228 2.5 22 6.97715 22 12.5C22 14.8535 21.1869 17.0172 19.8264 18.7254L21.9029 20.8019L20.3019 22.4029L18.2254 20.3264C16.5172 21.6869 14.3535 22.5 12 22.5C6.47715 22.5 2 18.0228 2 12.5C2 6.97715 6.47715 2.5 12 2.5ZM19.7358 12.5C19.7358 8.22761 16.2724 4.76415 12 4.76415C7.72761 4.76415 4.26415 8.22761 4.26415 12.5C4.26415 16.7724 7.72761 20.2358 12 20.2358C13.7278 20.2358 15.3234 19.6694 16.611 18.712L15.1618 17.2628C14.7197 16.8207 14.7197 16.1039 15.1618 15.6618C15.6039 15.2197 16.3207 15.2197 16.7628 15.6618L18.212 17.111C19.1694 15.8234 19.7358 14.2278 19.7358 12.5Z" fill="currentColor"/></svg>`,
   pandora: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1.882 0v24H8.32a1.085 1.085 0 0 0 1.085-1.085v-4.61h1.612c7.88 0 11.103-4.442 11.103-9.636C22.119 2.257 17.247 0 12.662 0H1.882Z"/></svg>`,
   soundCloud: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 622" aria-hidden="true"><path fill="currentColor" d="M864 576H512V49Q567 0 640 0q80 0 136 56t56 136q0 37-14 71q25-7 46-7q66 0 113 47t47 113t-47 113t-113 47zm-416 0h-64V132q35 7 64 29v415zM256 161q28-22 64-29v444h-64V161zM128 573V259q16-3 32-3q15 0 32 4v316h-32q-16 0-32-3zM64 289v254q-30-22-47-55.5T0 416t17-71.5T64 289z"/></svg>`,
   appleMusic: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.84 12.15c.03 3.11 2.73 4.15 2.76 4.16c-.02.07-.43 1.5-1.42 2.96c-.86 1.27-1.75 2.54-3.15 2.57c-1.38.03-1.83-.82-3.41-.82s-2.08.79-3.38.85c-1.35.05-2.39-1.35-3.26-2.62c-1.78-2.58-3.14-7.29-1.31-10.47c.91-1.58 2.53-2.58 4.29-2.6c1.34-.03 2.6.9 3.41.9c.81 0 2.34-1.11 3.95-.95c.67.03 2.56.27 3.77 2.04c-.1.06-2.25 1.31-2.23 3.98ZM14.26 4.45c.72-.87 1.2-2.08 1.07-3.28c-1.04.04-2.3.69-3.05 1.56c-.67.77-1.26 2.01-1.1 3.19c1.16.09 2.35-.59 3.08-1.47Z"/></svg>`,
@@ -102,7 +102,6 @@ const els = {
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
   floatingToast: document.getElementById("floatingToast"),
-  heroTelegramIcon: document.getElementById("heroTelegramIcon")
 };
 
 bootstrap();
@@ -116,10 +115,6 @@ function bootstrap() {
 }
 
 function injectButtonIcons() {
-  if (els.heroTelegramIcon) {
-    els.heroTelegramIcon.innerHTML = SVG_ICONS.telegram;
-  }
-
   if (els.pasteButton) {
     els.pasteButton.innerHTML = `<span class="button-icon">${SVG_ICONS.paste}</span>`;
   }
@@ -166,7 +161,7 @@ function bindEvents() {
     const text = buildPrimaryLinksText(state.currentResult);
     if (!text) return;
     await copyText(text);
-    showFloatingToast("principais copiadas.");
+    showFloatingToast("principais copiadas!");
   });
 
   els.sharePrimaryButton?.addEventListener("click", async () => {
@@ -188,13 +183,13 @@ function bindEvents() {
     }
 
     await copyText(text);
-    showFloatingToast("principais copiadas.");
+    showFloatingToast("principais copiadas!");
   });
 
   els.copyOriginalButton?.addEventListener("click", async () => {
     if (!state.currentOriginalUrl) return;
     await copyText(state.currentOriginalUrl);
-    showFloatingToast("link original copiado.");
+    showFloatingToast("link original copiado!");
   });
 
   els.input?.addEventListener("keydown", event => {
@@ -285,7 +280,10 @@ async function onConvert() {
 
   softlyDismissKeyboard();
   setLoading(true);
-  hideResult();
+  els.platformGroups.innerHTML = "";
+  els.copyPrimaryButton.classList.add("hidden");
+  els.sharePrimaryButton.classList.add("hidden");
+  els.copyOriginalButton.classList.add("hidden");
   showStatus("swapando...", "default");
   startCoverShimmer();
 
@@ -374,25 +372,27 @@ function normalizeArtworkUrl(url) {
 }
 
 function parsePreview(title, description) {
-  const cleanTitle = cleanText(title);
-  const cleanDescription = cleanText(description);
+  const separators = [" - ", " – ", " • ", " | "];
+  let parts = [cleanDescription];
 
-  if (!cleanDescription) {
-    return {
-      title: cleanTitle,
-      artist: "",
-      album: ""
-    };
+  for (const separator of separators) {
+    if (cleanDescription.includes(separator)) {
+      parts = cleanDescription.split(separator).map(cleanText).filter(Boolean);
+      break;
+    }
   }
 
-  const titleLower = cleanTitle.toLowerCase();
-  const descriptionLower = cleanDescription.toLowerCase();
+  const uniqueParts = parts.filter(Boolean).filter(part => part.toLowerCase() !== cleanTitle.toLowerCase());
 
-  if (descriptionLower === titleLower) {
+  let artist = "";
+  let album = "";
+
+  if (uniqueParts.length >= 1) artist = uniqueParts[0];
+  if (uniqueParts.length >= 2) album = uniqueParts.slice(1).join(" • ");
     return {
       title: cleanTitle,
-      artist: "",
-      album: ""
+      artist,
+      album
     };
   }
 
@@ -523,16 +523,16 @@ function createPlatformItem(item) {
 
   row.querySelector('[data-action="copy"]').addEventListener("click", async () => {
     await copyText(item.url);
-    showInlineToast(row, `${item.name} copiado.`);
+    showInlineToast(row, `${item.name} copiado!`);
   });
 
   row.querySelector('[data-action="share"]').addEventListener("click", async () => {
     const shared = await shareLink(item);
     if (shared) {
-      showInlineToast(row, `${item.name} compartilhado.`);
+      showInlineToast(row, `${item.name} compartilhado!`);
     } else {
       await copyText(item.url);
-      showInlineToast(row, `${item.name} copiado.`);
+      showInlineToast(row, `${item.name} copiado!`);
     }
   });
 
@@ -668,7 +668,6 @@ function softlyDismissKeyboard() {
 }
 
 function hideResult() {
-  els.resultCard.classList.add("hidden");
   els.platformGroups.innerHTML = "";
   els.copyPrimaryButton.classList.add("hidden");
   els.sharePrimaryButton.classList.add("hidden");
