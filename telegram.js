@@ -7,10 +7,7 @@ if (tg) {
     tg.expand();
   } catch (_error) {}
 
-  try {
-    tg.setHeaderColor("#0f0f10");
-    tg.setBackgroundColor("#0b0b0d");
-  } catch (_error) {}
+  applyTelegramTheme();
 
   try {
     if (typeof tg.isVerticalSwipesEnabled !== "undefined" && tg.disableVerticalSwipes) {
@@ -33,6 +30,28 @@ if (tg) {
   syncTelegramViewportVars();
 }
 
+window.addEventListener("mls-theme-change", applyTelegramTheme);
+window.addEventListener("resize", syncTelegramViewportVars);
+window.addEventListener("orientationchange", syncTelegramViewportVars);
+
+function applyTelegramTheme() {
+  if (!tg) return;
+
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const headerColor = isDark ? "#0f0f10" : "#f7f8fb";
+  const backgroundColor = isDark ? "#0b0b0d" : "#f7f8fb";
+
+  try {
+    tg.setHeaderColor(headerColor);
+    tg.setBackgroundColor(backgroundColor);
+  } catch (_error) {}
+
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute("content", backgroundColor);
+  }
+}
+
 function syncTelegramViewportVars() {
   const viewportHeight = tg?.viewportHeight || window.innerHeight;
   const stableHeight = tg?.viewportStableHeight || window.innerHeight;
@@ -40,6 +59,3 @@ function syncTelegramViewportVars() {
   document.documentElement.style.setProperty("--tg-viewport-height", `${viewportHeight}px`);
   document.documentElement.style.setProperty("--tg-viewport-stable-height", `${stableHeight}px`);
 }
-
-window.addEventListener("resize", syncTelegramViewportVars);
-window.addEventListener("orientationchange", syncTelegramViewportVars);
