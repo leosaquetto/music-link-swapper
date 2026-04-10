@@ -158,6 +158,7 @@ button:active {
 .theme-toggle {
   position: absolute;
   top: max(-2px, calc(env(safe-area-inset-top) - 4px));
+  top: max(6px, env(safe-area-inset-top));
   right: 0;
   width: 40px;
   height: 40px;
