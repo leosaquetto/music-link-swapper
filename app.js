@@ -79,9 +79,7 @@ const state = {
   currentOriginalUrl: null,
   autoConvertedFromQuery: false,
   statusHideTimer: null,
-  floatingToastTimer: null,
-  lastClipboardText: "",
-  autoPasteInFlight: false
+  floatingToastTimer: null
 };
 
 const els = {
@@ -115,7 +113,6 @@ function bootstrap() {
   bindEvents();
   hydrateFromQuery();
   tryAutoPasteFromClipboard();
-  bindTelegramAutoPaste();
 }
 
 function injectButtonIcons() {
@@ -856,66 +853,4 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-function bindTelegramAutoPaste() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg) return;
-
-  const run = () => {
-    maybeAutoSwapFromTelegramClipboard();
-  };
-
-  run();
-  tg.onEvent?.("activated", run);
-}
-
-async function maybeAutoSwapFromTelegramClipboard() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg?.readTextFromClipboard) return;
-  if (state.autoPasteInFlight) return;
-
-  const startParam = tg?.initDataUnsafe?.start_param || "";
-  const shouldForceAuto = startParam === "auto";
-
-  state.autoPasteInFlight = true;
-
-  const delay = isIOSDevice() ? 500 : 220;
-
-  setTimeout(() => {
-    tg.readTextFromClipboard(async text => {
-      try {
-        const rawText = typeof text === "string" ? text.trim() : "";
-        if (!rawText) return;
-
-        const url = extractUrl(rawText);
-        if (!url || !isSupportedStreamingUrl(url)) return;
-
-        const currentInput = extractUrl(els.input?.value?.trim?.() || "");
-        const isSameAsInput = currentInput && currentInput === url;
-        const isSameAsLastClipboard = state.lastClipboardText === rawText;
-
-        if (!shouldForceAuto && (isSameAsInput || isSameAsLastClipboard)) {
-          return;
-        }
-
-        state.lastClipboardText = rawText;
-        els.input.value = url;
-
-        try {
-          tg.HapticFeedback?.notificationOccurred?.("success");
-        } catch (_error) {}
-
-        showFloatingToast("link capturado do clipboard.");
-
-        await onConvert();
-      } finally {
-        state.autoPasteInFlight = false;
-      }
-    });
-  }, delay);
-}
-
-function isIOSDevice() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent || "");
 }
