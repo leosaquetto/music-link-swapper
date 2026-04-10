@@ -93,14 +93,16 @@ button:active {
   min-height: 100dvh;
   margin: 0 auto;
   padding:
-    max(22px, calc(env(safe-area-inset-top) + 14px))
+    max(28px, calc(env(safe-area-inset-top) + 20px))
     12px
     max(18px, env(safe-area-inset-bottom));
+  overflow-x: clip;
 }
 
 .main-stack {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .card {
@@ -110,12 +112,13 @@ button:active {
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  min-width: 0;
 }
 
 .hero-card {
   display: grid;
   gap: 12px;
-  padding: 18px 14px 6px;
+  padding: 20px 14px 8px;
   margin-bottom: 10px;
 }
 
@@ -131,6 +134,7 @@ button:active {
   display: flex;
   gap: 16px;
   align-items: center;
+  min-width: 0;
 }
 
 .app-logo {
@@ -169,33 +173,6 @@ h1 {
   line-height: 1.42;
 }
 
-.hero-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  min-height: 34px;
-  padding: 9px 0 3px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.hero-note-icon {
-  width: 15px;
-  height: 15px;
-  color: var(--accent);
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 auto;
-}
-
-.hero-note-icon svg,
-.hero-note-icon img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 .form-card,
 .result-card,
 .status-card {
@@ -228,6 +205,7 @@ h1 {
     transform 180ms ease,
     background 180ms ease,
     color 180ms ease;
+  flex: 0 0 auto;
 }
 
 .input-row {
@@ -340,8 +318,11 @@ h1 {
   gap: 10px;
   margin-top: 12px;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  padding-bottom: 2px;
+  max-width: 100%;
 }
 
 .supported-chips::-webkit-scrollbar {
@@ -359,6 +340,7 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--muted);
   font-size: 12px;
+  flex: 0 0 auto;
 }
 
 .chip.icon-chip {
@@ -414,6 +396,7 @@ h1 {
   display: flex;
   gap: 12px;
   align-items: center;
+  min-width: 0;
 }
 
 .cover-wrap {
@@ -473,10 +456,12 @@ h1 {
   align-items: flex-start;
   gap: 10px;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .result-title-stack {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 h2 {
@@ -487,9 +472,9 @@ h2 {
 
 .result-meta {
   color: var(--muted);
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .result-head-actions {
@@ -520,6 +505,7 @@ h2 {
   display: grid;
   gap: 12px;
   margin-top: 16px;
+  min-width: 0;
 }
 
 .group-title {
@@ -533,6 +519,7 @@ h2 {
 .platform-list {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .platform-item {
@@ -550,6 +537,8 @@ h2 {
     transform 180ms ease,
     background 180ms ease,
     border-color 180ms ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .platform-item:hover {
@@ -568,23 +557,14 @@ h2 {
   font-size: 18px;
   font-weight: 800;
   color: var(--text);
+  flex: 0 0 auto;
 }
 
 .platform-icon svg,
 .platform-icon img {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.platform-icon svg[viewBox="0 0 48 48"] {
   width: 20px;
   height: 20px;
-}
-
-.platform-icon svg[viewBox="0 0 1024 622"] {
-  width: 19px;
-  height: 19px;
+  display: block;
 }
 
 .platform-copy {
@@ -629,6 +609,8 @@ h2 {
   align-items: center;
   justify-self: end;
   align-self: center;
+  flex: 0 0 auto;
+  max-width: 100%;
 }
 
 .mini-action {
@@ -724,7 +706,7 @@ h2 {
 }
 
 .result-card-live {
-  animation: resultPop 420ms cubic-bezier(0.2, 0.85, 0.2, 1);
+  animation: resultPop 320ms cubic-bezier(0.2, 0.85, 0.2, 1);
   transform-origin: top center;
 }
 
@@ -742,7 +724,7 @@ h2 {
 @keyframes resultPop {
   0% {
     opacity: 0;
-    transform: translateY(8px) scale(0.992);
+    transform: translateY(4px) scale(0.996);
   }
   100% {
     opacity: 1;
@@ -824,8 +806,8 @@ h2 {
   }
 
   .hero-card {
-    padding-left: 2px;
-    padding-right: 2px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .button-row-compact {
@@ -861,8 +843,18 @@ h2 {
   }
 
   .platform-item {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
     padding: 11px 12px;
     gap: 10px;
+  }
+
+  .platform-actions {
+    gap: 6px;
+  }
+
+  .mini-action {
+    width: 32px;
+    height: 32px;
   }
 
   .platform-name {
