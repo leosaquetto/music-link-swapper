@@ -113,7 +113,7 @@ button:active {
   min-height: 100dvh;
   margin: 0 auto;
   padding:
-    max(40px, calc(env(safe-area-inset-top) + 30px))
+    max(50px, calc(env(safe-area-inset-top) + 36px))
     14px
     max(20px, env(safe-area-inset-bottom));
   overflow-x: clip;
@@ -157,8 +157,7 @@ button:active {
 
 .theme-toggle {
   position: absolute;
-  top: max(-2px, calc(env(safe-area-inset-top) - 4px));
-  top: max(6px, env(safe-area-inset-top));
+  top: max(-10px, calc(env(safe-area-inset-top) - 10px));
   right: 0;
   width: 40px;
   height: 40px;
@@ -193,8 +192,8 @@ button:active {
 }
 
 .app-logo {
-  width: 108px;
-  height: 108px;
+  width: 116px;
+  height: 116px;
   border-radius: 24px;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -209,8 +208,8 @@ button:active {
 
 .eyebrow {
   color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 6px;
 }
@@ -220,6 +219,7 @@ h1 {
   line-height: 0.98;
   letter-spacing: -0.04em;
   color: #ed474c;
+  animation: titleFloat 7.5s ease-in-out infinite;
 }
 
 .hero-subtitle {
@@ -251,8 +251,8 @@ h1 {
 }
 
 .tiny-button {
-  border: 0;
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  background: rgba(18, 22, 35, 0.05);
   color: var(--muted);
   padding: 8px 12px;
   border-radius: 999px;
@@ -447,9 +447,9 @@ h1 {
 }
 
 .status-card.is-success {
-  color: #9c2333;
-  border-color: rgba(237, 71, 76, 0.26);
-  background: rgba(237, 71, 76, 0.12);
+  color: #1f6d33;
+  border-color: rgba(46, 191, 89, 0.32);
+  background: rgba(46, 191, 89, 0.14);
 }
 
 .result-card {
@@ -807,6 +807,16 @@ h2 {
   }
 }
 
+@keyframes titleFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
 @keyframes floatingToastIn {
   0% {
     opacity: 0;
@@ -1058,6 +1068,7 @@ h2 {
 
 :root[data-theme="dark"] h1 {
   color: #ffffff;
+  animation: none;
 }
 
 :root[data-theme="dark"] .primary-button {
@@ -1092,7 +1103,9 @@ h2 {
 }
 
 :root:not([data-theme="dark"]) .platform-item {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(246, 248, 253, 0.9);
+  border-color: rgba(18, 22, 35, 0.14);
+  box-shadow: 0 8px 20px rgba(25, 32, 50, 0.06);
 }
 
 :root:not([data-theme="dark"]) .platform-icon {
