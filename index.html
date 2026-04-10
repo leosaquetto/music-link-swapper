@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>music link swapper</title>
+    <meta name="theme-color" content="#0b0b0d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <div class="app-shell">
+      <header class="hero-card hero-card-transparent reveal">
+        <div class="hero-left">
+          <img class="app-logo" src="./assets/logo.svg" alt="logo do app" />
+          <div class="hero-copy">
+            <p class="eyebrow">telegram mini app</p>
+            <h1>music link swapper</h1>
+            <p class="hero-subtitle">
+              cole um link de streaming e descubra versões em outras plataformas em poucos toques.
+            </p>
+          </div>
+        </div>
+
+        <div class="hero-note">
+          <span id="heroTelegramIcon" class="hero-note-icon" aria-hidden="true"></span>
+          <span>feito para abrir lisinho no telegram</span>
+        </div>
+      </header>
+
+      <main class="main-stack">
+        <section id="accessGate" class="card status-card hidden" aria-live="polite"></section>
+
+        <section class="card form-card reveal reveal-delay-1">
+          <div class="label-row">
+            <label class="label" for="linkInput">link da música</label>
+            <button id="useSampleButton" class="tiny-button" type="button">usar exemplo</button>
+          </div>
+
+          <div class="input-row">
+            <input
+              id="linkInput"
+              class="text-input"
+              type="url"
+              inputmode="url"
+              placeholder="https://open.spotify.com/track/..."
+              autocomplete="off"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+          </div>
+
+          <div class="button-row button-row-compact">
+            <button id="convertButton" class="primary-button primary-button-wide" type="button">
+              swap
+            </button>
+
+            <button
+              id="pasteButton"
+              class="icon-button"
+              type="button"
+              aria-label="colar"
+              title="colar"
+            ></button>
+
+            <button
+              id="clearButton"
+              class="icon-button"
+              type="button"
+              aria-label="limpar"
+              title="limpar"
+            ></button>
+          </div>
+
+          <div class="supported-chips icon-chips" id="supportedChips"></div>
+        </section>
+
+        <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
+
+        <section id="resultCard" class="card result-card hidden reveal reveal-delay-2">
+          <div class="result-header">
+            <div id="coverWrap" class="cover-wrap hidden">
+              <div id="coverShimmer" class="cover-shimmer hidden" aria-hidden="true"></div>
+              <img id="coverImage" class="cover-image hidden" alt="capa do conteúdo" />
+            </div>
+
+            <div class="result-copy">
+              <p id="resultDescription" class="result-description hidden"></p>
+
+              <div class="result-title-row">
+                <div class="result-title-stack">
+                  <h2 id="resultTitle">resultado</h2>
+                  <p id="resultMeta" class="result-meta"></p>
+                </div>
+
+                <div class="result-head-actions">
+                  <button
+                    id="copyOriginalButton"
+                    class="mini-head-action hidden"
+                    type="button"
+                    aria-label="copiar original"
+                    title="copiar original"
+                  ></button>
+
+                  <button
+                    id="copyPrimaryButton"
+                    class="mini-head-action hidden"
+                    type="button"
+                    aria-label="copiar principais"
+                    title="copiar principais"
+                  ></button>
+
+                  <button
+                    id="sharePrimaryButton"
+                    class="mini-head-action hidden"
+                    type="button"
+                    aria-label="compartilhar principais"
+                    title="compartilhar principais"
+                  ></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="platformGroups" class="platform-groups"></div>
+        </section>
+      </main>
+
+      <div id="floatingToast" class="floating-toast hidden" aria-live="polite"></div>
+
+      <footer class="footer">by leo saquetto</footer>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="./telegram.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
