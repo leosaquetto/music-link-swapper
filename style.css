@@ -110,9 +110,9 @@ button:active {
   min-height: 100dvh;
   margin: 0 auto;
   padding:
-    max(28px, calc(env(safe-area-inset-top) + 20px))
-    12px
-    max(18px, env(safe-area-inset-bottom));
+    max(40px, calc(env(safe-area-inset-top) + 30px))
+    14px
+    max(20px, env(safe-area-inset-bottom));
   overflow-x: clip;
   isolation: isolate;
 }
@@ -135,7 +135,7 @@ button:active {
   position: relative;
   display: grid;
   gap: 12px;
-  padding: 20px 14px 8px;
+  padding: 26px 12px 10px;
   margin-bottom: 10px;
 }
 
@@ -150,6 +150,7 @@ button:active {
 
 .theme-toggle {
   position: absolute;
+  top: max(-2px, calc(env(safe-area-inset-top) - 4px));
   top: max(6px, env(safe-area-inset-top));
   right: 0;
   width: 40px;
@@ -161,11 +162,20 @@ button:active {
   display: grid;
   place-items: center;
   box-shadow: var(--shadow);
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    opacity 220ms ease;
 }
 
 .theme-toggle .button-icon {
   width: 18px;
   height: 18px;
+}
+
+.theme-toggle.is-switching .button-icon {
+  animation: themeToggleFade 220ms ease;
 }
 
 .hero-left {
@@ -176,8 +186,8 @@ button:active {
 }
 
 .app-logo {
-  width: 96px;
-  height: 96px;
+  width: 108px;
+  height: 108px;
   border-radius: 24px;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -202,6 +212,7 @@ h1 {
   font-size: clamp(24px, 5vw, 32px);
   line-height: 0.98;
   letter-spacing: -0.04em;
+  color: #ed474c;
 }
 
 .hero-subtitle {
@@ -214,7 +225,7 @@ h1 {
 .form-card,
 .result-card,
 .status-card {
-  padding: 14px;
+  padding: 16px;
 }
 
 .label-row {
@@ -257,7 +268,7 @@ h1 {
   min-width: 0;
   padding: 14px 16px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
   background: var(--panel-strong);
   color: var(--text);
   outline: none;
@@ -302,10 +313,10 @@ h1 {
 
 .primary-button {
   flex: 1;
-  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
-  color: #071208;
+  background: #ed474c;
+  color: #ffffff;
   font-weight: 800;
-  box-shadow: 0 10px 26px rgba(52, 199, 89, 0.18);
+  box-shadow: 0 10px 26px rgba(237, 71, 76, 0.22);
 }
 
 .primary-button:disabled {
@@ -426,9 +437,9 @@ h1 {
 }
 
 .status-card.is-success {
-  color: #dbffe4;
-  border-color: rgba(52, 199, 89, 0.22);
-  background: rgba(21, 76, 33, 0.35);
+  color: #9c2333;
+  border-color: rgba(237, 71, 76, 0.26);
+  background: rgba(237, 71, 76, 0.12);
 }
 
 .result-card {
@@ -486,7 +497,7 @@ h1 {
 }
 
 .result-description {
-  color: var(--accent);
+  color: #ed474c;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -657,7 +668,7 @@ h2 {
 }
 
 .platform-badge.is-verified {
-  color: #34c759;
+  color: #ed474c;
 }
 
 .platform-badge.is-found {
@@ -700,8 +711,8 @@ h2 {
 }
 
 .mini-action.open {
-  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
-  color: #071208;
+  background: #ed474c;
+  color: #ffffff;
 }
 
 .mini-action.is-pressed-copy,
@@ -745,7 +756,7 @@ h2 {
 
 .footer {
   text-align: center;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--muted);
   font-size: 12px;
   padding: 16px 0 6px;
 }
@@ -767,7 +778,11 @@ h2 {
 }
 
 .result-card-live {
-  animation: none;
+  animation: resultCardIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.result-card.is-exiting {
+  animation: resultCardOut 220ms ease both;
 }
 
 @keyframes reveal {
@@ -808,6 +823,43 @@ h2 {
     transform: scale(0.93);
   }
   100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes resultCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes resultCardOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@keyframes themeToggleFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
     transform: scale(1);
   }
 }
@@ -855,8 +907,8 @@ h2 {
 
 @media (max-width: 640px) {
   .app-shell {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .hero-card {
@@ -966,8 +1018,8 @@ h2 {
   }
 
   .app-logo {
-    width: 84px;
-    height: 84px;
+    width: 92px;
+    height: 92px;
     border-radius: 22px;
   }
 
@@ -991,4 +1043,56 @@ h2 {
 
 :root[data-theme="dark"] .app-logo {
   background: #101113;
+}
+
+:root[data-theme="dark"] h1 {
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .primary-button {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+  box-shadow: 0 10px 26px rgba(52, 199, 89, 0.18);
+}
+
+:root[data-theme="dark"] .status-card.is-success {
+  color: #dbffe4;
+  border-color: rgba(52, 199, 89, 0.22);
+  background: rgba(21, 76, 33, 0.35);
+}
+
+:root[data-theme="dark"] .result-description {
+  color: var(--accent);
+}
+
+:root[data-theme="dark"] .platform-badge.is-verified {
+  color: #34c759;
+}
+
+:root[data-theme="dark"] .mini-action.open {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+}
+
+:root:not([data-theme="dark"]) .icon-button,
+:root:not([data-theme="dark"]) .mini-action,
+:root:not([data-theme="dark"]) .mini-head-action {
+  background: rgba(18, 22, 35, 0.06);
+}
+
+:root:not([data-theme="dark"]) .platform-item {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+:root:not([data-theme="dark"]) .platform-icon {
+  background: rgba(18, 22, 35, 0.08);
+}
+
+:root:not([data-theme="dark"]) .chip {
+  background: rgba(18, 22, 35, 0.04);
+  border-color: rgba(18, 22, 35, 0.12);
+}
+
+:root[data-theme="dark"] .footer {
+  color: rgba(255, 255, 255, 0.38);
 }
