@@ -113,7 +113,7 @@ button:active {
   min-height: 100dvh;
   margin: 0 auto;
   padding:
-    max(50px, calc(env(safe-area-inset-top) + 36px))
+    max(62px, calc(env(safe-area-inset-top) + 44px))
     14px
     max(20px, env(safe-area-inset-bottom));
   overflow-x: clip;
@@ -157,7 +157,7 @@ button:active {
 
 .theme-toggle {
   position: absolute;
-  top: max(-10px, calc(env(safe-area-inset-top) - 10px));
+  top: max(-16px, calc(env(safe-area-inset-top) - 14px));
   right: 0;
   width: 40px;
   height: 40px;
@@ -192,8 +192,8 @@ button:active {
 }
 
 .app-logo {
-  width: 116px;
-  height: 116px;
+  width: 124px;
+  height: 124px;
   border-radius: 24px;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -211,7 +211,7 @@ button:active {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-top: 10px;
 }
 
 h1 {
@@ -638,6 +638,15 @@ h2 {
   max-width: 100%;
   max-height: 100%;
   transition: color 220ms ease;
+}
+
+.icon-chip-youTube,
+.icon-chip-youtube,
+.icon-chip-youtubeMusic,
+.platform-icon-youTube,
+.platform-icon-youtube,
+.platform-icon-youtubeMusic {
+  --yt-play-cutout: rgba(18, 22, 35, 0.08);
 }
 
 .platform-copy {
@@ -1117,18 +1126,29 @@ h2 {
   border-color: rgba(18, 22, 35, 0.12);
 }
 
+:root:not([data-theme="dark"]) .mini-action.open {
+  background: #ed474c;
+  color: #ffffff;
+}
+
 :root:not([data-theme="dark"]) .icon-chip-youTube,
+:root:not([data-theme="dark"]) .icon-chip-youtube,
+:root:not([data-theme="dark"]) .icon-chip-youtubeMusic,
 :root:not([data-theme="dark"]) .platform-icon-youTube,
 :root:not([data-theme="dark"]) .platform-icon-youtube,
 :root:not([data-theme="dark"]) .platform-icon-youtubeMusic {
-  color: #ed474c;
-}
-
-:root:not([data-theme="dark"]) .icon-chip-appleMusic,
-:root:not([data-theme="dark"]) .platform-icon-appleMusic {
-  color: #101325;
+  --yt-play-cutout: rgba(18, 22, 35, 0.08);
 }
 
 :root[data-theme="dark"] .footer {
   color: rgba(255, 255, 255, 0.38);
+}
+
+:root[data-theme="dark"] .icon-chip-youTube,
+:root[data-theme="dark"] .icon-chip-youtube,
+:root[data-theme="dark"] .icon-chip-youtubeMusic,
+:root[data-theme="dark"] .platform-icon-youTube,
+:root[data-theme="dark"] .platform-icon-youtube,
+:root[data-theme="dark"] .platform-icon-youtubeMusic {
+  --yt-play-cutout: rgba(255, 255, 255, 0.07);
 }
