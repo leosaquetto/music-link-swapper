@@ -231,7 +231,7 @@ h1 {
 .form-card,
 .result-card,
 .status-card {
-  padding: 14px;
+  padding: 16px;
 }
 
 .label-row {
@@ -1064,6 +1064,11 @@ h2 {
     width: 92px;
     height: 92px;
     border-radius: 22px;
+  }
+
+  .hero-kicker {
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
   }
 
   .hero-subtitle {
