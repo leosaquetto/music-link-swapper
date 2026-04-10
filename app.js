@@ -409,32 +409,6 @@ function parsePreview(title, description) {
     album
   };
 }
-  const separators = [" - ", " – ", " • ", " | "];
-  let parts = [cleanDescription];
-
-  for (const separator of separators) {
-    if (cleanDescription.includes(separator)) {
-      parts = cleanDescription.split(separator).map(cleanText).filter(Boolean);
-      break;
-    }
-  }
-
-  const filtered = parts.filter(part => part.toLowerCase() !== titleLower);
-
-  if (!filtered.length) {
-    return {
-      title: cleanTitle,
-      artist: "",
-      album: ""
-    };
-  }
-
-  return {
-    title: cleanTitle,
-    artist: filtered[0] || "",
-    album: filtered.slice(1).join(" • ")
-  };
-}
 
 function renderSupportedChips() {
   if (!els.supportedChips) return;
