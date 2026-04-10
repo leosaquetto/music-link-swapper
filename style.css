@@ -196,6 +196,36 @@ button:active {
   animation: themeToggleFade 220ms ease;
 }
 
+
+.theme-toggle {
+  position: absolute;
+  top: max(-16px, calc(env(safe-area-inset-top) - 14px));
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--panel);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    opacity 220ms ease;
+}
+
+.theme-toggle .button-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.theme-toggle.is-switching .button-icon {
+  animation: themeToggleFade 220ms ease;
+}
+
 .hero-left {
   display: flex;
   gap: 18px;
@@ -247,7 +277,7 @@ h1 {
 .form-card,
 .result-card,
 .status-card {
-  padding: 14px;
+  padding: 16px;
 }
 
 .label-row {
