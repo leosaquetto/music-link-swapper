@@ -1078,6 +1078,9 @@ function syncThemeToggleIcon() {
   setTimeout(() => {
     els.themeToggle?.classList.remove("is-switching");
   }, 220);
+  els.themeToggle.innerHTML = `<span class="button-icon">${isLight ? SVG_ICONS.moon : SVG_ICONS.sun}</span>`;
+  els.themeToggle.setAttribute("aria-label", isLight ? "ativar modo escuro" : "ativar modo claro");
+  els.themeToggle.setAttribute("title", isLight ? "modo escuro" : "modo claro");
 }
 
 function escapeHtml(value) {
