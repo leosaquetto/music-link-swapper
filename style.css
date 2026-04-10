@@ -239,6 +239,7 @@ h1 {
   grid-template-columns: minmax(0, 1fr) 52px 52px;
   gap: 10px;
   margin-top: 10px;
+  align-items: center;
 }
 
 .primary-button,
@@ -276,7 +277,7 @@ h1 {
   place-items: center;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1;
   transition:
     transform 180ms ease,
@@ -284,6 +285,12 @@ h1 {
     background 180ms ease,
     color 180ms ease,
     box-shadow 180ms ease;
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .supported-chips {
@@ -369,21 +376,22 @@ h2 {
 }
 
 .result-actions {
-  margin-top: 16px;
+  margin-top: 14px;
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .result-actions .secondary-button {
-  flex: 1 1 180px;
+  flex: 1 1 160px;
+  min-height: 44px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
 
 .platform-groups {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   margin-top: 18px;
 }
 
@@ -409,6 +417,7 @@ h2 {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 86px;
 }
 
 .platform-icon {
@@ -422,8 +431,15 @@ h2 {
   font-weight: 800;
 }
 
+.platform-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
 .platform-copy {
   min-width: 0;
+  align-self: start;
 }
 
 .platform-name {
@@ -450,21 +466,27 @@ h2 {
   gap: 8px;
   align-items: center;
   justify-self: end;
+  align-self: center;
 }
 
 .mini-action {
   border: 0;
-  min-width: 38px;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
-  font-size: 16px;
   line-height: 1;
   font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.mini-action svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .mini-action.open {
@@ -547,12 +569,11 @@ h2 {
   }
 
   .platform-item {
-    grid-template-columns: 42px minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    min-height: 78px;
   }
 
   .platform-actions {
-    grid-column: 2 / 3;
     justify-self: end;
   }
 
