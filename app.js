@@ -1,5 +1,5 @@
 const API_URL = "/api/convert";
-const SAMPLE_URL = "https://music.apple.com/br/album/swim/1868862375?i=1868862384";
+const SAMPLE_URL = "https://music.apple.com/br/album/who-will-you-follow/1891104460?i=1891104594";
 
 const REQUESTED_ADAPTERS = [
   "appleMusic",
