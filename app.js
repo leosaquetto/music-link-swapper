@@ -846,30 +846,40 @@ function escapeHtml(value) {
 // --- Automação Robusta via Atalhos iOS ---
 function handleAutoPaste() {
   const tg = window.Telegram?.WebApp;
+  
+  // O initDataUnsafe pode demorar um milissegundo para atualizar se o app acabou de abrir
   const startParam = tg?.initDataUnsafe?.start_param;
 
   if (startParam === "auto" && tg.readTextFromClipboard) {
-    tg.readTextFromClipboard((text) => {
-      if (!text) return;
-      
-      const url = extractUrl(text);
-      if (url && isSupportedStreamingUrl(url)) {
-        const input = document.getElementById("urlInput");
-        const searchButton = document.getElementById("searchButton");
+    // Adicionamos um pequeno delay (300ms) para o iOS liberar o foco do clipboard para o Telegram
+    setTimeout(() => {
+      tg.readTextFromClipboard((text) => {
+        if (!text) return;
         
-        if (input && searchButton) {
-          input.value = url;
-          // Feedback visual de que funcionou
-          tg.HapticFeedback.notificationOccurred("success");
-          setTimeout(() => searchButton.click(), 150);
+        const url = extractUrl(text);
+        if (url && isSupportedStreamingUrl(url)) {
+          const input = document.getElementById("urlInput");
+          const searchButton = document.getElementById("searchButton");
+          
+          if (input && searchButton) {
+            input.value = url;
+            tg.HapticFeedback.notificationOccurred("success");
+            // Dispara a busca
+            searchButton.click();
+          }
         }
-      }
-    });
+      });
+    }, 300);
   }
 }
 
-// Executa ao carregar
+// 1. Executa quando o app abre do zero
 document.addEventListener("DOMContentLoaded", handleAutoPaste);
 
-// Executa se o app já estiver aberto e o parâmetro mudar (caso o Telegram suporte)
-window.addEventListener("pageshow", handleAutoPaste);
+// 2. Executa se o app já estiver aberto em segundo plano e você clicar no atalho
+window.Telegram?.WebApp?.onEvent('activated', handleAutoPaste);
+
+// 3. Fallback para garantir que rode após o ready() do telegram.js
+if (window.Telegram?.WebApp?.initDataUnsafe?.start_param === "auto") {
+    handleAutoPaste();
+}
