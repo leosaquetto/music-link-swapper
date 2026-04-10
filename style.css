@@ -196,36 +196,6 @@ button:active {
   animation: themeToggleFade 220ms ease;
 }
 
-
-.theme-toggle {
-  position: absolute;
-  top: max(-16px, calc(env(safe-area-inset-top) - 14px));
-  right: 0;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: var(--panel);
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  box-shadow: var(--shadow);
-  transition:
-    background 180ms ease,
-    color 180ms ease,
-    border-color 180ms ease,
-    opacity 220ms ease;
-}
-
-.theme-toggle .button-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.theme-toggle.is-switching .button-icon {
-  animation: themeToggleFade 220ms ease;
-}
-
 .hero-left {
   display: flex;
   gap: 18px;
@@ -1189,7 +1159,10 @@ h2 {
 
 :root:not([data-theme="dark"]) .icon-chip-youTube,
 :root:not([data-theme="dark"]) .icon-chip-youtube,
-:root:not([data-theme="dark"]) .icon-chip-youtubeMusic,
+:root:not([data-theme="dark"]) .icon-chip-youtubeMusic {
+  --yt-play-cutout: rgba(18, 22, 35, 0.04);
+}
+
 :root:not([data-theme="dark"]) .platform-icon-youTube,
 :root:not([data-theme="dark"]) .platform-icon-youtube,
 :root:not([data-theme="dark"]) .platform-icon-youtubeMusic {
@@ -1202,7 +1175,10 @@ h2 {
 
 :root[data-theme="dark"] .icon-chip-youTube,
 :root[data-theme="dark"] .icon-chip-youtube,
-:root[data-theme="dark"] .icon-chip-youtubeMusic,
+:root[data-theme="dark"] .icon-chip-youtubeMusic {
+  --yt-play-cutout: rgba(255, 255, 255, 0.045);
+}
+
 :root[data-theme="dark"] .platform-icon-youTube,
 :root[data-theme="dark"] .platform-icon-youtube,
 :root[data-theme="dark"] .platform-icon-youtubeMusic {
