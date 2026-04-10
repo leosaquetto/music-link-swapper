@@ -35,6 +35,8 @@ const SVG_ICONS = {
   copy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18.327 7.286h-8.044a1.932 1.932 0 0 0-1.925 1.938v10.088c0 1.07.862 1.938 1.925 1.938h8.044a1.932 1.932 0 0 0 1.925-1.938V9.224c0-1.07-.862-1.938-1.925-1.938"/><path d="M15.642 7.286V4.688c0-.514-.203-1.007-.564-1.37a1.918 1.918 0 0 0-1.361-.568H5.673c-.51 0-1 .204-1.36.568a1.945 1.945 0 0 0-.565 1.37v10.088c0 .514.203 1.007.564 1.37c.361.364.85.568 1.361.568h2.685"/></g></svg>`,
   open: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15" d="M7 17L17 7m0 0H9m8 0v8"/></svg>`,
   share: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 16V4m0 0l-4 4m4-4l4 4"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M5 13.5v3.25A2.25 2.25 0 0 0 7.25 19h9.5A2.25 2.25 0 0 0 19 16.75V13.5"/></svg>`,
+  moon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.08 2.56a1 1 0 0 1 1.27 1.22a8.03 8.03 0 0 0 9.87 9.87a1 1 0 0 1 1.22 1.27A10 10 0 1 1 9.08 2.56Z"/></svg>`,
+  sun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"/></g></svg>`,
   unlink: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 54.971 54.971" aria-hidden="true"><g fill="currentColor"><path d="M51.173,3.801c-5.068-5.068-13.315-5.066-18.384,0l-9.192,9.192c-0.781,0.781-0.781,2.047,0,2.828c0.781,0.781,2.047,0.781,2.828,0l9.192-9.192c1.691-1.69,3.951-2.622,6.363-2.622c2.413,0,4.673,0.932,6.364,2.623s2.623,3.951,2.623,6.364c0,2.412-0.932,4.672-2.623,6.363L36.325,31.379c-3.51,3.508-9.219,3.508-12.729,0c-0.781-0.781-2.047-0.781-2.828,0s-0.781,2.048,0,2.828c2.534,2.534,5.863,3.801,9.192,3.801s6.658-1.267,9.192-3.801l12.021-12.021c2.447-2.446,3.795-5.711,3.795-9.192C54.968,9.512,53.62,6.248,51.173,3.801z"/><path d="M27.132,40.57l-7.778,7.778c-1.691,1.691-3.951,2.623-6.364,2.623c-2.412,0-4.673-0.932-6.364-2.623c-3.509-3.509-3.509-9.219,0-12.728L17.94,24.306c1.691-1.69,3.951-2.622,6.364-2.622c2.412,0,4.672,0.932,6.363,2.622c0.781,0.781,2.047,0.781,2.828,0s0.781-2.047,0-2.828c-5.067-5.067-13.314-5.068-18.384,0L3.797,32.793c-2.446,2.446-3.794,5.711-3.794,9.192c0,3.48,1.348,6.745,3.795,9.191c2.446,2.447,5.711,3.795,9.191,3.795c3.481,0,6.746-1.348,9.192-3.795l7.778-7.778c0.781-0.781,0.781-2.047,0-2.828S27.913,39.789,27.132,40.57z"/></g></svg>`,
   verified: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.55879 3.6972C10.7552 2.02216 13.2447 2.02216 14.4412 3.6972L14.6317 3.96387C14.8422 4.25867 15.1958 4.41652 15.5558 4.37652L16.4048 4.28218C18.3156 4.06988 19.9301 5.68439 19.7178 7.59513L19.6235 8.44415C19.5835 8.8042 19.7413 9.15774 20.0361 9.36831L20.3028 9.55879C21.9778 10.7552 21.9778 13.2447 20.3028 14.4412L20.0361 14.6317C19.7413 14.8422 19.5835 15.1958 19.6235 15.5558L19.7178 16.4048C19.9301 18.3156 18.3156 19.9301 16.4048 19.7178L15.5558 19.6235C15.1958 19.5835 14.8422 19.7413 14.6317 20.0361L14.4412 20.3028C13.2447 21.9778 10.7553 21.9778 9.55879 20.3028L9.36831 20.0361C9.15774 19.7413 8.8042 19.5835 8.44414 19.6235L7.59513 19.7178C5.68439 19.9301 4.06988 18.3156 4.28218 16.4048L4.37652 15.5558C4.41652 15.1958 4.25867 14.8422 3.96387 14.6317L3.6972 14.4412C2.02216 13.2447 2.02216 10.7553 3.6972 9.55879L3.96387 9.36831C4.25867 9.15774 4.41652 8.8042 4.37652 8.44414L4.28218 7.59513C4.06988 5.68439 5.68439 4.06988 7.59513 4.28218L8.44415 4.37652C8.8042 4.41652 9.15774 4.25867 9.36831 3.96387L9.55879 3.6972ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L11.8882 14.526C11.3977 15.0166 10.6023 15.0166 10.1118 14.526L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
   found: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L12.0243 14.3899C11.4586 14.9556 10.5414 14.9556 9.97568 14.3899L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
@@ -42,8 +44,8 @@ const SVG_ICONS = {
   qobuz: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 25" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 13.4434C12.521 13.4434 12.9434 13.021 12.9434 12.5C12.9434 11.979 12.521 11.5566 12 11.5566C11.479 11.5566 11.0566 11.979 11.0566 12.5C11.0566 13.021 11.479 13.4434 12 13.4434ZM12 15.7075C13.7715 15.7075 15.2075 14.2715 15.2075 12.5C15.2075 10.7285 13.7715 9.29245 12 9.29245C10.2285 9.29245 8.79245 10.7285 8.79245 12.5C8.79245 14.2715 10.2285 15.7075 12 15.7075Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.5C17.5228 2.5 22 6.97715 22 12.5C22 14.8535 21.1869 17.0172 19.8264 18.7254L21.9029 20.8019L20.3019 22.4029L18.2254 20.3264C16.5172 21.6869 14.3535 22.5 12 22.5C6.47715 22.5 2 18.0228 2 12.5C2 6.97715 6.47715 2.5 12 2.5ZM19.7358 12.5C19.7358 8.22761 16.2724 4.76415 12 4.76415C7.72761 4.76415 4.26415 8.22761 4.26415 12.5C4.26415 16.7724 7.72761 20.2358 12 20.2358C13.7278 20.2358 15.3234 19.6694 16.611 18.712L15.1618 17.2628C14.7197 16.8207 14.7197 16.1039 15.1618 15.6618C15.6039 15.2197 16.3207 15.2197 16.7628 15.6618L18.212 17.111C19.1694 15.8234 19.7358 14.2278 19.7358 12.5Z" fill="currentColor"/></svg>`,
   pandora: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M25.401 0h-18.803c-3.599 0-6.599 2.964-6.599 6.599v18.803c0 3.599 2.959 6.599 6.599 6.599h18.803c3.635 0 6.599-2.964 6.599-6.599v-18.803c0-3.599-2.964-6.599-6.599-6.599zM16.5 21.083h-1.64v3.72c0 0.479-0.401 0.859-0.86 0.859h-5.14v-19.317h8.739c4.245 0 7.527 2.197 7.527 7.197 0 4.74-3.641 7.537-8.604 7.537h-0.021z"/></svg>`,
   soundCloud: `<svg fill="currentColor" viewBox="-271 345.8 256 111.2" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g><path d="M-238.4,398.1c-0.8,0-1.4,0.6-1.5,1.5l-2.3,28l2.3,27.1c0.1,0.8,0.7,1.5,1.5,1.5c0.8,0,1.4-0.6,1.5-1.5l2.6-27.1l-2.6-28C-237,398.7-237.7,398.1-238.4,398.1z"/><path d="M-228.2,399.9c-0.9,0-1.7,0.7-1.7,1.7l-2.1,26l2.1,27.3c0.1,1,0.8,1.7,1.7,1.7c0.9,0,1.6-0.7,1.7-1.7l2.4-27.3l-2.4-26C-226.6,400.6-227.3,399.9-228.2,399.9z"/><path d="M-258.6,403.5c-0.5,0-1,0.4-1.1,1l-2.5,23l2.5,22.5c0.1,0.6,0.5,1,1.1,1c0.5,0,1-0.4,1.1-1l2.9-22.5l-2.9-23C-257.7,404-258.1,403.5-258.6,403.5z"/><path d="M-268.1,412.3c-0.5,0-1,0.4-1,1l-1.9,14.3l1.9,14c0.1,0.6,0.5,1,1,1s0.9-0.4,1-1l2.2-14l-2.2-14.2C-267.2,412.8-267.6,412.3-268.1,412.3z"/><path d="M-207.5,373.5c-1.2,0-2.1,0.9-2.2,2.1l-1.9,52l1.9,27.2c0.1,1.2,1,2.1,2.2,2.1s2.1-0.9,2.2-2.1l2.1-27.2l-2.1-52C-205.4,374.4-206.4,373.5-207.5,373.5z"/><path d="M-248.6,399c-0.7,0-1.2,0.5-1.3,1.3l-2.4,27.3l2.4,26.3c0.1,0.7,0.6,1.3,1.3,1.3c0.7,0,1.2-0.5,1.3-1.2l2.7-26.3l-2.7-27.3C-247.4,399.6-247.9,399-248.6,399z"/><path d="M-217.9,383.4c-1,0-1.9,0.8-1.9,1.9l-2,42.3l2,27.3c0.1,1.1,0.9,1.9,1.9,1.9s1.9-0.8,1.9-1.9l2.3-27.3l-2.3-42.3C-216,384.2-216.9,383.4-217.9,383.4z"/><path d="M-154.4,359.3c-1.8,0-3.2,1.4-3.2,3.2l-1.2,65l1.2,26.1c0,1.8,1.5,3.2,3.2,3.2c1.8,0,3.2-1.5,3.2-3.2l1.4-26.1l-1.4-65C-151.1,360.8-152.6,359.3-154.4,359.3z"/><path d="M-197.1,368.9c-1.3,0-2.3,1-2.4,2.4l-1.8,56.3l1.8,26.9c0,1.3,1.1,2.3,2.4,2.3s2.3-1,2.4-2.4l2-26.9l-2-56.3C-194.7,370-195.8,368.9-197.1,368.9z"/><path d="M-46.5,394c-4.3,0-8.4,0.9-12.2,2.4C-61.2,368-85,345.8-114,345.8c-7.1,0-14,1.4-20.1,3.8c-2.4,0.9-3,1.9-3,3.7v99.9c0,1.9,1.5,3.5,3.4,3.7c0.1,0,86.7,0,87.3,0c17.4,0,31.5-14.1,31.5-31.5C-15,408.1-29.1,394-46.5,394z"/><path d="M-143.6,353.2c-1.9,0-3.4,1.6-3.5,3.5l-1.4,70.9l1.4,25.7c0,1.9,1.6,3.4,3.5,3.4c1.9,0,3.4-1.6,3.5-3.5l1.5-25.8l-1.5-70.9C-140.2,354.8-141.7,353.2-143.6,353.2z"/><path d="M-186.5,366.8c-1.4,0-2.5,1.1-2.6,2.6l-1.6,58.2l1.6,26.7c0,1.4,1.2,2.6,2.6,2.6s2.5-1.1,2.6-2.6l1.8-26.7l-1.8-58.2C-184,367.9-185.1,366.8-186.5,366.8z"/><path d="M-175.9,368.1c-1.5,0-2.8,1.2-2.8,2.8l-1.5,56.7l1.5,26.5c0,1.6,1.3,2.8,2.8,2.8s2.8-1.2,2.8-2.8l1.7-26.5l-1.7-56.7C-173.1,369.3-174.3,368.1-175.9,368.1z"/><path d="M-165.2,369.9c-1.7,0-3,1.3-3,3l-1.4,54.7l1.4,26.3c0,1.7,1.4,3,3,3c1.7,0,3-1.3,3-3l1.5-26.3l-1.5-54.7C-162.2,371.3-163.5,369.9-165.2,369.9z"/></g></svg>`,
-  appleMusic: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.84 12.15c.03 3.11 2.73 4.15 2.76 4.16c-.02.07-.43 1.5-1.42 2.96c-.86 1.27-1.75 2.54-3.15 2.57c-1.38.03-1.83-.82-3.41-.82s-2.08.79-3.38.85c-1.35.05-2.39-1.35-3.26-2.62c-1.78-2.58-3.14-7.29-1.31-10.47c.91-1.58 2.53-2.58 4.29-2.6c1.34-.03 2.6.9 3.41.9c.81 0 2.34-1.11 3.95-.95c.67.03 2.56.27 3.77 2.04c-.1.06-2.25 1.31-2.23 3.98ZM14.26 4.45c.72-.87 1.2-2.08 1.07-3.28c-1.04.04-2.3.69-3.05 1.56c-.67.77-1.26 2.01-1.1 3.19c1.16.09 2.35-.59 3.08-1.47Z"/></svg>`,
-  youTube: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g><path fill="currentColor" d="M50,2.5C23.766,2.5,2.5,23.823,2.5,50.126c2.502,63.175,92.507,63.157,95-0.001C97.5,23.823,76.233,2.5,50,2.5z M50,77.399c-15.036,0-27.27-12.233-27.27-27.27c0.74-18.662,14.654-27.134,27.269-27.134c0.001,0,0.001,0,0.002,0c12.616,0.001,26.531,8.473,27.267,27.073C77.27,65.167,65.036,77.399,50,77.399z"/><path fill="currentColor" d="M50.002,26.103c-15.946-0.001-23.704,12.486-24.165,24.088C25.838,63.453,36.677,74.292,50,74.292S74.162,63.453,74.162,50.13C73.705,38.591,65.948,26.105,50.002,26.103z"/><path fill="currentColor" d="M41.055,52.528c-0.001,2.575,0.001,7.867,0,10.46c0,0,21.802-13.417,21.802-13.417L41.055,37.272V52.528z"/></g></svg>`,
+  appleMusic: `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="m24 6.124c0-.029.001-.063.001-.097 0-.743-.088-1.465-.253-2.156l.013.063c-.312-1.291-1.1-2.359-2.163-3.031l-.02-.012c-.536-.35-1.168-.604-1.847-.723l-.03-.004c-.463-.084-1.003-.138-1.553-.15h-.011c-.04 0-.083-.01-.124-.013h-12.025c-.152.01-.3.017-.455.026-.791.016-1.542.161-2.242.415l.049-.015c-1.306.501-2.327 1.495-2.853 2.748l-.012.033c-.17.409-.297.885-.36 1.38l-.003.028c-.051.343-.087.751-.1 1.165v.016c0 .032-.007.062-.01.093v12.224c.01.14.017.283.027.424.02.861.202 1.673.516 2.416l-.016-.043c.609 1.364 1.774 2.387 3.199 2.792l.035.009c.377.111.817.192 1.271.227l.022.001c.555.053 1.11.06 1.667.06h11.028c.554 0 1.099-.037 1.633-.107l-.063.007c.864-.096 1.645-.385 2.321-.823l-.021.013c.825-.539 1.47-1.29 1.867-2.176l.013-.032c.166-.383.295-.829.366-1.293l.004-.031c.084-.539.132-1.161.132-1.794 0-.086-.001-.171-.003-.256v.013q0-5.7 0-11.394zm-6.424 3.99v5.712c.001.025.001.054.001.083 0 .407-.09.794-.252 1.14l.007-.017c-.273.562-.771.979-1.373 1.137l-.015.003c-.316.094-.682.156-1.06.173h-.01c-.029.002-.062.002-.096.002-1.033 0-1.871-.838-1.871-1.871 0-.741.431-1.382 1.056-1.685l.011-.005c.293-.14.635-.252.991-.32l.027-.004c.378-.082.758-.153 1.134-.24.264-.045.468-.252.51-.513v-.003c.013-.057.02-.122.02-.189 0-.002 0-.003 0-.005q0-2.723 0-5.443c-.001-.066-.01-.13-.027-.19l.001.005c-.026-.134-.143-.235-.283-.235-.006 0-.012 0-.018.001h.001c-.178.013-.34.036-.499.07l.024-.004q-1.14.225-2.28.456l-3.7.748c-.016 0-.032.01-.048.013-.222.03-.392.219-.392.447 0 .015.001.03.002.045v-.002.13q0 3.9 0 7.801c.001.028.001.062.001.095 0 .408-.079.797-.224 1.152l.007-.021c-.264.614-.792 1.072-1.436 1.235l-.015.003c-.319.096-.687.158-1.067.172h-.008c-.031.002-.067.003-.104.003-.913 0-1.67-.665-1.815-1.536l-.001-.011c-.02-.102-.031-.218-.031-.338 0-.785.485-1.458 1.172-1.733l.013-.004c.315-.127.687-.234 1.072-.305l.036-.005c.287-.06.575-.116.86-.177.341-.05.6-.341.6-.693 0-.007 0-.015 0-.022v.001-.15q0-4.44 0-8.883c0-.002 0-.004 0-.007 0-.129.015-.254.044-.374l-.002.011c.066-.264.277-.466.542-.517l.004-.001c.255-.066.515-.112.774-.165.733-.15 1.466-.3 2.2-.444l2.27-.46c.67-.134 1.34-.27 2.01-.4.181-.042.407-.079.637-.104l.027-.002c.018-.002.04-.004.061-.004.27 0 .489.217.493.485.008.067.012.144.012.222v.001q0 2.865 0 5.732z"/></svg>`,
+  youTube: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g><path fill="currentColor" d="M50,2.5C23.766,2.5,2.5,23.823,2.5,50.126c2.502,63.175,92.507,63.157,95-0.001C97.5,23.823,76.233,2.5,50,2.5z M50,77.399c-15.036,0-27.27-12.233-27.27-27.27c0.74-18.662,14.654-27.134,27.269-27.134c0.001,0,0.001,0,0.002,0c12.616,0.001,26.531,8.473,27.267,27.073C77.27,65.167,65.036,77.399,50,77.399z"/><path fill="currentColor" d="M50.002,26.103c-15.946-0.001-23.704,12.486-24.165,24.088C25.838,63.453,36.677,74.292,50,74.292S74.162,63.453,74.162,50.13C73.705,38.591,65.948,26.105,50.002,26.103z"/><path fill="var(--yt-play-cutout, var(--bg))" d="M41.055,52.528c-0.001,2.575,0.001,7.867,0,10.46c0,0,21.802-13.417,21.802-13.417L41.055,37.272V52.528z"/></g></svg>`,
   deezer: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M24.511 22.011v3.785h6.484v-3.786h-6.486zM16.676 22.011v3.785h6.486v-3.786h-6.486zM8.84 22.011v3.785h6.484v-3.786h-6.486zM1.004 22.011v3.785h6.486v-3.786h-6.486zM24.511 16.742v3.783h6.484v-3.783h-6.484zM16.676 16.742v3.783h6.486v-3.783zM8.84 16.742v3.783h6.484v-3.783h-6.484zM24.51 11.476v3.783h6.486v-3.783zM8.84 11.476v3.783h6.484v-3.783h-6.484zM24.51 6.203v3.786h6.486v-3.786z"></path></svg>`,
   bandcamp: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.29 6L2 18h14.71L22 6z"/></svg>`,
   tidal: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M16.016 5.323l-5.339 5.339-5.339-5.339-5.339 5.339 5.339 5.339 5.339-5.339 5.339 5.339-5.339 5.339 5.339 5.339 5.339-5.339-5.339-5.339 5.339-5.339zM21.391 10.661l5.302-5.307 5.307 5.307-5.307 5.307z"/></svg>`
@@ -84,7 +86,8 @@ const state = {
   lastAutoUrl: "",
   autoPasteInFlight: false,
   activeButtonResetTimers: new WeakMap(),
-  scrollAfterConvert: false
+  scrollAfterConvert: false,
+  hideResultTimer: null
 };
 
 const els = {
@@ -106,7 +109,8 @@ const els = {
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
-  floatingToast: document.getElementById("floatingToast")
+  floatingToast: document.getElementById("floatingToast"),
+  themeToggle: document.getElementById("themeToggle")
 };
 
 bootstrap();
@@ -114,6 +118,7 @@ bootstrap();
 function bootstrap() {
   injectButtonIcons();
   renderSupportedChips();
+  initTheme();
   bindEvents();
   hydrateFromQuery();
   tryAutoPasteFromClipboard();
@@ -140,9 +145,15 @@ function injectButtonIcons() {
   if (els.copyOriginalButton) {
     els.copyOriginalButton.innerHTML = `<span class="button-icon">${SVG_ICONS.unlink}</span>`;
   }
+
+  if (els.themeToggle) {
+    syncThemeToggleIcon();
+  }
 }
 
 function bindEvents() {
+  els.themeToggle?.addEventListener("click", toggleTheme);
+
   els.convertButton?.addEventListener("click", () => {
     onConvert({ shouldScrollToStatus: true });
   });
@@ -554,13 +565,15 @@ function renderSupportedChips() {
   els.supportedChips.innerHTML = SUPPORTED_PLATFORM_CHIPS
     .map(key => {
       const meta = PLATFORM_META[key];
-      return `<span class="chip icon-chip" title="${escapeHtml(meta.name)}" aria-label="${escapeHtml(meta.name)}">${meta.icon}</span>`;
+      return `<span class="chip icon-chip icon-chip-${escapeHtml(key)}" title="${escapeHtml(meta.name)}" aria-label="${escapeHtml(meta.name)}">${meta.icon}</span>`;
     })
     .join("");
 }
 
 function renderResult(result) {
-  els.resultCard.classList.remove("hidden");
+  clearTimeout(state.hideResultTimer);
+  els.resultCard.classList.remove("hidden", "is-exiting");
+  els.resultCard.classList.add("result-card-live");
   els.platformGroups.innerHTML = "";
 
   els.resultTitle.textContent = result.title || "resultado";
@@ -621,7 +634,7 @@ function createPlatformItem(item) {
   row.className = "platform-item";
 
   row.innerHTML = `
-    <div class="platform-icon">${item.icon}</div>
+    <div class="platform-icon platform-icon-${escapeHtml(item.key)}">${item.icon}</div>
     <div class="platform-copy">
       <div class="platform-name-row">
         <div class="platform-name">${escapeHtml(item.name)}</div>
@@ -826,7 +839,23 @@ function softlyDismissKeyboard() {
 }
 
 function hideResult() {
-  els.resultCard.classList.add("hidden");
+  clearTimeout(state.hideResultTimer);
+
+  if (!els.resultCard.classList.contains("hidden")) {
+    els.resultCard.classList.remove("result-card-live");
+    els.resultCard.classList.add("is-exiting");
+    state.hideResultTimer = setTimeout(() => {
+      els.platformGroups.innerHTML = "";
+      els.copyPrimaryButton.classList.add("hidden");
+      els.sharePrimaryButton.classList.add("hidden");
+      els.copyOriginalButton.classList.add("hidden");
+      hideCoverImage();
+      els.resultCard.classList.remove("is-exiting");
+      els.resultCard.classList.add("hidden");
+    }, 220);
+    return;
+  }
+
   els.platformGroups.innerHTML = "";
   els.copyPrimaryButton.classList.add("hidden");
   els.sharePrimaryButton.classList.add("hidden");
@@ -989,13 +1018,13 @@ function cleanText(str) {
 }
 
 async function copyText(text) {
-  if (window.Telegram?.WebApp?.Clipboard?.writeText) {
-    window.Telegram.WebApp.Clipboard.writeText(text);
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
     return;
   }
 
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
+  if (window.Telegram?.WebApp?.Clipboard?.writeText) {
+    window.Telegram.WebApp.Clipboard.writeText(text);
     return;
   }
 
@@ -1005,6 +1034,50 @@ async function copyText(text) {
   temp.select();
   document.execCommand("copy");
   temp.remove();
+}
+
+
+function getPreferredTheme() {
+  const persisted = localStorage.getItem("mls-theme");
+  if (persisted === "light" || persisted === "dark") return persisted;
+
+  return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+}
+
+function initTheme() {
+  applyTheme(getPreferredTheme(), { persist: false });
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  applyTheme(current === "light" ? "dark" : "light");
+}
+
+function applyTheme(theme, { persist = true } = {}) {
+  const normalized = theme === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", normalized);
+  syncThemeToggleIcon();
+
+  if (persist) {
+    localStorage.setItem("mls-theme", normalized);
+  }
+
+  window.dispatchEvent(new CustomEvent("mls-theme-change", { detail: { theme: normalized } }));
+}
+
+function syncThemeToggleIcon() {
+  if (!els.themeToggle) return;
+
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const isLight = current === "light";
+  els.themeToggle.classList.add("is-switching");
+  els.themeToggle.innerHTML = `<span class="button-icon">${isLight ? SVG_ICONS.moon : SVG_ICONS.sun}</span>`;
+  els.themeToggle.setAttribute("aria-label", isLight ? "ativar modo escuro" : "ativar modo claro");
+  els.themeToggle.setAttribute("title", isLight ? "modo escuro" : "modo claro");
+
+  setTimeout(() => {
+    els.themeToggle?.classList.remove("is-switching");
+  }, 220);
 }
 
 function escapeHtml(value) {
