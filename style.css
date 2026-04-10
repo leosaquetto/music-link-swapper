@@ -553,9 +553,9 @@ h2 {
 
 .mini-head-action {
   border: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.06);
@@ -569,8 +569,8 @@ h2 {
 }
 
 .mini-head-action .button-icon {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
 }
 
 .platform-groups {
@@ -801,7 +801,7 @@ h2 {
 }
 
 .result-card-live {
-  animation: resultCardIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: resultCardIn 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .result-card.is-exiting {
@@ -863,11 +863,13 @@ h2 {
 @keyframes resultCardIn {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.985);
+    transform: translateY(16px) scale(0.98);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -1095,7 +1097,6 @@ h2 {
 
 :root[data-theme="dark"] h1 {
   color: #ffffff;
-  animation: none;
 }
 
 :root[data-theme="dark"] .primary-button {
@@ -1137,10 +1138,6 @@ h2 {
 
 :root:not([data-theme="dark"]) .platform-icon {
   background: rgba(18, 22, 35, 0.08);
-  color: #ed474c;
-}
-
-:root:not([data-theme="dark"]) .chip.icon-chip {
   color: #ed474c;
 }
 
