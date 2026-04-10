@@ -372,6 +372,17 @@ function normalizeArtworkUrl(url) {
 }
 
 function parsePreview(title, description) {
+  const cleanTitle = cleanText(title);
+  const cleanDescription = cleanText(description);
+
+  if (!cleanDescription) {
+    return {
+      title: cleanTitle,
+      artist: "",
+      album: ""
+    };
+  }
+
   const separators = [" - ", " – ", " • ", " | "];
   let parts = [cleanDescription];
 
@@ -382,20 +393,22 @@ function parsePreview(title, description) {
     }
   }
 
-  const uniqueParts = parts.filter(Boolean).filter(part => part.toLowerCase() !== cleanTitle.toLowerCase());
+  const uniqueParts = parts
+    .filter(Boolean)
+    .filter(part => part.toLowerCase() !== cleanTitle.toLowerCase());
 
   let artist = "";
   let album = "";
 
   if (uniqueParts.length >= 1) artist = uniqueParts[0];
   if (uniqueParts.length >= 2) album = uniqueParts.slice(1).join(" • ");
-    return {
-      title: cleanTitle,
-      artist,
-      album
-    };
-  }
 
+  return {
+    title: cleanTitle,
+    artist,
+    album
+  };
+}
   const separators = [" - ", " – ", " • ", " | "];
   let parts = [cleanDescription];
 
