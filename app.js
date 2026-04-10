@@ -843,9 +843,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-// --- Automação Robusta via Atalhos iOS ---
 // --- Automação Ultra-Resiliente para iOS ---
-
 function handleAutoPaste() {
   const tg = window.Telegram?.WebApp;
   if (!tg) return;
