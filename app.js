@@ -843,39 +843,33 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+// --- Automação Robusta via Atalhos iOS ---
+function handleAutoPaste() {
   const tg = window.Telegram?.WebApp;
-  
-  // 1. Verifica se o parâmetro 'startapp' é 'auto'
   const startParam = tg?.initDataUnsafe?.start_param;
 
-  if (startParam === "auto") {
-    // 2. Tenta ler o clipboard automaticamente
-    if (tg.readTextFromClipboard) {
-      tg.readTextFromClipboard((text) => {
-        const url = extractUrl(text);
+  if (startParam === "auto" && tg.readTextFromClipboard) {
+    tg.readTextFromClipboard((text) => {
+      if (!text) return;
+      
+      const url = extractUrl(text);
+      if (url && isSupportedStreamingUrl(url)) {
+        const input = document.getElementById("urlInput");
+        const searchButton = document.getElementById("searchButton");
         
-        if (url && isSupportedStreamingUrl(url)) {
-          // 3. Preenche o input visualmente
-          const input = document.getElementById("urlInput");
-          if (input) input.value = url;
-
-          // 4. Dispara a conversão automaticamente
-          // No seu app-3.js a função principal parece ser a lógica do searchButton
-          handleConvert(url); 
-        } else {
-          tg.HapticFeedback.notificationOccurred("error");
-          showToast("Link inválido ou não suportado na área de transferência.");
+        if (input && searchButton) {
+          input.value = url;
+          // Feedback visual de que funcionou
+          tg.HapticFeedback.notificationOccurred("success");
+          setTimeout(() => searchButton.click(), 150);
         }
-      });
-    }
+      }
+    });
   }
-});
-
-// Função auxiliar para disparar a conversão (adapte conforme o nome da sua função no app-3.js)
-async function handleConvert(url) {
-  // Aqui você chama a mesma lógica que o seu searchButton.click() faria
-  // Exemplo: processUrl(url);
-  const searchButton = document.getElementById("searchButton");
-  if (searchButton) searchButton.click();
 }
+
+// Executa ao carregar
+document.addEventListener("DOMContentLoaded", handleAutoPaste);
+
+// Executa se o app já estiver aberto e o parâmetro mudar (caso o Telegram suporte)
+window.addEventListener("pageshow", handleAutoPaste);
