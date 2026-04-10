@@ -10,6 +10,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>music link swapper</title>
     <meta name="theme-color" content="#f7f8fb" />
+    <script>
+      (function syncInitialThemeMeta() {
+        try {
+          var savedTheme = localStorage.getItem("mls-theme");
+          var theme = savedTheme === "dark" ? "dark" : "light";
+          var color = theme === "dark" ? "#0b0b0d" : "#f7f8fb";
+          document.documentElement.setAttribute("data-theme", theme);
+          var themeMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeMeta) themeMeta.setAttribute("content", color);
+        } catch (_error) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,7 +37,6 @@
     <div class="app-shell">
       <header class="hero-card reveal">
         <div class="hero-topbar">
-          <p class="hero-kicker">mini app • smart links</p>
           <button id="themeToggle" class="theme-toggle" type="button" aria-label="alternar tema" title="alternar tema"></button>
         </div>
 
