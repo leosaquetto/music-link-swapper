@@ -336,9 +336,16 @@ h1 {
 
 .supported-chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 10px;
   margin-top: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.supported-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .icon-chips {
@@ -602,9 +609,10 @@ h2 {
 
 .platform-note svg,
 .platform-note img {
-  width: 13px;
-  height: 13px;
+  width: 16px;
+  height: 16px;
   display: block;
+  flex: 0 0 auto;
 }
 
 .platform-note.is-verified {
