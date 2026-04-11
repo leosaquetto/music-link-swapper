@@ -1,5 +1,6 @@
 const API_URL = "/api/convert";
 const SAMPLE_URL = "https://music.apple.com/br/album/who-will-you-follow/1891104460?i=1891104594";
+const HERO_LOGO_GIF_URL = "https://i.imgur.com/T1uEx9T.gif?v=20260411";
 
 const REQUESTED_ADAPTERS = [
   "appleMusic",
@@ -122,12 +123,14 @@ const els = {
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
   floatingToast: document.getElementById("floatingToast"),
   themeToggle: document.getElementById("themeToggle"),
-  viewportFillSpacer: document.getElementById("viewportFillSpacer")
+  viewportFillSpacer: document.getElementById("viewportFillSpacer"),
+  heroLogo: document.querySelector(".app-logo")
 };
 
 bootstrap();
 
 function bootstrap() {
+  forceHeroGifLogo();
   installIOSViewportBounceGuard();
   initIOSViewportFillAssist();
   injectButtonIcons();
@@ -137,6 +140,13 @@ function bootstrap() {
   bindLaunchQueueConsumer();
   hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
+}
+
+function forceHeroGifLogo() {
+  if (!els.heroLogo) return;
+  if (els.heroLogo.src !== HERO_LOGO_GIF_URL) {
+    els.heroLogo.src = HERO_LOGO_GIF_URL;
+  }
 }
 
 function initIOSViewportFillAssist() {
