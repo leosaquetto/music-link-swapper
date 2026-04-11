@@ -142,7 +142,6 @@ function installIOSViewportBounceGuard() {
   const isFxiOS = /FxiOS/i.test(ua);
 
   if (!isIOS || !isWebKit || isCriOS || isFxiOS) return;
-  document.documentElement.classList.add("ios-safari");
 
   let startY = 0;
   let startX = 0;
@@ -170,12 +169,6 @@ function installIOSViewportBounceGuard() {
       if (!isVerticalSwipe) return;
 
       const scrollRoot = document.scrollingElement || document.documentElement;
-      const canScroll = scrollRoot.scrollHeight > window.innerHeight + 1;
-      if (!canScroll) {
-        event.preventDefault();
-        return;
-      }
-
       const atTop = scrollRoot.scrollTop <= 0;
       const atBottom = scrollRoot.scrollTop + window.innerHeight >= scrollRoot.scrollHeight - 1;
       const pullingDownAtTop = atTop && deltaY > 0;
@@ -1149,6 +1142,10 @@ function toggleTheme() {
   applyTheme(current === "light" ? "dark" : "light");
 }
 
+function getThemeChromeColor(theme) {
+  return theme === "dark" ? "#14181f" : "#e6dce2";
+}
+
 function applyTheme(theme, { persist = true } = {}) {
   const normalized = theme === "dark" ? "dark" : "light";
   document.documentElement.classList.add("theme-switching");
@@ -1165,7 +1162,7 @@ function applyTheme(theme, { persist = true } = {}) {
   window.dispatchEvent(new CustomEvent("mls-theme-change", { detail: { theme: normalized } }));
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute("content", normalized === "dark" ? "#0f2416" : "#f06b90");
+    themeMeta.setAttribute("content", getThemeChromeColor(normalized));
   }
 
   state.themeSwitchTimer = setTimeout(() => {
