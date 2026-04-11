@@ -196,12 +196,12 @@ button:active {
 }
 
 .app-logo {
-  width: 116px;
-  height: 116px;
+  width: 113px;
+  height: 113px;
   border-radius: 24px;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
   background: #ffffff;
   flex: 0 0 auto;
 }
