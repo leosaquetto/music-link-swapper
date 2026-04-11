@@ -27,6 +27,17 @@
   --control-size: 50px;
   --control-radius: 16px;
   --byline: #ec8189;
+  --page-background:
+    linear-gradient(
+      180deg,
+      rgba(243, 95, 127, 0.2) 0%,
+      rgba(243, 95, 127, 0.08) 24%,
+      rgba(247, 248, 251, 0.4) 52%,
+      rgba(46, 191, 89, 0.16) 100%
+    ),
+    radial-gradient(circle at 10% 14%, rgba(243, 95, 127, 0.24), transparent 36%),
+    radial-gradient(circle at 88% 90%, rgba(46, 191, 89, 0.22), transparent 34%),
+    var(--bg);
 }
 
 :root[data-theme="dark"] {
@@ -45,6 +56,16 @@
   --found: #8e8e93;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
   --byline: #34c759;
+  --page-background:
+    linear-gradient(
+      180deg,
+      rgba(237, 71, 76, 0.22) 0%,
+      rgba(16, 18, 24, 0.72) 48%,
+      rgba(52, 199, 89, 0.2) 100%
+    ),
+    radial-gradient(circle at 12% 8%, rgba(237, 71, 76, 0.24), transparent 35%),
+    radial-gradient(circle at 90% 86%, rgba(52, 199, 89, 0.2), transparent 33%),
+    var(--bg);
 }
 
 html,
@@ -65,7 +86,9 @@ html {
 }
 
 html {
-  background: var(--bg);
+  background: var(--page-background);
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 body {
@@ -73,13 +96,10 @@ body {
   min-height: 100svh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    var(--bg);
+  background: var(--page-background);
   background-repeat: no-repeat;
   background-size: cover;
-  background-attachment: scroll;
+  background-attachment: fixed;
   color: var(--text);
   overscroll-behavior-y: none;
   position: relative;
