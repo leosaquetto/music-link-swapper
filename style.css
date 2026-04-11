@@ -32,8 +32,8 @@
   --bg: #0b0b0d;
   --panel: rgba(28, 28, 30, 0.84);
   --panel-strong: rgba(34, 34, 38, 0.96);
-  --line: rgba(255, 255, 255, 0.08);
-  --line-soft: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.12);
+  --line-soft: rgba(255, 255, 255, 0.10);
   --text: #ffffff;
   --muted: #a4a7b0;
   --soft: #7b8190;
@@ -140,7 +140,7 @@ button:active {
     box-shadow 260ms ease;
 }
 
-.hero-card {
+.hero-card {  
   position: relative;
   display: grid;
   gap: 12px;
@@ -1178,6 +1178,7 @@ h2 {
 :root:not([data-theme="dark"]) .platform-icon {
   background: rgba(18, 22, 35, 0.08);
   color: #ed474c;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 :root:not([data-theme="dark"]) .chip {
