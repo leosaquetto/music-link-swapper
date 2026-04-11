@@ -51,16 +51,29 @@ html {
   height: 100%;
   width: 100%;
   overflow: auto;
-  /* Gradiente fixo na viewport, cobre overscroll naturalmente */
-  background-attachment: fixed;
-  background-image: 
+  background-color: var(--bg); /* cor sólida de fallback, mesma do gradiente */
+  position: relative;
+}
+
+html::before {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: -2;
+  pointer-events: none;
+  background: 
     radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%);
-  background-color: var(--bg); /* fallback sólido da mesma cor do gradiente */
-  background-repeat: no-repeat;
+    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%),
+    var(--bg);
   background-size: cover;
   background-position: center;
-  transition: background-color 260ms ease, background-image 260ms ease;
+  background-repeat: no-repeat;
+  transition: background 260ms ease;
 }
 
 body {
@@ -73,6 +86,8 @@ body {
   -webkit-overflow-scrolling: touch;
   background-color: transparent;
   color: var(--text);
+  position: relative;
+  z-index: 1;
 }
 
 button,
