@@ -15,13 +15,13 @@
     <title>music link swapper</title>
     <link rel="canonical" href="https://swapper.leosaquetto.com/" />
     <meta property="og:url" content="https://swapper.leosaquetto.com/" />
-    <meta name="theme-color" content="#f06b90" />
+    <meta name="theme-color" content="#f7f8fb" />
     <script>
       (function syncInitialThemeMeta() {
         try {
           var savedTheme = localStorage.getItem("mls-theme");
           var theme = savedTheme === "dark" ? "dark" : "light";
-          var color = theme === "dark" ? "#0f2416" : "#f06b90";
+          var color = theme === "dark" ? "#0b0b0d" : "#f7f8fb";
           document.documentElement.setAttribute("data-theme", theme);
           var themeMeta = document.querySelector('meta[name="theme-color"]');
           if (themeMeta) themeMeta.setAttribute("content", color);
@@ -47,7 +47,7 @@
         </div>
 
           <div class="hero-left">
-            <img class="app-logo" src="https://i.imgur.com/T1uEx9T.gif" alt="logo do app" />
+            <img class="app-logo" src="https://i.imgur.com/T1uEx9T.gif?v=20260411" alt="logo do app" />
             <div class="hero-copy">
               <h1>music link<br />swapper</h1>
               <p class="hero-byline">por leo saquetto</p>
@@ -156,11 +156,26 @@
         </section>
       </main>
 
+      <div id="viewportFillSpacer" class="viewport-fill-spacer" aria-hidden="true"></div>
+
       <div id="floatingToast" class="floating-toast hidden" aria-live="polite"></div>
 
       <footer class="footer">
+        <a
+          class="shortcut-card"
+          href="https://www.icloud.com/shortcuts/73dbfa8d2292493da4f48a0388d5cf07"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="ios shortcut available"
+        >
+          <svg viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" height="16" width="16" aria-hidden="true">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M2.16593 7.54673c-1.13208-0.72047-1.13208-2.37303 0.00001-3.09345l4.13399-2.63073c1.03727-0.66009 2.36294-0.66009 3.40021 0l4.134 2.63072c1.13207 0.72042 1.13207 2.37298 0 3.09345l-4.134 2.63073c-1.03727 0.66007-2.36293 0.66007-3.40021 0L2.16593 7.54673Z" fill="currentColor"></path>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="m13.1072 7.99067-3.40707-2.16812c-1.03727-0.66009-2.36287-0.6601-3.40019 0L2.89289 7.99067l3.94391 2.5098c0.70973 0.4516 1.61673 0.4516 2.32647 0l3.94393-2.5098Zm0.9072 0.59267c-0.0565 0.04607-0.1166 0.08953-0.18027 0.13007l-4.134 2.63073c-1.03727 0.66007-2.36293 0.66007-3.40021 0L2.16593 8.7134c-0.06366-0.04053-0.12374-0.084-0.18024-0.13007-0.94824 0.77327-0.88815 2.28347 0.18026 2.96333l4.13399 2.63073c1.03732 0.66013 2.36292 0.66013 3.40019 0l4.134-2.63073c1.06847-0.67987 1.12853-2.19007 0.18027-2.96333Z" fill="currentColor"></path>
+          </svg>
+          <span class="shortcut-text">ios shortcut available</span>
+        </a>
         <p>feito por 🇧🇷 <a href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer">leo saquetto</a></p>
-        <p>powered by <a href="https://idonthavespotify.sjdonado.com" target="_blank" rel="noopener noreferrer">idonthavespotify</a></p>
+        <p>powered by <a href="https://idonthavespotify.sjdonado.com" target="_blank" rel="noopener noreferrer">idonthavespotify</a> &amp; <a href="https://odesli.co" target="_blank" rel="noopener noreferrer"><strong>odesli</strong></a></p>
       </footer>
     </div>
 
