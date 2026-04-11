@@ -27,6 +27,17 @@
   --control-size: 50px;
   --control-radius: 16px;
   --byline: #ec8189;
+  --page-background:
+    linear-gradient(
+      180deg,
+      rgba(243, 95, 127, 0.2) 0%,
+      rgba(243, 95, 127, 0.08) 24%,
+      rgba(247, 248, 251, 0.4) 52%,
+      rgba(46, 191, 89, 0.16) 100%
+    ),
+    radial-gradient(circle at 10% 14%, rgba(243, 95, 127, 0.24), transparent 36%),
+    radial-gradient(circle at 88% 90%, rgba(46, 191, 89, 0.22), transparent 34%),
+    var(--bg);
 }
 
 :root[data-theme="dark"] {
@@ -45,34 +56,53 @@
   --found: #8e8e93;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
   --byline: #34c759;
+  --page-background:
+    linear-gradient(
+      180deg,
+      rgba(237, 71, 76, 0.22) 0%,
+      rgba(16, 18, 24, 0.72) 48%,
+      rgba(52, 199, 89, 0.2) 100%
+    ),
+    radial-gradient(circle at 12% 8%, rgba(237, 71, 76, 0.24), transparent 35%),
+    radial-gradient(circle at 90% 86%, rgba(52, 199, 89, 0.2), transparent 33%),
+    var(--bg);
 }
 
 html,
 body {
   width: 100%;
-  min-height: 100dvh;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   touch-action: manipulation;
+  overscroll-behavior: none;
+  background-color: var(--bg);
 }
 
 html {
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    var(--bg);
-  background-attachment: fixed;
-  background-size: cover;
+  height: 100%;
+  min-height: -webkit-fill-available;
+}
+
+html {
+  background: var(--page-background);
   background-repeat: no-repeat;
+  background-size: cover;
 }
 
 body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100svh;
   min-height: 100dvh;
-  background: transparent;
+  min-height: -webkit-fill-available;
+  background: var(--page-background);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
   color: var(--text);
   overscroll-behavior-y: none;
+  position: relative;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition:
@@ -80,19 +110,19 @@ body {
     color 220ms ease;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    var(--bg);
-  background-attachment: fixed;
-  background-size: cover;
-  background-repeat: no-repeat;
+html.ios-safari {
+  height: 100svh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+html.ios-safari body {
+  min-height: 100svh;
+  min-height: 100dvh;
+  height: 100svh;
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 button,
@@ -141,6 +171,7 @@ button:active {
   z-index: 1;
   width: min(100%, 720px);
   height: 100%;
+  min-height: 100svh;
   min-height: 100dvh;
   margin: 0 auto;
   padding:
