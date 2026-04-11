@@ -142,6 +142,7 @@ function installIOSViewportBounceGuard() {
   const isFxiOS = /FxiOS/i.test(ua);
 
   if (!isIOS || !isWebKit || isCriOS || isFxiOS) return;
+  document.documentElement.classList.add("ios-safari");
 
   let startY = 0;
   let startX = 0;
