@@ -58,21 +58,20 @@ body {
 }
 
 html {
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
+    var(--bg);
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(255, 184, 196, 0.18), transparent 24%),
-    var(--bg);
+  background: transparent;
   color: var(--text);
-  background-attachment: fixed;
-  background-size: cover;
-  background-repeat: no-repeat;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -85,12 +84,11 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -2;
+  z-index: -1;
   pointer-events: none;
   background:
     radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
     radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(255, 184, 196, 0.18), transparent 24%),
     var(--bg);
   background-attachment: fixed;
   background-size: cover;
@@ -502,9 +500,9 @@ h1 {
 }
 
 .status-card.is-error {
-  color: #ffd5d5;
-  border-color: rgba(255, 107, 107, 0.18);
-  background: rgba(110, 28, 28, 0.34);
+  color: #8f1d2d;
+  border-color: rgba(237, 71, 76, 0.34);
+  background: rgba(237, 71, 76, 0.12);
 }
 
 .status-card.is-success {
@@ -797,7 +795,9 @@ h2 {
 }
 
 .mini-action.is-pressed-copy,
-.mini-head-action.is-pressed-copy {
+.mini-head-action.is-pressed-copy,
+.icon-button.is-pressed-copy,
+.tiny-button.is-pressed-copy {
   background: var(--danger);
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);
@@ -836,11 +836,6 @@ h2 {
   pointer-events: none;
 }
 
-:root.theme-switching *,
-:root.theme-switching *::before,
-:root.theme-switching *::after {
-  transition: none !important;
-}
 
 .floating-toast.show {
   opacity: 1;
@@ -1211,6 +1206,21 @@ h2 {
   color: #071208;
 }
 
+:root[data-theme="dark"] .mini-action.is-pressed-copy,
+:root[data-theme="dark"] .mini-head-action.is-pressed-copy,
+:root[data-theme="dark"] .icon-button.is-pressed-copy,
+:root[data-theme="dark"] .tiny-button.is-pressed-copy {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+  box-shadow: 0 10px 24px rgba(52, 199, 89, 0.35);
+}
+
+:root[data-theme="dark"] .status-card.is-error {
+  color: #ffd7d8;
+  border-color: rgba(237, 71, 76, 0.24);
+  background: rgba(110, 28, 28, 0.34);
+}
+
 :root:not([data-theme="dark"]) .icon-button,
 :root:not([data-theme="dark"]) .mini-action,
 :root:not([data-theme="dark"]) .mini-head-action {
@@ -1267,7 +1277,9 @@ h2 {
 }
 
 :root:not([data-theme="dark"]) .mini-action.is-pressed-copy,
-:root:not([data-theme="dark"]) .mini-head-action.is-pressed-copy {
+:root:not([data-theme="dark"]) .mini-head-action.is-pressed-copy,
+:root:not([data-theme="dark"]) .icon-button.is-pressed-copy,
+:root:not([data-theme="dark"]) .tiny-button.is-pressed-copy {
   background: #ed474c;
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);
