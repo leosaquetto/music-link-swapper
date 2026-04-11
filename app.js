@@ -1090,8 +1090,8 @@ function normalizePlatformKey(key) {
   if (normalized === "youtubemusic") return "youtubeMusic";
   if (normalized === "youtube") return "youtube";
   if (normalized === "soundcloud") return "soundCloud";
-  if (normalized === "amazonstore") return "amazonStore";
-  if (normalized === "amazon" || normalized === "amazonmusic") return "amazonMusic";
+  if (normalized === "amazonstore" || normalized === "amazonStore") return "amazonStore";
+  if (normalized === "amazon" || normalized === "amazonmusic" || normalized === "amazonMusic") return "amazonMusic";
   if (normalized === "apple" || normalized === "itunes") return "itunes";
   return raw;
 }
