@@ -240,7 +240,7 @@ function bindEvents() {
 
 function hydrateFromQuery() {
   const params = new URLSearchParams(window.location.search);
-  const incomingUrl = extractUrl(params.get("url") || "");
+  const incomingUrl = resolveIncomingLink(params);
 
   if (incomingUrl) {
     els.input.value = incomingUrl;
@@ -253,6 +253,57 @@ function hydrateFromQuery() {
         onConvert({ shouldScrollToStatus: false });
       }, 100);
     });
+  }
+}
+
+function resolveIncomingLink(params) {
+  const tgStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || "";
+
+  const candidateValues = [
+    params.get("url"),
+    params.get("link"),
+    params.get("text"),
+    params.get("startapp"),
+    params.get("tgWebAppStartParam"),
+    tgStartParam
+  ];
+
+  for (const candidate of candidateValues) {
+    const parsed = parseUrlCandidate(candidate);
+    if (parsed) return parsed;
+  }
+
+  return null;
+}
+
+function parseUrlCandidate(rawValue) {
+  if (!rawValue || typeof rawValue !== "string") return null;
+  const value = rawValue.trim();
+  if (!value) return null;
+
+  const direct = extractUrl(value);
+  if (direct && isSupportedStreamingUrl(direct)) return direct;
+
+  const decoded = safeDecodeURIComponent(value);
+  if (decoded && decoded !== value) {
+    const decodedUrl = extractUrl(decoded);
+    if (decodedUrl && isSupportedStreamingUrl(decodedUrl)) return decodedUrl;
+  }
+
+  const prefixed = value.match(/^(?:url|link)[:=](.+)$/i)?.[1]?.trim();
+  if (prefixed) {
+    const prefixedUrl = extractUrl(prefixed);
+    if (prefixedUrl && isSupportedStreamingUrl(prefixedUrl)) return prefixedUrl;
+  }
+
+  return null;
+}
+
+function safeDecodeURIComponent(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch (_error) {
+    return value;
   }
 }
 

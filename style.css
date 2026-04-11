@@ -24,6 +24,8 @@
   --radius-lg: 18px;
   --radius-md: 14px;
   --press-scale: 0.985;
+  --control-size: 50px;
+  --control-radius: 16px;
 }
 
 :root[data-theme="dark"] {
@@ -141,8 +143,8 @@ button:active {
 .hero-card {
   position: relative;
   display: grid;
-  gap: 10px;
-  padding: 6px 4px 8px;
+  gap: 12px;
+  padding: 2px 4px 8px;
   margin-bottom: 8px;
 }
 
@@ -155,10 +157,10 @@ button:active {
 
 .theme-toggle {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: var(--control-size);
+  height: var(--control-size);
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--control-radius);
   background: var(--panel-strong);
   color: var(--text);
   display: grid;
@@ -172,8 +174,13 @@ button:active {
 }
 
 .theme-toggle .button-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle .button-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .theme-toggle.is-switching .button-icon {
@@ -182,8 +189,9 @@ button:active {
 
 .hero-left {
   display: flex;
-  gap: 18px;
-  align-items: flex-start;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
 }
 
@@ -200,21 +208,12 @@ button:active {
 
 .hero-copy {
   min-width: 0;
-  padding-top: 6px;
-}
-
-.eyebrow {
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-top: 8px;
-  font-weight: 500;
+  padding-top: 0;
 }
 
 h1 {
   font-size: clamp(25px, 5vw, 34px);
-  line-height: 1.02;
+  line-height: 0.95;
   letter-spacing: -0.035em;
   color: #ed474c;
   animation: titleFloat 7.5s ease-in-out infinite;
@@ -222,10 +221,12 @@ h1 {
 
 .hero-subtitle {
   color: var(--muted);
-  margin-top: 11px;
-  font-size: 15px;
+  margin-top: 2px;
+  font-size: 17px;
   line-height: 1.46;
   max-width: 34ch;
+  text-align: center;
+  margin-inline: auto;
 }
 
 .form-card,
@@ -284,12 +285,12 @@ h1 {
     box-shadow 180ms ease,
     background 220ms ease,
     color 220ms ease;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .text-input::placeholder {
   color: var(--soft);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .text-input:focus {
@@ -338,9 +339,9 @@ h1 {
 
 .icon-button {
   border: 0;
-  width: 50px;
-  height: 50px;
-  border-radius: 16px;
+  width: var(--control-size);
+  height: var(--control-size);
+  border-radius: var(--control-radius);
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.06);
@@ -780,8 +781,16 @@ h2 {
 .footer {
   text-align: center;
   color: var(--muted);
-  font-size: 12px;
-  padding: 16px 0 6px;
+  font-size: 13px;
+  padding: 16px 0 8px;
+  display: grid;
+  gap: 3px;
+}
+
+.footer a {
+  font-weight: 700;
+  text-decoration: underline;
+  color: inherit;
 }
 
 .hidden {
@@ -1058,23 +1067,14 @@ h2 {
     font-size: 12px;
   }
 
-  .hero-left {
-    gap: 14px;
-  }
-
   .app-logo {
     width: 92px;
     height: 92px;
     border-radius: 22px;
   }
 
-  .hero-kicker {
-    font-size: 9.5px;
-    letter-spacing: 0.12em;
-  }
-
   .hero-subtitle {
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .chip.icon-chip {
