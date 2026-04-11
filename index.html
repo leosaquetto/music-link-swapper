@@ -7,18 +7,21 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
     <link rel="manifest" href="./manifest.json" />
-    <link rel="apple-touch-icon" href="https://i.imgur.com/aOoxJTT.png" />
-    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <link rel="apple-touch-icon" href="./assets/logo.png" />
+    <link rel="icon" type="image/svg+xml" href="./assets/logo.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/logo.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>music link swapper</title>
-    <meta name="theme-color" content="#f7f8fb" />
+    <link rel="canonical" href="https://swapper.leosaquetto.com/" />
+    <meta property="og:url" content="https://swapper.leosaquetto.com/" />
+    <meta name="theme-color" content="#f06b90" />
     <script>
       (function syncInitialThemeMeta() {
         try {
           var savedTheme = localStorage.getItem("mls-theme");
           var theme = savedTheme === "dark" ? "dark" : "light";
-          var color = theme === "dark" ? "#0b0b0d" : "#f7f8fb";
+          var color = theme === "dark" ? "#0f2416" : "#f06b90";
           document.documentElement.setAttribute("data-theme", theme);
           var themeMeta = document.querySelector('meta[name="theme-color"]');
           if (themeMeta) themeMeta.setAttribute("content", color);
@@ -43,12 +46,13 @@
           <button id="themeToggle" class="theme-toggle" type="button" aria-label="alternar tema" title="alternar tema"></button>
         </div>
 
-        <div class="hero-left">
-          <img class="app-logo" src="https://i.imgur.com/T1uEx9T.gif" alt="logo do app" />
-          <div class="hero-copy">
-            <h1>music link<br />swapper</h1>
+          <div class="hero-left">
+            <img class="app-logo" src="https://i.imgur.com/T1uEx9T.gif" alt="logo do app" />
+            <div class="hero-copy">
+              <h1>music link<br />swapper</h1>
+              <p class="hero-byline">por leo saquetto</p>
+            </div>
           </div>
-        </div>
 
         <p class="hero-subtitle">qualquer streaming por um só link</p>
       </header>
@@ -160,8 +164,6 @@
       </footer>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="./telegram.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
