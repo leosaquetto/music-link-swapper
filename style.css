@@ -154,9 +154,9 @@ button:active {
 .orb-b {
   width: 280px;
   height: 280px;
-  bottom: 30%;
+  bottom: 24%;
   right: -20px;
-  background: rgba(46, 191, 89, 0.4);
+  background: rgba(46, 191, 89, 0.5);
   animation: none;
 }
 
