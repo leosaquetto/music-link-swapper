@@ -89,6 +89,7 @@ const state = {
   autoConvertedFromQuery: false,
   statusHideTimer: null,
   floatingToastTimer: null,
+  floatingToastHideTimer: null,
   lastClipboardText: "",
   lastAutoUrl: "",
   activeButtonResetTimers: new WeakMap(),
@@ -918,6 +919,7 @@ function showFloatingToast(message) {
   if (!els.floatingToast) return;
 
   clearTimeout(state.floatingToastTimer);
+  clearTimeout(state.floatingToastHideTimer);
   els.floatingToast.textContent = message;
   els.floatingToast.classList.remove("hidden", "show");
 
@@ -927,7 +929,10 @@ function showFloatingToast(message) {
 
   state.floatingToastTimer = setTimeout(() => {
     els.floatingToast.classList.remove("show");
-    els.floatingToast.classList.add("hidden");
+    state.floatingToastHideTimer = setTimeout(() => {
+      els.floatingToast.classList.add("hidden");
+      state.floatingToastHideTimer = null;
+    }, 260);
   }, 2050);
 }
 
