@@ -86,7 +86,8 @@ const state = {
   lastAutoUrl: "",
   activeButtonResetTimers: new WeakMap(),
   scrollAfterConvert: false,
-  hideResultTimer: null
+  hideResultTimer: null,
+  themeSwitchTimer: null
 };
 
 const els = {
@@ -119,8 +120,19 @@ function bootstrap() {
   renderSupportedChips();
   initTheme();
   bindEvents();
+  bindLaunchQueueConsumer();
   hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
+}
+
+function bindLaunchQueueConsumer() {
+  if (!("launchQueue" in window) || typeof window.launchQueue?.setConsumer !== "function") return;
+
+  window.launchQueue.setConsumer(launchParams => {
+    const target = launchParams?.targetURL;
+    if (!target) return;
+    handleIncomingTargetUrl(String(target));
+  });
 }
 
 function injectButtonIcons() {
@@ -255,6 +267,32 @@ function hydrateFromIncomingUrl() {
   }
 }
 
+function handleIncomingTargetUrl(targetUrl) {
+  if (!targetUrl) return;
+
+  let incomingUrl = null;
+
+  try {
+    const parsed = new URL(targetUrl, window.location.origin);
+    incomingUrl = resolveIncomingLink(parsed.searchParams);
+  } catch (_error) {
+    incomingUrl = parseUrlCandidate(targetUrl);
+  }
+
+  if (!incomingUrl) return;
+
+  els.input.value = incomingUrl;
+  state.autoConvertedFromQuery = true;
+  state.lastAutoUrl = incomingUrl;
+  showStatus("link recebido automaticamente.", "success", { autoHide: true });
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      onConvert({ shouldScrollToStatus: false });
+    }, 80);
+  });
+}
+
 function resolveIncomingLink(params) {
   const candidateValues = [
     params.get("url"),
@@ -280,8 +318,18 @@ function parseUrlCandidate(rawValue) {
 
   const decoded = safeDecodeURIComponent(value);
   if (decoded && decoded !== value) {
+    const normalizedDecoded = decoded.replace(/^web\+swapper:/i, "").trim();
+    const decodedProtocolUrl = extractUrl(normalizedDecoded);
+    if (decodedProtocolUrl && isSupportedStreamingUrl(decodedProtocolUrl)) return decodedProtocolUrl;
+
     const decodedUrl = extractUrl(decoded);
     if (decodedUrl && isSupportedStreamingUrl(decodedUrl)) return decodedUrl;
+  }
+
+  const protocolStripped = value.replace(/^web\+swapper:/i, "").trim();
+  if (protocolStripped && protocolStripped !== value) {
+    const protocolUrl = extractUrl(protocolStripped);
+    if (protocolUrl && isSupportedStreamingUrl(protocolUrl)) return protocolUrl;
   }
 
   const prefixed = value.match(/^(?:url|link)[:=](.+)$/i)?.[1]?.trim();
@@ -1020,6 +1068,10 @@ function toggleTheme() {
 
 function applyTheme(theme, { persist = true } = {}) {
   const normalized = theme === "dark" ? "dark" : "light";
+  document.documentElement.classList.add("theme-switching");
+  if (state.themeSwitchTimer) {
+    clearTimeout(state.themeSwitchTimer);
+  }
   document.documentElement.setAttribute("data-theme", normalized);
   syncThemeToggleIcon();
 
@@ -1032,6 +1084,11 @@ function applyTheme(theme, { persist = true } = {}) {
   if (themeMeta) {
     themeMeta.setAttribute("content", normalized === "dark" ? "#0f2416" : "#f06b90");
   }
+
+  state.themeSwitchTimer = setTimeout(() => {
+    document.documentElement.classList.remove("theme-switching");
+    state.themeSwitchTimer = null;
+  }, 220);
 }
 
 function syncThemeToggleIcon() {

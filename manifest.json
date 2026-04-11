@@ -3,17 +3,27 @@
   "short_name": "Swapper",
   "description": "Converta links de música instantaneamente",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f7f8fb",
   "theme_color": "#f7f8fb",
+  "protocol_handlers": [
+    {
+      "protocol": "web+swapper",
+      "url": "/?url=%s"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
-      "src": "logo.png",
+      "src": "assets/logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "logo.png",
+      "src": "assets/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
