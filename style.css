@@ -50,8 +50,17 @@
 html {
   height: 100%;
   width: 100%;
-  overflow: auto;      /* scroll normal */
-  background-color: var(--bg); /* fallback sólido, mas o pseudo-elemento vai cobrir */
+  overflow: auto;
+  /* Gradiente fixo – não rola com o conteúdo */
+  background-attachment: fixed;
+  background-image: 
+    radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%);
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  transition: background-color 260ms ease, background-image 260ms ease;
 }
 
 body {
@@ -62,28 +71,8 @@ body {
   padding: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background-color: transparent;  /* ← essencial: deixa o fundo fixo aparecer */
+  background-color: transparent; /* ← deixa o fundo do html aparecer */
   color: var(--text);
-  /* sem position: relative */
-}
-
-/* Este pseudo-elemento fixo é a salvação para o Safari */
-body::before {
-  content: "";
-  position: fixed;      /* ← volta a ser fixed */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;            /* ← cobre a viewport inteira, sem depender do tamanho do conteúdo */
-  z-index: -2;
-  pointer-events: none;
-  background: 
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%),
-    var(--bg);
-  background-size: cover;
-  background-position: center;
-  transition: background 260ms ease;
 }
 
 button,
