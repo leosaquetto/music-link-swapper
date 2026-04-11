@@ -124,6 +124,7 @@ const els = {
 bootstrap();
 
 function bootstrap() {
+  installIOSViewportBounceGuard();
   injectButtonIcons();
   renderSupportedChips();
   initTheme();
@@ -131,6 +132,61 @@ function bootstrap() {
   bindLaunchQueueConsumer();
   hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
+}
+
+function installIOSViewportBounceGuard() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iP(ad|hone|od)/.test(ua);
+  const isWebKit = /WebKit/i.test(ua);
+  const isCriOS = /CriOS/i.test(ua);
+  const isFxiOS = /FxiOS/i.test(ua);
+
+  if (!isIOS || !isWebKit || isCriOS || isFxiOS) return;
+  document.documentElement.classList.add("ios-safari");
+
+  let startY = 0;
+  let startX = 0;
+
+  document.addEventListener(
+    "touchstart",
+    event => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      startY = touch.clientY;
+      startX = touch.clientX;
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    "touchmove",
+    event => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+
+      const deltaY = touch.clientY - startY;
+      const deltaX = touch.clientX - startX;
+      const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
+      if (!isVerticalSwipe) return;
+
+      const scrollRoot = document.scrollingElement || document.documentElement;
+      const canScroll = scrollRoot.scrollHeight > window.innerHeight + 1;
+      if (!canScroll) {
+        event.preventDefault();
+        return;
+      }
+
+      const atTop = scrollRoot.scrollTop <= 0;
+      const atBottom = scrollRoot.scrollTop + window.innerHeight >= scrollRoot.scrollHeight - 1;
+      const pullingDownAtTop = atTop && deltaY > 0;
+      const pullingUpAtBottom = atBottom && deltaY < 0;
+
+      if (pullingDownAtTop || pullingUpAtBottom) {
+        event.preventDefault();
+      }
+    },
+    { passive: false }
+  );
 }
 
 function bindLaunchQueueConsumer() {

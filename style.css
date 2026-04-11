@@ -50,29 +50,39 @@
 html,
 body {
   width: 100%;
-  min-height: 100dvh;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   touch-action: manipulation;
+  overscroll-behavior: none;
+  background-color: var(--bg);
 }
 
 html {
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    var(--bg);
-  background-attachment: fixed;
-  background-size: cover;
-  background-repeat: no-repeat;
+  height: 100%;
+  min-height: -webkit-fill-available;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100svh;
   min-height: 100dvh;
-  background: transparent;
+  min-height: -webkit-fill-available;
+  background:
+    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
+    var(--bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
   color: var(--text);
   overscroll-behavior-y: none;
+  position: relative;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition:
@@ -80,19 +90,19 @@ body {
     color 220ms ease;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    var(--bg);
-  background-attachment: fixed;
-  background-size: cover;
-  background-repeat: no-repeat;
+html.ios-safari {
+  height: 100svh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+html.ios-safari body {
+  min-height: 100svh;
+  min-height: 100dvh;
+  height: 100svh;
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 button,
@@ -141,6 +151,7 @@ button:active {
   z-index: 1;
   width: min(100%, 720px);
   height: 100%;
+  min-height: 100svh;
   min-height: 100dvh;
   margin: 0 auto;
   padding:
