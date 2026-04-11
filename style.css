@@ -155,8 +155,8 @@ button:active {
   width: 200px;
   height: 280px;
   bottom: 18%;
-  right: -95px;
-  background: rgba(46, 191, 89, 0.6);
+  right: -20px;
+  background: rgba(46, 191, 89, 0.5);
   animation: none;
 }
 
