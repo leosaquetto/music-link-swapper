@@ -290,6 +290,7 @@ function bindEvents() {
     softlyDismissKeyboard();
     pulseActionButton(event.currentTarget);
     showFloatingToast("exemplo utilizado.");
+    onConvert({ shouldScrollToStatus: true });
   });
 
   els.copyPrimaryButton?.addEventListener("click", async event => {
@@ -1058,7 +1059,8 @@ function normalizeLinks(links, sourceLink = "") {
     if (!item || !item.url || item.notAvailable) continue;
 
     let type = normalizePlatformKey(item.type);
-    if (type === "youtube" && cameFromYouTubeMusic) {
+    const linkIsYouTubeMusic = isYouTubeMusicUrl(item.url || "");
+    if (type === "youtube" && (cameFromYouTubeMusic || linkIsYouTubeMusic)) {
       type = "youtubeMusic";
     }
     const meta = PLATFORM_META[type] || {
