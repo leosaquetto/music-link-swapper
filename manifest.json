@@ -1,6 +1,6 @@
 {
   "name": "Music Link Swapper",
-  "short_name": "MLS",
+  "short_name": "Swapper",
   "description": "Converta links de música instantaneamente",
   "start_url": "/",
   "display": "standalone",
