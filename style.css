@@ -1114,6 +1114,7 @@ h2 {
 
 :root[data-theme="dark"] .app-logo {
   background: #101113;
+  align-items: center;
 }
 
 :root[data-theme="dark"] h1 {
