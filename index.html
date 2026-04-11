@@ -15,13 +15,13 @@
     <title>music link swapper</title>
     <link rel="canonical" href="https://swapper.leosaquetto.com/" />
     <meta property="og:url" content="https://swapper.leosaquetto.com/" />
-    <meta name="theme-color" content="#e6dce2" />
+    <meta name="theme-color" content="#f7f8fb" />
     <script>
       (function syncInitialThemeMeta() {
         try {
           var savedTheme = localStorage.getItem("mls-theme");
           var theme = savedTheme === "dark" ? "dark" : "light";
-          var color = theme === "dark" ? "#14181f" : "#e6dce2";
+          var color = theme === "dark" ? "#0b0b0d" : "#f7f8fb";
           document.documentElement.setAttribute("data-theme", theme);
           var themeMeta = document.querySelector('meta[name="theme-color"]');
           if (themeMeta) themeMeta.setAttribute("content", color);

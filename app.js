@@ -1173,7 +1173,7 @@ function toggleTheme() {
 }
 
 function getThemeChromeColor(theme) {
-  return theme === "dark" ? "#14181f" : "#e6dce2";
+  return theme === "dark" ? "#0b0b0d" : "#f7f8fb";
 }
 
 function applyTheme(theme, { persist = true } = {}) {
