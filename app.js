@@ -118,13 +118,15 @@ const els = {
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
   floatingToast: document.getElementById("floatingToast"),
-  themeToggle: document.getElementById("themeToggle")
+  themeToggle: document.getElementById("themeToggle"),
+  viewportFillSpacer: document.getElementById("viewportFillSpacer")
 };
 
 bootstrap();
 
 function bootstrap() {
   installIOSViewportBounceGuard();
+  initIOSViewportFillAssist();
   injectButtonIcons();
   renderSupportedChips();
   initTheme();
@@ -132,6 +134,34 @@ function bootstrap() {
   bindLaunchQueueConsumer();
   hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
+}
+
+function initIOSViewportFillAssist() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iP(ad|hone|od)/.test(ua);
+  const isWebKit = /WebKit/i.test(ua);
+  const isCriOS = /CriOS/i.test(ua);
+  const isFxiOS = /FxiOS/i.test(ua);
+
+  if (!isIOS || !isWebKit || isCriOS || isFxiOS || !els.viewportFillSpacer) return;
+
+  const syncViewportFill = () => {
+    const hasResult = !els.resultCard?.classList.contains("hidden");
+    document.body.classList.toggle("needs-viewport-fill", !hasResult);
+
+    if (!hasResult && window.scrollY === 0) {
+      window.requestAnimationFrame(() => window.scrollTo(0, 1));
+    }
+  };
+
+  syncViewportFill();
+
+  const observer = new MutationObserver(syncViewportFill);
+  if (els.resultCard) {
+    observer.observe(els.resultCard, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  window.addEventListener("resize", syncViewportFill);
 }
 
 function installIOSViewportBounceGuard() {

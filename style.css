@@ -110,21 +110,6 @@ body {
     color 220ms ease;
 }
 
-html.ios-safari {
-  height: 100svh;
-  height: 100dvh;
-  overflow: hidden;
-}
-
-html.ios-safari body {
-  min-height: 100svh;
-  min-height: 100dvh;
-  height: 100svh;
-  height: 100dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 button,
 input {
   font: inherit;
@@ -186,6 +171,16 @@ button:active {
   display: grid;
   gap: 12px;
   min-width: 0;
+}
+
+.viewport-fill-spacer {
+  height: 0;
+  pointer-events: none;
+  transition: height 220ms ease;
+}
+
+body.needs-viewport-fill .viewport-fill-spacer {
+  height: clamp(120px, 20vh, 220px);
 }
 
 .card {
