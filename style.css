@@ -204,11 +204,13 @@ button:active {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
   background: #ffffff;
   flex: 0 0 auto;
+  align-items: center;
 }
 
 .hero-copy {
   min-width: 0;
   padding-top: 0;
+  align-items: center;
 }
 
 h1 {
@@ -219,10 +221,10 @@ h1 {
   
   /* Mantendo exatamente o efeito de brilho anterior */
   background: linear-gradient(
-    to right, 
+    135deg, 
     #ed474c 20%, 
     #ff8a8e 40%, 
-    #ff8a8e 60%, 
+    #fbb5b8 60%, 
     #ed474c 80%
   );
   background-size: 200% auto;
@@ -234,8 +236,8 @@ h1 {
 
 .hero-subtitle {
   color: var(--muted);
-  margin-top: 2px;
-  font-size: 12px;
+  margin-top: 6px;
+  font-size: 13px;
   line-height: 1.46;
   max-width: 34ch;
   text-align: center;
@@ -1093,7 +1095,7 @@ h2 {
   }
 
   .hero-subtitle {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .chip.icon-chip {
@@ -1116,7 +1118,7 @@ h2 {
 
 :root[data-theme="dark"] h1 {
   background: linear-gradient(
-    to right, 
+    135deg, 
     #ffffff 35%,   /* Branco predomina na esquerda */
     #00d752 45%,   /* Verde neon (brilho rápido) */
     #ed474c 50%,   /* Rosa (transição rápida) */
