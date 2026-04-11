@@ -47,24 +47,24 @@
   --byline: #34c759;
 }
 
+/* Fundo do html: cor sólida que combina com o degradê */
 html {
   height: 100%;
   width: 100%;
   overflow: auto;
-  background-color: var(--bg); /* cor sólida de fallback, mesma do gradiente */
+  background-color: var(--bg); /* mesma cor base do degradê */
   position: relative;
 }
 
-html::before {
+/* Degradê fixo via pseudo-elemento do body (ou html) */
+body::before {
   content: "";
   position: fixed;
-  top: -50%;
-  left: -50%;
-  right: -50%;
-  bottom: -50%;
-  width: 200%;
-  height: 200%;
-  z-index: -2;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
   pointer-events: none;
   background: 
     radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
@@ -72,10 +72,10 @@ html::before {
     var(--bg);
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   transition: background 260ms ease;
 }
 
+/* Body transparente para deixar o fundo aparecer */
 body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
   min-height: 100%;
