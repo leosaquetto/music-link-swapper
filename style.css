@@ -30,17 +30,17 @@
   --page-background:
     linear-gradient(
       135deg,
-      transparent 43%,
-      rgba(243, 95, 127, 0.2) 48%,
-      rgba(243, 95, 127, 0.15) 51%,
-      transparent 56%
+      transparent 39%,
+      rgba(243, 95, 127, 0.24) 46%,
+      rgba(243, 95, 127, 0.18) 53%,
+      transparent 61%
     ),
     linear-gradient(
       135deg,
-      transparent 46%,
-      rgba(46, 191, 89, 0.18) 51%,
-      rgba(46, 191, 89, 0.12) 54%,
-      transparent 59%
+      transparent 42%,
+      rgba(46, 191, 89, 0.22) 49%,
+      rgba(46, 191, 89, 0.15) 56%,
+      transparent 64%
     ),
     linear-gradient(
       180deg,
@@ -71,17 +71,17 @@
   --page-background:
     linear-gradient(
       135deg,
-      transparent 43%,
-      rgba(237, 71, 76, 0.26) 48%,
-      rgba(237, 71, 76, 0.18) 51%,
-      transparent 56%
+      transparent 39%,
+      rgba(237, 71, 76, 0.3) 46%,
+      rgba(237, 71, 76, 0.2) 53%,
+      transparent 61%
     ),
     linear-gradient(
       135deg,
-      transparent 46%,
-      rgba(52, 199, 89, 0.24) 51%,
-      rgba(52, 199, 89, 0.15) 54%,
-      transparent 59%
+      transparent 42%,
+      rgba(52, 199, 89, 0.26) 49%,
+      rgba(52, 199, 89, 0.16) 56%,
+      transparent 64%
     ),
     linear-gradient(
       180deg,
@@ -122,10 +122,7 @@ body {
   min-height: 100svh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  background: var(--page-background);
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
+  background: transparent;
   color: var(--text);
   overscroll-behavior-y: none;
   position: relative;
@@ -134,6 +131,18 @@ body {
   transition:
     background 260ms ease,
     color 220ms ease;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--page-background);
+  background-repeat: no-repeat;
+  background-size: cover;
+  transition: background 260ms ease;
 }
 
 button,
@@ -911,9 +920,10 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 12px;
   color: var(--muted);
-  text-decoration: none;
+  text-decoration: none !important;
   background: rgba(255, 255, 255, 0.04);
   width: fit-content;
+  font-weight: 500 !important;
 }
 
 .shortcut-card svg {
@@ -923,7 +933,7 @@ h2 {
 
 .shortcut-card .shortcut-text {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.01em;
 }
 
