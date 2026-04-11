@@ -63,7 +63,7 @@ const PLATFORM_META = {
   appleMusic: { name: "apple music", icon: SVG_ICONS.appleMusic, section: "principais", order: 1, isPrimaryCopy: true, appScheme: "music://" },
   spotify: { name: "spotify", icon: SVG_ICONS.spotify, section: "principais", order: 2, isPrimaryCopy: true, appScheme: "spotify://" },
   youTube: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 3, isPrimaryCopy: true, appScheme: "youtubemusic://" },
-  youtube: { name: "youtube", icon: SVG_ICONS.youtube, section: "principais", order: 3, isPrimaryCopy: true, appScheme: "youtube://" },
+  youtube: { name: "youtube", icon: SVG_ICONS.youtube, section: "outras", order: 12, isPrimaryCopy: false, appScheme: "youtube://" },
   youtubeMusic: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 3, isPrimaryCopy: true, appScheme: "youtubemusic://" },
   deezer: { name: "deezer", icon: SVG_ICONS.deezer, section: "principais", order: 4, isPrimaryCopy: true, appScheme: "deezer://" },
   tidal: { name: "tidal", icon: SVG_ICONS.tidal, section: "principais", order: 5, isPrimaryCopy: true, appScheme: "tidal://" },
@@ -541,7 +541,7 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
       return;
     }
 
-    const result = normalizeApiPayload(payload.data);
+    const result = normalizeApiPayload(payload.data, link);
     if (!result) {
       stopCoverShimmer();
       showStatus("não encontrei plataformas para esse link.", "error");
@@ -574,8 +574,8 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
   }
 }
 
-function normalizeApiPayload(data) {
-  const links = normalizeLinks(data.links);
+function normalizeApiPayload(data, sourceLink = "") {
+  const links = normalizeLinks(data.links, sourceLink);
   if (!links.length) return null;
 
   const rawTitle = cleanText(data.title || "música encontrada");
@@ -1049,14 +1049,18 @@ function resetForm({ announce = false } = {}) {
   }
 }
 
-function normalizeLinks(links) {
+function normalizeLinks(links, sourceLink = "") {
   const seen = new Set();
   const normalized = [];
+  const cameFromYouTubeMusic = isYouTubeMusicUrl(sourceLink);
 
   for (const item of links) {
     if (!item || !item.url || item.notAvailable) continue;
 
-    const type = normalizePlatformKey(item.type);
+    let type = normalizePlatformKey(item.type);
+    if (type === "youtube" && cameFromYouTubeMusic) {
+      type = "youtubeMusic";
+    }
     const meta = PLATFORM_META[type] || {
       name: prettifyPlatform(type),
       icon: "•",
@@ -1093,6 +1097,10 @@ function normalizeLinks(links) {
   return normalized;
 }
 
+function isYouTubeMusicUrl(url) {
+  return String(url || "").toLowerCase().includes("music.youtube.com");
+}
+
 function normalizePlatformKey(key) {
   if (!key) return "";
   const raw = String(key);
@@ -1100,8 +1108,8 @@ function normalizePlatformKey(key) {
   if (normalized === "youtubemusic") return "youtubeMusic";
   if (normalized === "youtube") return "youtube";
   if (normalized === "soundcloud") return "soundCloud";
-  if (normalized === "amazonstore" || normalized === "amazonStore") return "amazonStore";
-  if (normalized === "amazon" || normalized === "amazonmusic" || normalized === "amazonMusic") return "amazonMusic";
+  if (normalized === "amazonstore") return "amazonStore";
+  if (normalized === "amazon" || normalized === "amazonmusic") return "amazonMusic";
   if (normalized === "apple" || normalized === "itunes") return "itunes";
   return raw;
 }
