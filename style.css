@@ -50,31 +50,31 @@
 html {
   height: 100%;
   width: 100%;
-  overflow: auto;      /* ← antes era hidden */
-  background-color: var(--bg);
+  overflow: auto;      /* scroll normal */
+  background-color: var(--bg); /* fallback sólido, mas o pseudo-elemento vai cobrir */
 }
 
 body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
-  min-height: 100%;    /* ← era height: 100% */
+  min-height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  background-color: var(--bg);
+  background-color: transparent;  /* ← essencial: deixa o fundo fixo aparecer */
   color: var(--text);
-  position: relative;  /* ← NOVO: necessário para o pseudo-elemento absoluto */
+  /* sem position: relative */
 }
 
 /* Este pseudo-elemento fixo é a salvação para o Safari */
 body::before {
   content: "";
-  position: absolute;   /* ← antes era fixed */
+  position: fixed;      /* ← volta a ser fixed */
   top: 0;
   left: 0;
-  width: 100%;
-  min-height: 100%;     /* garante que cubra todo o conteúdo rolável */
+  right: 0;
+  bottom: 0;            /* ← cobre a viewport inteira, sem depender do tamanho do conteúdo */
   z-index: -2;
   pointer-events: none;
   background: 
@@ -83,7 +83,7 @@ body::before {
     var(--bg);
   background-size: cover;
   background-position: center;
-  transition: background 260ms ease;  /* transição mantida */
+  transition: background 260ms ease;
 }
 
 button,
@@ -1282,4 +1282,12 @@ h2 {
   color: #071208;
   border-color: rgba(52, 199, 89, 0.3);
   box-shadow: 0 18px 44px rgba(12, 44, 23, 0.42);
+}
+
+/* Garantia extra de que o fundo fixo sempre prevalece */
+html, body {
+  background-color: transparent;
+}
+html {
+  background-color: var(--bg); /* fallback apenas enquanto o CSS carrega */
 }
