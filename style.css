@@ -32,7 +32,7 @@
   --bg: #0b0b0d;
   --panel: rgba(28, 28, 30, 0.84);
   --panel-strong: rgba(34, 34, 38, 0.96);
-  --line: rgba(255, 255, 255, 0.12);
+  --line: rgba(255, 255, 255, 0.14);
   --line-soft: rgba(255, 255, 255, 0.10);
   --text: #ffffff;
   --muted: #a4a7b0;
@@ -646,6 +646,7 @@ h2 {
   color: var(--text);
   flex: 0 0 auto;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .platform-icon svg,
@@ -1178,7 +1179,6 @@ h2 {
 :root:not([data-theme="dark"]) .platform-icon {
   background: rgba(18, 22, 35, 0.08);
   color: #ed474c;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 :root:not([data-theme="dark"]) .chip {
