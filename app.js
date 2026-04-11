@@ -84,10 +84,10 @@ const state = {
   floatingToastTimer: null,
   lastClipboardText: "",
   lastAutoUrl: "",
-  autoPasteInFlight: false,
   activeButtonResetTimers: new WeakMap(),
   scrollAfterConvert: false,
-  hideResultTimer: null
+  hideResultTimer: null,
+  themeSwitchTimer: null
 };
 
 const els = {
@@ -113,30 +113,6 @@ const els = {
   themeToggle: document.getElementById("themeToggle")
 };
 
-async function handleIncomingLink() {
-  const params = new URLSearchParams(window.location.search);
-  const sharedUrl = params.get('url');
-
-  if (sharedUrl) {
-    // Se veio via link (Atalho do iOS ou query string)
-    els.input.value = decodeURIComponent(sharedUrl);
-    onConvert({ shouldScrollToStatus: true });
-    // Limpa a URL para não converter de novo se der refresh
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else {
-    // Tentar ler o clipboard automaticamente ao abrir
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && isSupportedStreamingUrl(extractUrl(text.trim()) || "")) {
-        els.input.value = text;
-        // Opcional: onConvert() se quiser que converta assim que abrir
-      }
-    } catch (err) {
-      console.log('Permissão de clipboard negada ou não suportada');
-    }
-  }
-}
-
 bootstrap();
 
 function bootstrap() {
@@ -144,10 +120,8 @@ function bootstrap() {
   renderSupportedChips();
   initTheme();
   bindEvents();
-  hydrateFromQuery();
+  hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
-  bindTelegramAutoPaste();
-  handleIncomingLink();
 }
 
 function injectButtonIcons() {
@@ -263,7 +237,7 @@ function bindEvents() {
   });
 }
 
-function hydrateFromQuery() {
+function hydrateFromIncomingUrl() {
   const params = new URLSearchParams(window.location.search);
   const incomingUrl = resolveIncomingLink(params);
 
@@ -278,19 +252,15 @@ function hydrateFromQuery() {
         onConvert({ shouldScrollToStatus: false });
       }, 100);
     });
+    window.history.replaceState({}, document.title, window.location.pathname);
   }
 }
 
 function resolveIncomingLink(params) {
-  const tgStartParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || "";
-
   const candidateValues = [
     params.get("url"),
     params.get("link"),
-    params.get("text"),
-    params.get("startapp"),
-    params.get("tgWebAppStartParam"),
-    tgStartParam
+    params.get("text")
   ];
 
   for (const candidate of candidateValues) {
@@ -334,7 +304,6 @@ function safeDecodeURIComponent(value) {
 
 async function tryAutoPasteFromClipboard() {
   if (els.input.value.trim()) return;
-  if (window.Telegram?.WebApp) return;
   if (!navigator.clipboard?.readText) return;
 
   try {
@@ -345,72 +314,10 @@ async function tryAutoPasteFromClipboard() {
       els.input.value = url;
       state.lastClipboardText = typeof text === "string" ? text.trim() : "";
       state.lastAutoUrl = url;
+      showStatus("link detectado no clipboard.", "success", { autoHide: true });
+      setTimeout(() => onConvert({ shouldScrollToStatus: false }), 80);
     }
   } catch (_error) {}
-}
-
-function bindTelegramAutoPaste() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg) return;
-
-  const run = () => {
-    maybeAutoSwapFromTelegramClipboard();
-  };
-
-  run();
-  tg.onEvent?.("activated", run);
-}
-
-async function maybeAutoSwapFromTelegramClipboard() {
-  const tg = window.Telegram?.WebApp;
-  if (!tg?.readTextFromClipboard) return;
-  if (state.autoPasteInFlight) return;
-
-  const startParam = tg?.initDataUnsafe?.start_param || "";
-  const shouldForceAuto = startParam === "auto";
-
-  state.autoPasteInFlight = true;
-
-  const delay = isIOSDevice() ? 500 : 220;
-
-  setTimeout(() => {
-    tg.readTextFromClipboard(async text => {
-      try {
-        const rawText = typeof text === "string" ? text.trim() : "";
-        if (!rawText) return;
-
-        const url = extractUrl(rawText);
-        if (!url || !isSupportedStreamingUrl(url)) return;
-
-        const currentInput = extractUrl(els.input?.value?.trim?.() || "");
-        const isSameAsInput = currentInput && currentInput === url;
-        const isSameAsLastClipboard = state.lastClipboardText === rawText;
-        const isSameAsLastAutoUrl = state.lastAutoUrl === url;
-
-        if (!shouldForceAuto && (isSameAsInput || isSameAsLastClipboard || isSameAsLastAutoUrl)) {
-          return;
-        }
-
-        state.lastClipboardText = rawText;
-        state.lastAutoUrl = url;
-        els.input.value = url;
-
-        try {
-          tg.HapticFeedback?.notificationOccurred?.("success");
-        } catch (_error) {}
-
-        showFloatingToast("link capturado do clipboard.");
-
-        await onConvert({ shouldScrollToStatus: false });
-      } finally {
-        state.autoPasteInFlight = false;
-      }
-    });
-  }, delay);
-}
-
-function isIOSDevice() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent || "");
 }
 
 async function smartPasteIntoInput({ announce = false, autoConvert = false } = {}) {
@@ -787,20 +694,10 @@ function pulseActionButton(button, variant = "copy") {
 
 function triggerHaptic(kind = "light") {
   try {
-    const tg = window.Telegram?.WebApp;
-    if (!tg?.HapticFeedback) return;
-
-    if (kind === "medium") {
-      tg.HapticFeedback.impactOccurred("medium");
-      return;
+    if (navigator.vibrate) {
+      const pattern = kind === "heavy" ? [20] : kind === "medium" ? [14] : [8];
+      navigator.vibrate(pattern);
     }
-
-    if (kind === "heavy") {
-      tg.HapticFeedback.impactOccurred("heavy");
-      return;
-    }
-
-    tg.HapticFeedback.impactOccurred("light");
   } catch (_error) {}
 }
 
@@ -828,11 +725,6 @@ async function shareLink(item) {
 function openPlatformUrl(item) {
   const url = item?.url;
   if (!url) return;
-
-  if (window.Telegram?.WebApp?.openLink) {
-    window.Telegram.WebApp.openLink(url, { try_instant_view: false });
-    return;
-  }
 
   const scheme = item.appScheme;
   if (scheme && isMobileDevice()) {
@@ -1102,11 +994,6 @@ async function copyText(text) {
     return;
   }
 
-  if (window.Telegram?.WebApp?.Clipboard?.writeText) {
-    window.Telegram.WebApp.Clipboard.writeText(text);
-    return;
-  }
-
   const temp = document.createElement("textarea");
   temp.value = text;
   document.body.appendChild(temp);
@@ -1134,6 +1021,10 @@ function toggleTheme() {
 
 function applyTheme(theme, { persist = true } = {}) {
   const normalized = theme === "dark" ? "dark" : "light";
+  document.documentElement.classList.add("theme-switching");
+  if (state.themeSwitchTimer) {
+    clearTimeout(state.themeSwitchTimer);
+  }
   document.documentElement.setAttribute("data-theme", normalized);
   syncThemeToggleIcon();
 
@@ -1142,6 +1033,15 @@ function applyTheme(theme, { persist = true } = {}) {
   }
 
   window.dispatchEvent(new CustomEvent("mls-theme-change", { detail: { theme: normalized } }));
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute("content", normalized === "dark" ? "#0f2416" : "#f06b90");
+  }
+
+  state.themeSwitchTimer = setTimeout(() => {
+    document.documentElement.classList.remove("theme-switching");
+    state.themeSwitchTimer = null;
+  }, 220);
 }
 
 function syncThemeToggleIcon() {
