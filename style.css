@@ -48,66 +48,38 @@
 }
 
 html {
+  height: 100%;
   width: 100%;
-  min-height: 100dvh;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  touch-action: manipulation;
-  /* Cor base sólida no HTML resolve a "borda" no PWA durante o overscroll/carregamento */
+  overflow: hidden; /* Importante para o PWA no iOS */
   background-color: var(--bg);
-  transition: background-color 260ms ease;
 }
 
 body {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  min-height: 100dvh;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
-  background: transparent;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: var(--bg);
   color: var(--text);
-  overscroll-behavior-y: none;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  /* Retiramos a transição de background daqui, pois vai para o pseudo-elemento */
-  transition: color 220ms ease;
 }
 
 /* Este pseudo-elemento fixo é a salvação para o Safari */
 body::before {
   content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;  /* Fallback para navegadores mais antigos */
-  height: 100dvh; /* Altura dinâmica da tela */
-  z-index: -1;
+  inset: 0;
+  z-index: -2; /* Diminuímos para -2 para ficar atrás das orbs */
   pointer-events: none;
-  /* Aplicamos os gradientes aqui, SEM background-attachment: fixed */
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
+  background: 
+    radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%),
     var(--bg);
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   transition: background 260ms ease;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at top left, rgba(243, 95, 127, 0.2), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.2), transparent 26%),
-    var(--bg);
-  background-attachment: fixed;
-  background-size: cover;
-  background-repeat: no-repeat;
 }
 
 button,
@@ -127,7 +99,7 @@ button:active {
 
 .bg-orb {
   position: fixed;
-  z-index: 0;
+  z-index: -1; /* Fica entre o fundo (body::before) e o conteúdo (app-shell) */
   filter: blur(72px);
   opacity: 0.45;
   pointer-events: none;
@@ -155,15 +127,14 @@ button:active {
   position: relative;
   z-index: 1;
   width: min(100%, 720px);
-  height: 100%;
-  min-height: 100dvh;
+  min-height: 101%; /* O 1% extra força o Safari a entender que há conteúdo */
   margin: 0 auto;
-  padding:
-    max(16px, calc(env(safe-area-inset-top) + 4px))
-    14px
-    max(20px, env(safe-area-inset-bottom));
-  overflow-x: clip;
-  isolation: isolate;
+  padding: 
+    calc(env(safe-area-inset-top) + 20px) 
+    14px 
+    calc(env(safe-area-inset-bottom) + 40px);
+  display: flex;
+  flex-direction: column;
 }
 
 .main-stack {
