@@ -47,51 +47,32 @@
   --byline: #34c759;
 }
 
-html { 
-  height: 100%; /* Fallback */
-  height: 100dvh; /* Cobre o viewport dinâmico inteiro, removendo bordas no PWA */
-  width: 100%; 
-  overflow: hidden; /* Importante para o PWA no iOS */ 
-  background-color: var(--bg);
-}
-
-body { 
-  font-family: Inter, system-ui, -apple-system, sans-serif; 
-  height: 100%; /* Fallback */
-  height: 100dvh; 
-  width: 100%; 
-  margin: 0; 
-  padding: 0; 
-  overflow-y: auto; 
-  -webkit-overflow-scrolling: touch; 
-  background-color: transparent; /* Alterado para transparent */
-  color: var(--text);
-}
-
-/* Este pseudo-elemento fixo é a salvação para o Safari */
-body::before { 
-  content: ""; 
-  position: fixed; 
-  
-  /* Substitua o inset: 0 por valores negativos grandes para cobrir o overscroll infinito */
-  top: -50vh;
-  bottom: -50vh;
-  left: -50vw;
-  right: -50vw;
-  
-  z-index: -2; 
-  pointer-events: none; 
-  
-  background: radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%), 
-              radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%), 
-              var(--bg); 
-              
-  /* Fixa as cores no tamanho real da tela e impede a repetição do gradiente */
-  background-size: 100vw 100vh; 
-  background-position: center; 
+html {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  /* Gradiente fixo na viewport, cobre overscroll naturalmente */
+  background-attachment: fixed;
+  background-image: 
+    radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(46, 191, 89, 0.15), transparent 35%);
+  background-color: var(--bg); /* fallback sólido da mesma cor do gradiente */
   background-repeat: no-repeat;
-  
-  transition: background 260ms ease;
+  background-size: cover;
+  background-position: center;
+  transition: background-color 260ms ease, background-image 260ms ease;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: transparent;
+  color: var(--text);
 }
 
 button,
