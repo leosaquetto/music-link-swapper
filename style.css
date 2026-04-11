@@ -212,11 +212,12 @@ button:active {
 }
 
 h1 {
-  font-size: clamp(28px, 6vw, 38px);
+  /* Aumento direto: de 28px/38px para 34px/48px */
+  font-size: clamp(34px, 7.5vw, 48px); 
   line-height: 0.95;
   letter-spacing: -0.035em;
   
-  /* Efeito Glass Shine Rosa/Vermelho */
+  /* Mantendo exatamente o efeito de brilho anterior */
   background: linear-gradient(
     to right, 
     #ed474c 20%, 
@@ -228,8 +229,6 @@ h1 {
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  
-  /* Removido titleFloat, adicionado textShine */
   animation: textShine 5s linear infinite;
 }
 
@@ -1118,17 +1117,15 @@ h2 {
 :root[data-theme="dark"] h1 {
   background: linear-gradient(
     to right, 
-    #ffffff 10%, 
-    #ed474c 30%, 
-    #071208 50%, 
-    #ed474c 70%, 
-    #ffffff 90%
+    #ffffff 35%,   /* Branco predomina na esquerda */
+    #00d752 45%,   /* Verde neon (brilho rápido) */
+    #ed474c 50%,   /* Rosa (transição rápida) */
+    #ffffff 65%    /* Volta para o branco rápido */
   );
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
-  /* A animação textShine já é herdada do h1 geral */
 }
 
 /* KEYFRAME ÚNICO PARA O BRILHO */
