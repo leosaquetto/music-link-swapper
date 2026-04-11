@@ -28,15 +28,7 @@
   --control-radius: 16px;
   --byline: #ec8189;
   --input-text: #606a7c;
-  --page-background:
-    linear-gradient(
-      180deg,
-      #f7f8fb 0%,
-      #f7f8fb 37%,
-      #f7f8fb 63%,
-      #f7f8fb 100%
-    ),
-    var(--bg);
+  --page-background: var(--bg);
 }
 
 :root[data-theme="dark"] {
