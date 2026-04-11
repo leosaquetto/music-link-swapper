@@ -36,7 +36,15 @@ export default async function handler(req, res) {
       : await fetchPrimaryApi(link, adapters);
 
     if (primaryResult.ok) {
-      return res.status(200).json({ ok: true, data: primaryResult.data });
+      const enrichmentResult = shouldUseSongLinkFirst
+        ? await fetchPrimaryApi(link, adapters)
+        : await fetchSongLinkAsFallback(link);
+
+      const mergedData = enrichmentResult.ok
+        ? mergeLinkResults(primaryResult.data, enrichmentResult.data)
+        : primaryResult.data;
+
+      return res.status(200).json({ ok: true, data: mergedData });
     }
 
     const fallbackResult = shouldUseSongLinkFirst
@@ -119,7 +127,7 @@ async function fetchSongLinkAsPrimary(link) {
 }
 
 async function fetchSongLinkAsFallback(link) {
-  return fetchSongLink(link, { markVerified: false });
+  return fetchSongLink(link, { markVerified: true });
 }
 
 async function fetchSongLink(link, { markVerified = false } = {}) {
@@ -190,7 +198,8 @@ function normalizeSongLinkPayload(data, { markVerified = false } = {}) {
 function mapSongLinkPlatform(platform) {
   const key = String(platform || "").toLowerCase();
 
-  if (key === "youtube" || key === "youtubemusic") return "youTube";
+  if (key === "youtube") return "youtube";
+  if (key === "youtubemusic") return "youtubeMusic";
   if (key === "soundcloud") return "soundCloud";
   if (key === "amazonmusic" || key === "amazon") return "amazonMusic";
   if (key === "itunes" || key === "apple") return "itunes";
@@ -242,4 +251,38 @@ function buildFriendlyPlatformError(platform, rawError) {
 function shouldPrioritizeSongLink(link) {
   const lower = String(link || "").toLowerCase();
   return SONGLINK_PRIORITY_HOSTS.some(host => lower.includes(host));
+}
+
+function mergeLinkResults(primaryData, enrichmentData) {
+  const base = Array.isArray(primaryData?.links) ? primaryData.links : [];
+  const extra = Array.isArray(enrichmentData?.links) ? enrichmentData.links : [];
+
+  if (!extra.length) return primaryData;
+
+  const byType = new Map();
+
+  for (const item of base) {
+    if (!item?.type || !item?.url) continue;
+    byType.set(String(item.type).toLowerCase(), { ...item });
+  }
+
+  for (const item of extra) {
+    if (!item?.type || !item?.url) continue;
+    const key = String(item.type).toLowerCase();
+    if (!byType.has(key)) {
+      byType.set(key, { ...item });
+      continue;
+    }
+
+    const existing = byType.get(key);
+    byType.set(key, {
+      ...existing,
+      isVerified: Boolean(existing?.isVerified || item?.isVerified)
+    });
+  }
+
+  return {
+    ...primaryData,
+    links: Array.from(byType.values())
+  };
 }
