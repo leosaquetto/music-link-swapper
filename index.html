@@ -21,8 +21,16 @@
         try {
           var savedTheme = localStorage.getItem("mls-theme");
           var theme = savedTheme === "dark" ? "dark" : "light";
-          var color = theme === "dark" ? "#0f2416" : "#f06b90";
+          
+          // 1. Usar as cores exatas do seu var(--bg) do CSS
+          var color = theme === "dark" ? "#0b0b0d" : "#f7f8fb";
+          
           document.documentElement.setAttribute("data-theme", theme);
+          
+          // 2. Forçar o fundo instantaneamente antes do CSS carregar
+          // Isso mata a faixa branca/preta no overscroll do PWA
+          document.documentElement.style.backgroundColor = color;
+          
           var themeMeta = document.querySelector('meta[name="theme-color"]');
           if (themeMeta) themeMeta.setAttribute("content", color);
         } catch (_error) {}
