@@ -15,22 +15,14 @@
     <title>music link swapper</title>
     <link rel="canonical" href="https://swapper.leosaquetto.com/" />
     <meta property="og:url" content="https://swapper.leosaquetto.com/" />
-    <meta name="theme-color" content="#f7f8fb" />
+    <meta name="theme-color" content="#f06b90" />
     <script>
-        (function syncInitialThemeMeta() {
+      (function syncInitialThemeMeta() {
         try {
           var savedTheme = localStorage.getItem("mls-theme");
           var theme = savedTheme === "dark" ? "dark" : "light";
-          
-          // 1. Usar as cores exatas do seu var(--bg) do CSS
-          var color = theme === "dark" ? "#0b0b0d" : "#f7f8fb";
-          
+          var color = theme === "dark" ? "#0f2416" : "#f06b90";
           document.documentElement.setAttribute("data-theme", theme);
-          
-          // 2. Forçar o fundo instantaneamente antes do CSS carregar
-          // Isso mata a faixa branca/preta no overscroll do PWA
-          // document.documentElement.style.backgroundColor = color;  // removido para não interferir no CSS
-          
           var themeMeta = document.querySelector('meta[name="theme-color"]');
           if (themeMeta) themeMeta.setAttribute("content", color);
         } catch (_error) {}
