@@ -147,7 +147,7 @@ button:active {
   height: 260px;
   top: 22%;
   left: -80px;
-  background: rgba(243, 95, 127, 0.6);
+  background: rgba(243, 95, 127, 0.5);
   animation: none;
 }
 
