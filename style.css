@@ -50,13 +50,13 @@
 html {
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Importante para o PWA no iOS */
+  overflow: auto;      /* ← antes era hidden */
   background-color: var(--bg);
 }
 
 body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
-  height: 100%;
+  min-height: 100%;    /* ← era height: 100% */
   width: 100%;
   margin: 0;
   padding: 0;
@@ -64,14 +64,18 @@ body {
   -webkit-overflow-scrolling: touch;
   background-color: var(--bg);
   color: var(--text);
+  position: relative;  /* ← NOVO: necessário para o pseudo-elemento absoluto */
 }
 
 /* Este pseudo-elemento fixo é a salvação para o Safari */
 body::before {
   content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -2; /* Diminuímos para -2 para ficar atrás das orbs */
+  position: absolute;   /* ← antes era fixed */
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100%;     /* garante que cubra todo o conteúdo rolável */
+  z-index: -2;
   pointer-events: none;
   background: 
     radial-gradient(circle at top left, rgba(243, 95, 127, 0.15), transparent 35%),
@@ -79,7 +83,7 @@ body::before {
     var(--bg);
   background-size: cover;
   background-position: center;
-  transition: background 260ms ease;
+  transition: background 260ms ease;  /* transição mantida */
 }
 
 button,
@@ -127,7 +131,6 @@ button:active {
   position: relative;
   z-index: 1;
   width: min(100%, 720px);
-  min-height: 101%; /* O 1% extra força o Safari a entender que há conteúdo */
   margin: 0 auto;
   padding: 
     calc(env(safe-area-inset-top) + 20px) 
