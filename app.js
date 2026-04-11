@@ -118,12 +118,15 @@ const els = {
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
   floatingToast: document.getElementById("floatingToast"),
-  themeToggle: document.getElementById("themeToggle")
+  themeToggle: document.getElementById("themeToggle"),
+  viewportFillSpacer: document.getElementById("viewportFillSpacer")
 };
 
 bootstrap();
 
 function bootstrap() {
+  installIOSViewportBounceGuard();
+  initIOSViewportFillAssist();
   injectButtonIcons();
   renderSupportedChips();
   initTheme();
@@ -131,6 +134,82 @@ function bootstrap() {
   bindLaunchQueueConsumer();
   hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
+}
+
+function initIOSViewportFillAssist() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iP(ad|hone|od)/.test(ua);
+  const isWebKit = /WebKit/i.test(ua);
+  const isCriOS = /CriOS/i.test(ua);
+  const isFxiOS = /FxiOS/i.test(ua);
+
+  if (!isIOS || !isWebKit || isCriOS || isFxiOS || !els.viewportFillSpacer) return;
+
+  const syncViewportFill = () => {
+    const hasResult = !els.resultCard?.classList.contains("hidden");
+    document.body.classList.toggle("needs-viewport-fill", !hasResult);
+
+    if (!hasResult && window.scrollY === 0) {
+      window.requestAnimationFrame(() => window.scrollTo(0, 1));
+    }
+  };
+
+  syncViewportFill();
+
+  const observer = new MutationObserver(syncViewportFill);
+  if (els.resultCard) {
+    observer.observe(els.resultCard, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  window.addEventListener("resize", syncViewportFill);
+}
+
+function installIOSViewportBounceGuard() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iP(ad|hone|od)/.test(ua);
+  const isWebKit = /WebKit/i.test(ua);
+  const isCriOS = /CriOS/i.test(ua);
+  const isFxiOS = /FxiOS/i.test(ua);
+
+  if (!isIOS || !isWebKit || isCriOS || isFxiOS) return;
+
+  let startY = 0;
+  let startX = 0;
+
+  document.addEventListener(
+    "touchstart",
+    event => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      startY = touch.clientY;
+      startX = touch.clientX;
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    "touchmove",
+    event => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+
+      const deltaY = touch.clientY - startY;
+      const deltaX = touch.clientX - startX;
+      const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
+      if (!isVerticalSwipe) return;
+
+      const scrollRoot = document.scrollingElement || document.documentElement;
+      const atTop = scrollRoot.scrollTop <= 0;
+      const atBottom = scrollRoot.scrollTop + window.innerHeight >= scrollRoot.scrollHeight - 1;
+      const pullingDownAtTop = atTop && deltaY > 0;
+      const pullingUpAtBottom = atBottom && deltaY < 0;
+
+      if (pullingDownAtTop || pullingUpAtBottom) {
+        event.preventDefault();
+      }
+    },
+    { passive: false }
+  );
 }
 
 function bindLaunchQueueConsumer() {
@@ -1093,6 +1172,10 @@ function toggleTheme() {
   applyTheme(current === "light" ? "dark" : "light");
 }
 
+function getThemeChromeColor(theme) {
+  return theme === "dark" ? "#0b0b0d" : "#f7f8fb";
+}
+
 function applyTheme(theme, { persist = true } = {}) {
   const normalized = theme === "dark" ? "dark" : "light";
   document.documentElement.classList.add("theme-switching");
@@ -1109,7 +1192,7 @@ function applyTheme(theme, { persist = true } = {}) {
   window.dispatchEvent(new CustomEvent("mls-theme-change", { detail: { theme: normalized } }));
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute("content", normalized === "dark" ? "#0f2416" : "#f06b90");
+    themeMeta.setAttribute("content", getThemeChromeColor(normalized));
   }
 
   state.themeSwitchTimer = setTimeout(() => {
