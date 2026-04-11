@@ -29,7 +29,7 @@
           
           // 2. Forçar o fundo instantaneamente antes do CSS carregar
           // Isso mata a faixa branca/preta no overscroll do PWA
-          document.documentElement.style.backgroundColor = color;
+          // document.documentElement.style.backgroundColor = color;  // removido para não interferir no CSS
           
           var themeMeta = document.querySelector('meta[name="theme-color"]');
           if (themeMeta) themeMeta.setAttribute("content", color);
