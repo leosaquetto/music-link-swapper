@@ -127,7 +127,7 @@ async function fetchSongLinkAsPrimary(link) {
 }
 
 async function fetchSongLinkAsFallback(link) {
-  return fetchSongLink(link, { markVerified: false });
+  return fetchSongLink(link, { markVerified: true });
 }
 
 async function fetchSongLink(link, { markVerified = false } = {}) {
@@ -198,7 +198,8 @@ function normalizeSongLinkPayload(data, { markVerified = false } = {}) {
 function mapSongLinkPlatform(platform) {
   const key = String(platform || "").toLowerCase();
 
-  if (key === "youtube" || key === "youtubemusic") return "youTube";
+  if (key === "youtube") return "youtube";
+  if (key === "youtubemusic") return "youtubeMusic";
   if (key === "soundcloud") return "soundCloud";
   if (key === "amazonmusic" || key === "amazon") return "amazonMusic";
   if (key === "itunes" || key === "apple") return "itunes";
