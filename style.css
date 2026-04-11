@@ -121,8 +121,8 @@ button:active {
 .bg-orb {
   position: fixed;
   z-index: 0;
-  filter: blur(86px);
-  opacity: 0.58;
+  filter: blur(60px);
+  opacity: 0.80;
   pointer-events: none;
 }
 
