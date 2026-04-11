@@ -113,6 +113,30 @@ const els = {
   themeToggle: document.getElementById("themeToggle")
 };
 
+async function handleIncomingLink() {
+  const params = new URLSearchParams(window.location.search);
+  const sharedUrl = params.get('url');
+
+  if (sharedUrl) {
+    // Se veio via link (Atalho do iOS ou query string)
+    els.input.value = decodeURIComponent(sharedUrl);
+    onConvert({ shouldScrollToStatus: true });
+    // Limpa a URL para não converter de novo se der refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    // Tentar ler o clipboard automaticamente ao abrir
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && isSupportedStreamingUrl(extractUrl(text.trim()) || "")) {
+        els.input.value = text;
+        // Opcional: onConvert() se quiser que converta assim que abrir
+      }
+    } catch (err) {
+      console.log('Permissão de clipboard negada ou não suportada');
+    }
+  }
+}
+
 bootstrap();
 
 function bootstrap() {
@@ -123,6 +147,7 @@ function bootstrap() {
   hydrateFromQuery();
   tryAutoPasteFromClipboard();
   bindTelegramAutoPaste();
+  handleIncomingLink();
 }
 
 function injectButtonIcons() {
