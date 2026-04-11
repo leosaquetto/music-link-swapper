@@ -236,7 +236,7 @@ h1 {
 
 .hero-subtitle {
   color: var(--muted);
-  margin-top: 6px;
+  margin-top: 2px;
   font-size: 13px;
   line-height: 1.46;
   max-width: 34ch;
