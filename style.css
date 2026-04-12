@@ -607,7 +607,9 @@ h1 {
 }
 
 .result-card {
+  position: relative;
   overflow: visible;
+  padding-bottom: 44px;
 }
 
 .result-header {
@@ -771,6 +773,20 @@ h2 {
   gap: 10px;
   color: var(--muted);
   font-size: 10px;
+}
+
+.result-dismiss-button {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
 }
 
 .legend-item {
@@ -953,7 +969,8 @@ h2 {
 .mini-head-action.is-pressed-copy,
 .icon-button.is-pressed-copy,
 .tiny-button.is-pressed-copy,
-.clear-history-button.is-pressed-copy {
+.clear-history-button.is-pressed-copy,
+.result-dismiss-button.is-pressed-copy {
   background: var(--danger);
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);
@@ -1290,6 +1307,7 @@ body.ios-install-modal-open {
   font-size: 14px;
   letter-spacing: 0.1em;
   color: var(--muted);
+  font-weight: 500;
 }
 
 .recent-swaps-close {
@@ -1395,14 +1413,15 @@ body.ios-install-modal-open {
 
 .clear-history-button {
   border: 1px solid var(--line);
-  border-radius: 12px;
-  min-height: 38px;
-  padding: 0 12px;
+  border-radius: 10px;
+  min-height: 32px;
+  padding: 0 10px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
+  font-size: 12px;
 }
 
 body.recent-swaps-modal-open {
@@ -1803,7 +1822,8 @@ body.recent-swaps-modal-open {
 :root[data-theme="dark"] .mini-head-action.is-pressed-copy,
 :root[data-theme="dark"] .icon-button.is-pressed-copy,
 :root[data-theme="dark"] .tiny-button.is-pressed-copy,
-:root[data-theme="dark"] .clear-history-button.is-pressed-copy {
+:root[data-theme="dark"] .clear-history-button.is-pressed-copy,
+:root[data-theme="dark"] .result-dismiss-button.is-pressed-copy {
   background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
   color: #071208;
   box-shadow: 0 10px 24px rgba(52, 199, 89, 0.35);
@@ -1829,6 +1849,12 @@ body.recent-swaps-modal-open {
 }
 
 :root:not([data-theme="dark"]) .platform-item {
+  background: rgba(246, 248, 253, 0.9);
+  border-color: rgba(18, 22, 35, 0.14);
+  box-shadow: 0 8px 20px rgba(25, 32, 50, 0.06);
+}
+
+:root:not([data-theme="dark"]) .recent-swap-card {
   background: rgba(246, 248, 253, 0.9);
   border-color: rgba(18, 22, 35, 0.14);
   box-shadow: 0 8px 20px rgba(25, 32, 50, 0.06);
@@ -1881,7 +1907,8 @@ body.recent-swaps-modal-open {
 :root:not([data-theme="dark"]) .mini-head-action.is-pressed-copy,
 :root:not([data-theme="dark"]) .icon-button.is-pressed-copy,
 :root:not([data-theme="dark"]) .tiny-button.is-pressed-copy,
-:root:not([data-theme="dark"]) .clear-history-button.is-pressed-copy {
+:root:not([data-theme="dark"]) .clear-history-button.is-pressed-copy,
+:root:not([data-theme="dark"]) .result-dismiss-button.is-pressed-copy {
   background: #ed474c;
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);

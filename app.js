@@ -51,7 +51,7 @@ const MAX_RECENT_SWAPS = 5;
 const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
 
 const SVG_ICONS = {
-  history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20" aria-hidden="true"><path fill="currentColor" d="M12 4a8 8 0 1 1-7.75 10h2.06A6 6 0 1 0 6 10H3.4l1.8-1.8A1 1 0 1 0 3.8 6.8L.3 10.3a1 1 0 0 0 0 1.4l3.5 3.5a1 1 0 0 0 1.4-1.4L3.4 12H6a8 8 0 0 1 6-8Zm-1 4a1 1 0 0 1 2 0v3.59l2.2 2.2a1 1 0 1 1-1.4 1.42l-2.5-2.5A1 1 0 0 1 11 12V8Z"/></svg>`,
+  history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>`,
   link: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20" aria-hidden="true"><path fill="currentColor" d="M9.47 14.53a1 1 0 0 1 0-1.41l4.24-4.24a1 1 0 0 1 1.41 1.41l-4.24 4.24a1 1 0 0 1-1.41 0Zm-3.54 3.54a4 4 0 0 1 0-5.66l2.12-2.12a1 1 0 1 1 1.41 1.41L7.34 13.8a2 2 0 0 0 2.83 2.83l2.12-2.12a1 1 0 0 1 1.41 1.41l-2.12 2.12a4 4 0 0 1-5.66 0ZM10.3 8.7a1 1 0 0 1 0-1.4l2.12-2.13a4 4 0 0 1 5.66 5.66l-2.12 2.12a1 1 0 1 1-1.41-1.41l2.12-2.12a2 2 0 0 0-2.83-2.83L11.71 8.7a1 1 0 0 1-1.41 0Z"/></svg>`,
   shuffle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3,8H5.28a6,6,0,0,1,4.51,2.05L13.21,14a6,6,0,0,0,4.51,2H21"/><polyline points="19 14 21 16 19 18"/><path d="M21,8H17.72a6,6,0,0,0-4.51,2.05L9.79,14a6,6,0,0,1-4.51,2H3"/><polyline points="19 6 21 8 19 10"/></g></svg>`,
   swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410.489 410.489" aria-hidden="true"><path fill="currentColor" d="M370.446,256.623l36.079-81.654c2.257-5.125,3.328-10.356,3.356-15.262c1.167-5.059,0.708-10.519-1.854-15.482c-3.356-6.55-9.477-10.643-16.209-11.876c-2.696-1.252-5.604-2.247-8.759-2.897l-87.459-17.939c-16.715-3.452-32.397,4.102-35.008,16.839c-2.611,12.747,8.807,25.848,25.531,29.261l33.211,6.837L186.99,232.726c-11.15,5.709-15.51,19.422-9.773,30.553c5.767,11.131,19.44,15.481,30.561,9.744l134.631-69.396l-15.022,34.004c-6.885,15.616-2.84,32.513,9.056,37.782C348.338,280.654,363.562,272.239,370.446,256.623z"/><path fill="currentColor" d="M74.067,135.093c-11.905-5.26-27.129,3.146-34.023,18.762l-36.08,81.654c-2.256,5.125-3.328,10.355-3.356,15.28c-1.167,5.049-0.708,10.5,1.855,15.463c3.366,6.55,9.476,10.643,16.208,11.877c2.696,1.252,5.613,2.247,8.769,2.897l87.458,17.958c16.706,3.433,32.388-4.121,34.999-16.858c2.61-12.729-8.807-25.848-25.532-29.262l-33.211-6.827l132.344-68.267c11.15-5.728,15.521-19.44,9.773-30.571c-5.767-11.131-19.431-15.482-30.561-9.744L68.081,206.87l15.023-34.014C90.007,157.259,85.972,140.343,74.067,135.093z"/></svg>`,
@@ -155,6 +155,7 @@ const els = {
   resultMeta: document.getElementById("resultMeta"),
   platformGroups: document.getElementById("platformGroups"),
   resultLegend: document.getElementById("resultLegend"),
+  resultDismissButton: document.getElementById("resultDismissButton"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
@@ -170,7 +171,8 @@ const els = {
   recentSwapsBackdrop: document.getElementById("recentSwapsBackdrop"),
   recentSwapsClose: document.getElementById("recentSwapsClose"),
   recentSwapsList: document.getElementById("recentSwapsList"),
-  clearRecentSwapsButton: document.getElementById("clearRecentSwapsButton")
+  clearRecentSwapsButton: document.getElementById("clearRecentSwapsButton"),
+  recentSwapsTitle: document.getElementById("recentSwapsTitle")
 };
 
 if (document.readyState === "loading") {
@@ -485,6 +487,11 @@ function bindEvents() {
     resetForm({ announce: true });
   });
 
+  els.resultDismissButton?.addEventListener("click", event => {
+    pulseActionButton(event.currentTarget);
+    resetForm();
+  });
+
   els.pasteButton?.addEventListener("click", async () => {
     const pasted = await smartPasteIntoInput({ announce: true, autoConvert: true });
 
@@ -744,7 +751,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   softlyDismissKeyboard();
   setLoading(true);
   hideResult();
-  showStatus(modeAtSubmit ? "pesquisando..." : "swapando...", "default");
+  showStatus(modeAtSubmit ? "pesquisando..." : "carregando swaps...", "default");
   startCoverShimmer();
 
   try {
@@ -772,7 +779,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       return;
     }
 
-    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link);
+    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link, modeAtSubmit);
     if (!result) {
       stopCoverShimmer();
       showStatus("não encontrei plataformas para esse link.", "error");
@@ -816,7 +823,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   }
 }
 
-function normalizeApiPayload(data, sourceLink = "") {
+function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   const rawTitle = cleanText(data.title || "música encontrada");
   const rawDescription = cleanText(data.description || "");
   const preview = parsePreview(rawTitle, rawDescription);
@@ -832,6 +839,7 @@ function normalizeApiPayload(data, sourceLink = "") {
     image,
     universalLink: data.universalLink || null,
     originalUrl: sourceLink || "",
+    fromSearchMode: !!fromSearchMode,
     links
   };
 }
@@ -1282,8 +1290,7 @@ function persistRecentSwaps() {
 
 function saveRecentSwap(result) {
   if (!result || !result.title) return;
-  const fallbackLink = result.links.find(item => !item.isSearchResult)?.url || "";
-  const originalUrl = cleanText(result.originalUrl || state.currentOriginalUrl || fallbackLink);
+  const originalUrl = cleanText(result.originalUrl || state.currentOriginalUrl || "");
   const sourceKey = detectPlatformKeyFromUrl(originalUrl);
   const sourceMeta = sourceKey ? PLATFORM_META[sourceKey] : null;
   const entry = {
@@ -1293,6 +1300,8 @@ function saveRecentSwap(result) {
     album: cleanText(result.album || ""),
     image: cleanText(result.image || ""),
     originalUrl,
+    isManualSearch: !!result.fromSearchMode,
+    queryText: cleanText([result.artist, result.title].filter(Boolean).join(" ")),
     sourceKey: sourceKey || "",
     sourceName: sourceMeta?.name || "fonte",
     savedAt: Date.now()
@@ -1332,6 +1341,18 @@ function detectPlatformKeyFromUrl(url) {
 
 function renderRecentSwaps() {
   if (!els.recentSwapsList) return;
+  const swapCount = state.recentSwaps.length;
+  if (els.recentSwapsTitle) {
+    els.recentSwapsTitle.textContent = swapCount === 1 ? "ÚLTIMO SWAP" : "SWAPS RECENTES";
+  }
+  if (els.clearRecentSwapsButton) {
+    els.clearRecentSwapsButton.classList.toggle("hidden", swapCount === 0);
+    const label = els.clearRecentSwapsButton.querySelector("span:last-child");
+    if (label) {
+      label.textContent = swapCount === 1 ? "limpar swap" : "limpar swaps";
+    }
+  }
+
   if (!state.recentSwaps.length) {
     els.recentSwapsList.innerHTML = `<p class="recent-empty">ainda não há swaps recentes.</p>`;
     return;
@@ -1346,6 +1367,8 @@ function renderRecentSwaps() {
     const safeArtist = escapeHtml(item.artist || "artista desconhecido");
     const safeImage = escapeHtml(item.image || "");
     const sourceName = escapeHtml(item.sourceName || "fonte");
+    const shouldShowSource = !item.isManualSearch && !!sourceIcon;
+    const shouldShowCopy = !item.isManualSearch && !!item.originalUrl;
 
     card.innerHTML = `
       <div class="recent-swap-cover-wrap">
@@ -1355,11 +1378,9 @@ function renderRecentSwaps() {
         <p class="recent-swap-artist">${safeArtist}</p>
         <p class="recent-swap-title">${safeTitle}</p>
       </div>
-      <div class="recent-swap-source" title="${sourceName}" aria-label="${sourceName}">
-        ${sourceIcon || "•"}
-      </div>
+      ${shouldShowSource ? `<div class="recent-swap-source" title="${sourceName}" aria-label="${sourceName}">${sourceIcon}</div>` : `<div class="recent-swap-source hidden" aria-hidden="true"></div>`}
       <div class="recent-swap-actions">
-        <button class="mini-action copy" type="button" data-action="copy" aria-label="copiar link" title="copiar link">
+        <button class="mini-action copy ${shouldShowCopy ? "" : "hidden"}" type="button" data-action="copy" aria-label="copiar link" title="copiar link">
           <span class="button-icon">${SVG_ICONS.link}</span>
         </button>
         <button class="mini-action open" type="button" data-action="swap" aria-label="refazer swap" title="refazer swap">
@@ -1376,11 +1397,20 @@ function renderRecentSwaps() {
     });
 
     card.querySelector('[data-action="swap"]')?.addEventListener("click", event => {
-      if (!item.originalUrl) return;
       pulseActionButton(event.currentTarget, "open");
       closeRecentSwapsModal();
-      els.input.value = item.originalUrl;
-      onConvert({ shouldScrollToStatus: true, forcedLink: item.originalUrl });
+      if (item.originalUrl) {
+        els.input.value = item.originalUrl;
+        onConvert({ shouldScrollToStatus: true, forcedLink: item.originalUrl });
+        return;
+      }
+
+      if (item.queryText) {
+        state.isSearchMode = true;
+        syncSearchModeUI();
+        els.input.value = item.queryText;
+        onConvert({ shouldScrollToStatus: true });
+      }
     });
 
     els.recentSwapsList.appendChild(card);
