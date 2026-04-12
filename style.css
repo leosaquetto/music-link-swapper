@@ -185,7 +185,7 @@ button:active {
 }
 
 body.needs-viewport-fill .viewport-fill-spacer {
-  height: clamp(28px, 8vh, 72px);
+  height: clamp(4px, 1.8vh, 14px);
 }
 
 .card {
@@ -373,8 +373,8 @@ h1 {
 }
 
 .tiny-icon-button .button-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   transform: translateX(-0.75px);
 }
 
@@ -382,6 +382,21 @@ h1 {
   background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
   color: #071208;
   box-shadow: 0 8px 20px rgba(52, 199, 89, 0.28);
+}
+
+
+:root[data-theme="dark"] .tiny-button,
+:root[data-theme="dark"] .see-more-button {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .tiny-button:hover,
+:root[data-theme="dark"] .see-more-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#clearButton .button-icon svg {
+  transform: scale(0.9);
 }
 
 .input-row {
@@ -405,12 +420,12 @@ h1 {
     box-shadow 180ms ease,
     background 220ms ease,
     color 220ms ease;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .text-input::placeholder {
   color: var(--soft);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .text-input:focus {
@@ -546,8 +561,8 @@ h1 {
 
 .chip.icon-chip svg,
 .chip.icon-chip img {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: block;
   flex: 0 0 auto;
   transition: color 220ms ease;
@@ -697,7 +712,7 @@ h2 {
 .platform-groups {
   display: grid;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 12px;
   min-width: 0;
 }
 
@@ -750,16 +765,16 @@ h2 {
 }
 
 .legend-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .legend-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
 }
 
 .legend-icon.is-verified {
@@ -978,42 +993,231 @@ h2 {
 .footer {
   text-align: center;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 10px;
   padding: 10px 0 8px;
   display: grid;
-  gap: 6px;
+  gap: 4px;
+  margin-top: 18px;
+}
+
+body.needs-viewport-fill .footer {
+  margin-top: 6px;
 }
 
 .shortcut-card {
+  text-decoration: none !important;
+}
+
+.ios-badges {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: center;
+  gap: 8px;
+  width: min(100%, 320px);
+  margin: 0 auto 10px;
+}
+
+.ios-badge {
+  border: 0;
+  border-radius: 12px;
+  background: rgba(246, 248, 253, 0.9);
+  color: #ed474c;
+  min-height: 46px;
+  padding: 6px 9px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 0 auto 2px;
-  padding: 6px 10px;
+  justify-content: flex-start;
+  box-shadow: 0 8px 18px rgba(25, 32, 50, 0.06);
+}
+
+.ios-badge-icon {
+  width: 17px;
+  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ed474c;
+}
+
+.ios-badge-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ios-badge-text {
+  display: grid;
+  line-height: 1.05;
+  text-align: left;
+}
+
+.ios-badge-text small {
+  font-size: 8.5px;
+  color: #ed474c;
+  font-weight: 600;
+}
+
+.ios-badge-text strong {
+  font-size: 12px;
+  color: #ed474c;
+  font-weight: 700;
+}
+
+:root[data-theme="dark"] .ios-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] .ios-badge-icon,
+:root[data-theme="dark"] .ios-badge-text small,
+:root[data-theme="dark"] .ios-badge-text strong {
+  color: #ffffff;
+}
+
+.ios-install-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: end center;
+  padding: 16px 14px calc(14px + env(safe-area-inset-bottom));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.ios-install-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ios-install-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 8, 14, 0.56);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.ios-install-modal.is-open .ios-install-backdrop {
+  opacity: 1;
+}
+
+.ios-install-sheet {
+  position: relative;
+  width: min(100%, 470px);
+  border-radius: 24px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  background: var(--panel-strong);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.34);
+  padding: 18px 18px 16px;
+  text-align: left;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
+  transition:
+    opacity 220ms ease,
+    transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ios-install-modal.is-open .ios-install-sheet {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ios-install-sheet h2 {
+  font-size: 22px;
+  line-height: 1.14;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.ios-install-mockup {
+  width: min(100%, 240px);
+  margin: 10px auto 14px;
   color: var(--muted);
-  text-decoration: none !important;
-  background: rgba(255, 255, 255, 0.04);
-  width: fit-content;
-  font-weight: 500 !important;
 }
 
-.shortcut-card svg {
-  width: 14px;
-  height: 14px;
+.ios-install-mockup svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.shortcut-card .shortcut-text {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+.ios-install-steps {
+  list-style: none;
+  margin: 12px 0;
+  padding-left: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.ios-install-steps li {
+  display: block;
+}
+
+
+.step-number {
+  display: inline-block;
+  min-width: 20px;
+  margin-right: 6px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.step-accent {
+  color: #0a84ff;
+  font-weight: 400;
+}
+
+.step-icon {
+  width: 17px;
+  height: 17px;
+  color: #0a84ff;
+  display: inline-flex;
+  vertical-align: -2px;
+  margin: 0 5px 0 2px;
+}
+
+.step-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ios-install-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+body.ios-install-modal-open {
+  overflow: hidden;
 }
 
 .footer a {
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: underline;
   color: inherit;
+}
+
+.footer strong {
+  font-weight: 600;
+}
+
+.ios-badge {
+  text-decoration: none !important;
+  font-weight: 500 !important;
 }
 
 .hidden {
@@ -1193,8 +1397,14 @@ h2 {
     padding: 4px 2px 6px;
   }
 
+  .hero-subtitle {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
   .button-row-compact {
     grid-template-columns: minmax(0, 1fr) 50px 50px;
+    margin-top: 7px;
   }
 
   .platform-item {
@@ -1228,6 +1438,16 @@ h2 {
     height: 72px;
   }
 
+  .result-card {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .platform-groups {
+    margin-top: 8px;
+    gap: 10px;
+  }
+
   .app-logo {
     width: 96px;
     height: 96px;
@@ -1254,7 +1474,7 @@ h2 {
 
   .tiny-button {
     padding: 7px 10px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .platform-item {
