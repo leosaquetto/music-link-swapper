@@ -40,21 +40,27 @@
     <div class="bg-orb orb-a"></div>
     <div class="bg-orb orb-b"></div>
 
-    <div class="app-shell">
+    <div id="appShell" class="app-shell">
       <header class="hero-card reveal">
         <div class="hero-topbar">
-          <button id="themeToggle" class="theme-toggle" type="button" aria-label="alternar tema" title="alternar tema"></button>
+          <div class="topbar-controls">
+            <div id="languageMenu" class="language-menu">
+              <button id="languageToggle" class="theme-toggle language-toggle" type="button" aria-label="selecionar idioma" title="selecionar idioma"></button>
+              <div id="languageDropdown" class="language-dropdown hidden" role="menu" aria-label="seleção de idioma"></div>
+            </div>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-label="alternar tema" title="alternar tema"></button>
+          </div>
         </div>
 
           <div class="hero-left">
             <img class="app-logo" src="https://i.imgur.com/T1uEx9T.gif?v=20260411" alt="logo do app" />
             <div class="hero-copy">
-              <h1>music link<br />swapper</h1>
-              <p class="hero-byline">por leo saquetto</p>
+              <h1 id="heroTitle">music link<br />swapper</h1>
+              <p id="heroByline" class="hero-byline">por leo saquetto</p>
             </div>
           </div>
 
-        <p class="hero-subtitle">qualquer streaming por um só link</p>
+        <p id="heroSubtitle" class="hero-subtitle">qualquer streaming por um só link</p>
       </header>
 
       <main class="main-stack">
@@ -183,8 +189,8 @@
           </a>
         </div>
 
-        <p>feito por 🇧🇷 <a href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer">leo saquetto</a></p>
-        <p>powered by <a href="https://idonthavespotify.sjdonado.com" target="_blank" rel="noopener noreferrer">idonthavespotify</a> &amp; <a href="https://odesli.co" target="_blank" rel="noopener noreferrer"><strong>odesli</strong></a></p>
+        <p id="footerMadeBy">feito por 🇧🇷 <a href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer">leo saquetto</a></p>
+        <p id="footerPoweredBy">powered by <a href="https://idonthavespotify.sjdonado.com" target="_blank" rel="noopener noreferrer">idonthavespotify</a> &amp; <a href="https://odesli.co" target="_blank" rel="noopener noreferrer"><strong>odesli</strong></a></p>
       </footer>
     </div>
 
