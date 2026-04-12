@@ -1,6 +1,7 @@
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
+const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 
 const SONGLINK_PRIORITY_HOSTS = [
   "pandora.com",
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
 
 async function buildSpotifySearchFallback(link) {
   try {
-    const metadata = await fetchSpotifyMetadataFromOg(link);
+    const metadata = await fetchSpotifyMetadata(link);
     if (!metadata?.title) {
       return {
         ok: false,
@@ -129,6 +130,28 @@ async function buildSpotifySearchFallback(link) {
   }
 }
 
+async function fetchSpotifyMetadata(link) {
+  const ogMetadata = await tryFetchSpotifyMetadataFromOg(link);
+  if (ogMetadata?.title) {
+    return ogMetadata;
+  }
+
+  return fetchSpotifyMetadataFromOEmbed(link);
+}
+
+async function tryFetchSpotifyMetadataFromOg(link) {
+  try {
+    return await fetchSpotifyMetadataFromOg(link);
+  } catch (_error) {
+    return {
+      title: "",
+      description: "",
+      image: "",
+      type: ""
+    };
+  }
+}
+
 async function fetchSpotifyMetadataFromOg(link) {
   const response = await fetch(link, {
     headers: {
@@ -149,6 +172,43 @@ async function fetchSpotifyMetadataFromOg(link) {
   const type = extractOgValue(html, "og:type");
 
   return { title, description, image, type };
+}
+
+async function fetchSpotifyMetadataFromOEmbed(link) {
+  const response = await fetch(`${SPOTIFY_OEMBED_API_URL}?url=${encodeURIComponent(link)}`, {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error("spotify oembed indisponível");
+  }
+
+  const payload = await response.json();
+  const { title, artist } = parseSpotifyOEmbedTitle(payload?.title || "");
+
+  return {
+    title,
+    description: artist ? `${artist} · Spotify` : "",
+    image: payload?.thumbnail_url || "",
+    type: payload?.type || ""
+  };
+}
+
+function parseSpotifyOEmbedTitle(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return { title: "", artist: "" };
+
+  const index = raw.toLowerCase().lastIndexOf(" by ");
+  if (index === -1) {
+    return { title: raw, artist: "" };
+  }
+
+  return {
+    title: raw.slice(0, index).trim(),
+    artist: raw.slice(index + 4).trim()
+  };
 }
 
 function extractOgValue(html, property) {
