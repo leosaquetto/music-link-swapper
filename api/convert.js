@@ -5,17 +5,29 @@ const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
 const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
 const SPOTIFY_NEGATIVE_CACHE_TTL_MS = 2 * 60 * 1000;
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
-const RATE_LIMIT_MAX_REQUESTS = 60;
+const RATE_LIMIT_SHORT_WINDOW_MS = 10 * 1000;
+const RATE_LIMIT_LONG_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_LINK_SHORT_MAX = 5;
+const RATE_LIMIT_LINK_LONG_MAX = 20;
+const RATE_LIMIT_QUERY_SHORT_MAX = 3;
+const RATE_LIMIT_QUERY_LONG_MAX = 10;
+const RATE_LIMIT_BLOCK_MS = 10 * 60 * 1000;
+const RATE_LIMIT_STRIKES_BEFORE_BLOCK = 3;
+const REQUEST_TIMEOUT_MS = 6_000;
+const MAX_IN_FLIGHT_REQUESTS = 40;
+const MAX_QUERY_LENGTH = 160;
+const MAX_LINK_LENGTH = 500;
 
 const spotifyUrlCache = new Map();
 const spotifyQueryCache = new Map();
 const spotifyNegativeCache = new Map();
 const requestRateLimitStore = new Map();
+let inFlightRequests = 0;
 const metrics = {
   requests: 0,
   rateLimited: 0,
   errors: 0,
+  rejectedByLoad: 0,
   spotifyCacheHit: 0,
   spotifyCacheMiss: 0
 };
@@ -40,8 +52,18 @@ export default async function handler(req, res) {
     });
   }
 
+  if (!acquireInFlightSlot()) {
+    metrics.rejectedByLoad += 1;
+    return res.status(503).json({
+      ok: false,
+      error: "servidor ocupado, tente novamente em instantes"
+    });
+  }
+
   try {
-    const rateLimit = enforceRateLimit(req, res);
+    const { link, adapters, queryMode, query } = req.body || {};
+    const mode = queryMode ? "query" : "link";
+    const rateLimit = enforceRateLimit(req, res, mode);
     if (!rateLimit.allowed) {
       metrics.rateLimited += 1;
       return res.status(429).json({
@@ -50,13 +72,18 @@ export default async function handler(req, res) {
       });
     }
 
-    const { link, adapters, queryMode, query } = req.body || {};
-
     if (queryMode) {
       if (!query || typeof query !== "string" || !query.trim()) {
         return res.status(400).json({
           ok: false,
           error: "consulta inválida"
+        });
+      }
+
+      if (!isQuerySafe(query)) {
+        return res.status(400).json({
+          ok: false,
+          error: "consulta inválida ou muito longa"
         });
       }
 
@@ -75,6 +102,13 @@ export default async function handler(req, res) {
       return res.status(400).json({
         ok: false,
         error: "link inválido"
+      });
+    }
+
+    if (!isSupportedMusicLink(link)) {
+      return res.status(400).json({
+        ok: false,
+        error: "link inválido ou não suportado"
       });
     }
 
@@ -122,6 +156,8 @@ export default async function handler(req, res) {
       ok: false,
       error: "erro interno ao converter"
     });
+  } finally {
+    releaseInFlightSlot();
   }
 }
 
@@ -343,30 +379,50 @@ function deleteCache(cache, key) {
   cache.delete(key);
 }
 
-function enforceRateLimit(req, res) {
+function enforceRateLimit(req, res, mode = "link") {
   const now = Date.now();
   const key = resolveRateLimitKey(req);
-  const current = requestRateLimitStore.get(key);
+  const current = requestRateLimitStore.get(key) || {
+    short: { count: 0, resetAt: now + RATE_LIMIT_SHORT_WINDOW_MS },
+    long: { count: 0, resetAt: now + RATE_LIMIT_LONG_WINDOW_MS },
+    strikes: 0,
+    blockedUntil: 0
+  };
 
-  if (!current || current.resetAt <= now) {
-    requestRateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
-    res.setHeader("X-RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX_REQUESTS - 1)));
-    return { allowed: true };
-  }
-
-  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
-    const retryAfterSeconds = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+  if (current.blockedUntil > now) {
+    const retryAfterSeconds = Math.max(1, Math.ceil((current.blockedUntil - now) / 1000));
     res.setHeader("Retry-After", String(retryAfterSeconds));
-    res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
     res.setHeader("X-RateLimit-Remaining", "0");
     return { allowed: false };
   }
 
-  current.count += 1;
+  if (current.short.resetAt <= now) current.short = { count: 0, resetAt: now + RATE_LIMIT_SHORT_WINDOW_MS };
+  if (current.long.resetAt <= now) current.long = { count: 0, resetAt: now + RATE_LIMIT_LONG_WINDOW_MS };
+
+  const limits = mode === "query"
+    ? { short: RATE_LIMIT_QUERY_SHORT_MAX, long: RATE_LIMIT_QUERY_LONG_MAX }
+    : { short: RATE_LIMIT_LINK_SHORT_MAX, long: RATE_LIMIT_LINK_LONG_MAX };
+
+  if (current.short.count >= limits.short || current.long.count >= limits.long) {
+    current.strikes += 1;
+    if (current.strikes >= RATE_LIMIT_STRIKES_BEFORE_BLOCK) {
+      current.blockedUntil = now + RATE_LIMIT_BLOCK_MS;
+      current.strikes = 0;
+    }
+    requestRateLimitStore.set(key, current);
+    const retryAt = current.blockedUntil > now ? current.blockedUntil : Math.min(current.short.resetAt, current.long.resetAt);
+    const retryAfterSeconds = Math.max(1, Math.ceil((retryAt - now) / 1000));
+    res.setHeader("Retry-After", String(retryAfterSeconds));
+    res.setHeader("X-RateLimit-Limit", String(limits.long));
+    res.setHeader("X-RateLimit-Remaining", "0");
+    return { allowed: false };
+  }
+
+  current.short.count += 1;
+  current.long.count += 1;
   requestRateLimitStore.set(key, current);
-  res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
-  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX_REQUESTS - current.count)));
+  res.setHeader("X-RateLimit-Limit", String(limits.long));
+  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, limits.long - current.long.count)));
   return { allowed: true };
 }
 
@@ -378,7 +434,58 @@ function resolveRateLimitKey(req) {
     req.socket?.remoteAddress ||
     "unknown-ip";
   const apiKey = String(req.headers?.["x-api-key"] || "anon").trim();
-  return `${ip}|${apiKey}`;
+  const userAgent = String(req.headers?.["user-agent"] || "").slice(0, 120);
+  return `${ip}|${apiKey}|${userAgent}`;
+}
+
+function acquireInFlightSlot() {
+  if (inFlightRequests >= MAX_IN_FLIGHT_REQUESTS) return false;
+  inFlightRequests += 1;
+  return true;
+}
+
+function releaseInFlightSlot() {
+  inFlightRequests = Math.max(0, inFlightRequests - 1);
+}
+
+function isQuerySafe(query) {
+  const normalized = String(query || "").trim();
+  if (!normalized || normalized.length > MAX_QUERY_LENGTH) return false;
+  if (/([a-z0-9])\1{8,}/i.test(normalized)) return false;
+  if (!/[a-z0-9]/i.test(normalized)) return false;
+  return true;
+}
+
+function isSupportedMusicLink(link) {
+  const normalized = String(link || "").trim();
+  if (!normalized || normalized.length > MAX_LINK_LENGTH) return false;
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch (_error) {
+    return false;
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) return false;
+  const host = parsed.hostname.toLowerCase();
+  const supportedHosts = [
+    "spotify.com",
+    "open.spotify.com",
+    "music.apple.com",
+    "itunes.apple.com",
+    "youtube.com",
+    "youtu.be",
+    "music.youtube.com",
+    "deezer.com",
+    "soundcloud.com",
+    "tidal.com",
+    "qobuz.com",
+    "pandora.com",
+    "music.amazon.com",
+    "amazon.com"
+  ];
+
+  return supportedHosts.some(item => host === item || host.endsWith(`.${item}`));
 }
 
 let nextMetricsLogAt = Date.now() + 60_000;
@@ -412,6 +519,20 @@ function cloneJson(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort("timeout"), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function fetchSpotifyMetadata(link) {
   const ogMetadata = await tryFetchSpotifyMetadataFromOg(link);
   if (ogMetadata?.title) {
@@ -435,7 +556,7 @@ async function tryFetchSpotifyMetadataFromOg(link) {
 }
 
 async function fetchSpotifyMetadataFromOg(link) {
-  const response = await fetch(link, {
+  const response = await fetchWithTimeout(link, {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -457,7 +578,7 @@ async function fetchSpotifyMetadataFromOg(link) {
 }
 
 async function fetchSpotifyMetadataFromOEmbed(link) {
-  const response = await fetch(`${SPOTIFY_OEMBED_API_URL}?url=${encodeURIComponent(link)}`, {
+  const response = await fetchWithTimeout(`${SPOTIFY_OEMBED_API_URL}?url=${encodeURIComponent(link)}`, {
     headers: {
       Accept: "application/json"
     }
@@ -550,7 +671,7 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
   if (!query) return { url: "", isVerified: false };
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${ITUNES_SEARCH_API_URL}?term=${encodeURIComponent(query)}&entity=song&limit=5`
     );
 
@@ -774,7 +895,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 
 async function fetchPrimaryApi(link, adapters) {
   try {
-    const upstream = await fetch(PRIMARY_API_URL, {
+    const upstream = await fetchWithTimeout(PRIMARY_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -841,7 +962,7 @@ async function fetchSongLinkAsFallback(link) {
 
 async function fetchSongLink(link, { markVerified = false } = {}) {
   try {
-    const upstream = await fetch(`${SONGLINK_API_URL}?url=${encodeURIComponent(link)}`);
+    const upstream = await fetchWithTimeout(`${SONGLINK_API_URL}?url=${encodeURIComponent(link)}`);
     const data = await upstream.json();
 
     if (!upstream.ok) {
