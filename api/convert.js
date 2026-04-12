@@ -172,15 +172,17 @@ async function buildSpotifySearchFallback(link) {
       return failedResult;
     }
 
+    const metadataPayload = pickBestMetadata(
+      { title: metadata.title, description: metadata.description || normalizedQuery.artist || "resultado por busca" },
+      primaryFromApple.ok ? primaryFromApple.data : songLinkFromApple.ok ? songLinkFromApple.data : {},
+      { image: metadata.image || "" }
+    );
+
     const successResult = {
       ok: true,
       status: 200,
       data: {
-        title: metadata.title,
-        description: metadata.description || normalizedQuery.artist || "resultado por busca",
-        album: "",
-        image: metadata.image || "",
-        universalLink: "",
+        ...metadataPayload,
         links
       }
     };
@@ -244,15 +246,19 @@ async function buildSearchFallbackFromQuery(query) {
     };
   }
 
+  const metadataPayload = pickBestMetadata(
+    {
+      title: normalizedQuery.title || query,
+      description: normalizedQuery.artist || ""
+    },
+    primaryFromApple.ok ? primaryFromApple.data : songLinkFromApple.ok ? songLinkFromApple.data : {}
+  );
+
   return {
     ok: true,
     status: 200,
     data: {
-      title: normalizedQuery.title || query,
-      description: normalizedQuery.artist || "",
-      album: "",
-      image: "",
-      universalLink: "",
+      ...metadataPayload,
       links
     }
   };
@@ -659,6 +665,18 @@ function buildSearchLinksFromQuery(query, originalSpotifyUrl, appleMusicResult) 
   ];
 
   return links.filter(item => item.url);
+}
+
+function pickBestMetadata(baseData, enrichedData, fallback = {}) {
+  const base = baseData || {};
+  const enriched = enrichedData || {};
+  return {
+    title: enriched.title || base.title || fallback.title || "música encontrada",
+    description: enriched.description || base.description || fallback.description || "",
+    album: enriched.album || base.album || fallback.album || "",
+    image: enriched.image || base.image || fallback.image || "",
+    universalLink: enriched.universalLink || base.universalLink || fallback.universalLink || ""
+  };
 }
 
 async function fetchPrimaryApi(link, adapters) {
