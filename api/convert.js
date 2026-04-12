@@ -2,6 +2,13 @@ const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
+const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
+const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
+const SPOTIFY_NEGATIVE_CACHE_TTL_MS = 2 * 60 * 1000;
+
+const spotifyUrlCache = new Map();
+const spotifyQueryCache = new Map();
+const spotifyNegativeCache = new Map();
 
 const SONGLINK_PRIORITY_HOSTS = [
   "pandora.com",
@@ -77,39 +84,76 @@ export default async function handler(req, res) {
 }
 
 async function buildSpotifySearchFallback(link) {
+  const normalizedLink = normalizeSpotifyUrl(link);
+  const negativeCacheKey = `spotify:${normalizedLink}`;
+
+  const cachedFailure = readCache(spotifyNegativeCache, negativeCacheKey);
+  if (cachedFailure) return cachedFailure;
+
+  const cachedByUrl = readCache(spotifyUrlCache, normalizedLink);
+  if (cachedByUrl) return cachedByUrl;
+
   try {
     const metadata = await fetchSpotifyMetadata(link);
     if (!metadata?.title) {
-      return {
+      const failedResult = {
         ok: false,
         status: 404,
         error: "spotify metadata indisponível"
       };
+      writeCache(spotifyNegativeCache, negativeCacheKey, failedResult, SPOTIFY_NEGATIVE_CACHE_TTL_MS);
+      return failedResult;
     }
 
     const normalizedQuery = buildSpotifyQueryFromMetadata(metadata);
     if (!normalizedQuery.query) {
-      return {
+      const failedResult = {
         ok: false,
         status: 404,
         error: "query inválida para fallback spotify"
       };
+      writeCache(spotifyNegativeCache, negativeCacheKey, failedResult, SPOTIFY_NEGATIVE_CACHE_TTL_MS);
+      return failedResult;
     }
 
-    const [itunesLink] = await Promise.all([
+    const queryCacheKey = normalizeSearchText(normalizedQuery.query);
+    const cachedByQuery = readCache(spotifyQueryCache, queryCacheKey);
+    if (cachedByQuery) {
+      const cachedWithCurrentSpotifyUrl = withCurrentSpotifyUrl(cachedByQuery, link);
+      writeCache(spotifyUrlCache, normalizedLink, cachedWithCurrentSpotifyUrl, SPOTIFY_URL_CACHE_TTL_MS);
+      return cachedWithCurrentSpotifyUrl;
+    }
+
+    const [appleMusicResult] = await Promise.all([
       fetchAppleMusicLinkFromItunes(normalizedQuery.query, normalizedQuery)
     ]);
-    const links = buildSearchLinksFromQuery(normalizedQuery.query, link, itunesLink);
+    const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, link, appleMusicResult);
+    const [songLinkFromApple, primaryFromApple] = appleMusicResult.url
+      ? await Promise.all([
+          fetchSongLink(appleMusicResult.url, { markVerified: true }),
+          fetchPrimaryApi(appleMusicResult.url)
+        ])
+      : [{ ok: false }, { ok: false }];
+
+    const songLinkMergedLinks = songLinkFromApple.ok
+      ? mergeLinkResults({ links: baseLinks }, songLinkFromApple.data).links
+      : baseLinks;
+
+    const links = primaryFromApple.ok
+      ? mergeLinkResults({ links: songLinkMergedLinks }, primaryFromApple.data).links
+      : songLinkMergedLinks;
 
     if (!links.length) {
-      return {
+      const failedResult = {
         ok: false,
         status: 404,
         error: "nenhum link encontrado para fallback spotify"
       };
+      writeCache(spotifyNegativeCache, negativeCacheKey, failedResult, SPOTIFY_NEGATIVE_CACHE_TTL_MS);
+      return failedResult;
     }
 
-    return {
+    const successResult = {
       ok: true,
       status: 200,
       data: {
@@ -121,13 +165,75 @@ async function buildSpotifySearchFallback(link) {
         links
       }
     };
+    writeCache(spotifyUrlCache, normalizedLink, successResult, SPOTIFY_URL_CACHE_TTL_MS);
+    writeCache(spotifyQueryCache, queryCacheKey, successResult, SPOTIFY_QUERY_CACHE_TTL_MS);
+    deleteCache(spotifyNegativeCache, negativeCacheKey);
+
+    return successResult;
   } catch (_error) {
-    return {
+    const failedResult = {
       ok: false,
       status: 502,
       error: "erro no fallback de spotify"
     };
+    writeCache(spotifyNegativeCache, negativeCacheKey, failedResult, SPOTIFY_NEGATIVE_CACHE_TTL_MS);
+    return failedResult;
   }
+}
+
+function normalizeSpotifyUrl(link) {
+  try {
+    const parsed = new URL(String(link || ""));
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString();
+  } catch (_error) {
+    return String(link || "").trim();
+  }
+}
+
+function withCurrentSpotifyUrl(result, spotifyUrl) {
+  const cloned = cloneJson(result);
+  if (!cloned?.data?.links?.length) return cloned;
+
+  cloned.data.links = cloned.data.links.map(item =>
+    String(item?.type || "").toLowerCase() === "spotify"
+      ? {
+          ...item,
+          url: spotifyUrl,
+          isVerified: true
+        }
+      : item
+  );
+
+  return cloned;
+}
+
+function readCache(cache, key) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+
+  if (entry.expiresAt <= Date.now()) {
+    cache.delete(key);
+    return null;
+  }
+
+  return cloneJson(entry.value);
+}
+
+function writeCache(cache, key, value, ttlMs) {
+  cache.set(key, {
+    value: cloneJson(value),
+    expiresAt: Date.now() + ttlMs
+  });
+}
+
+function deleteCache(cache, key) {
+  cache.delete(key);
+}
+
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 
 async function fetchSpotifyMetadata(link) {
@@ -265,18 +371,18 @@ function buildSpotifyQueryFromMetadata(metadata) {
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
-  if (!query) return "";
+  if (!query) return { url: "", isVerified: false };
 
   try {
     const response = await fetch(
       `${ITUNES_SEARCH_API_URL}?term=${encodeURIComponent(query)}&entity=song&limit=5`
     );
 
-    if (!response.ok) return "";
+    if (!response.ok) return { url: "", isVerified: false };
 
     const data = await response.json();
     const results = Array.isArray(data?.results) ? data.results : [];
-    if (!results.length) return "";
+    if (!results.length) return { url: "", isVerified: false };
 
     const target = findBestMatch(results, {
       query,
@@ -288,9 +394,13 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
       getCandidateArtist: item => item?.artistName || "",
       getCandidateTitle: item => item?.trackName || ""
     });
-    return target?.trackViewUrl || "";
+
+    return {
+      url: target?.candidate?.trackViewUrl || "",
+      isVerified: target.score >= 85
+    };
   } catch (_error) {
-    return "";
+    return { url: "", isVerified: false };
   }
 }
 
@@ -361,7 +471,14 @@ function findBestMatch(candidates, target) {
     }
   }
 
-  return best || candidates[0];
+  if (best) {
+    return { candidate: best, score: bestScore };
+  }
+
+  return {
+    candidate: candidates[0] || null,
+    score: 0
+  };
 }
 
 function normalizeSearchText(value) {
@@ -405,8 +522,10 @@ function containsAnyToken(tokens, candidates) {
   return candidates.some(item => tokenSet.has(item));
 }
 
-function buildSearchLinksFromQuery(query, originalSpotifyUrl, itunesLink) {
+function buildSearchLinksFromQuery(query, originalSpotifyUrl, appleMusicResult) {
   const encoded = encodeURIComponent(query);
+  const appleMusicUrl = appleMusicResult?.url || "";
+  const appleMusicIsVerified = Boolean(appleMusicResult?.isVerified);
 
   const links = [
     {
@@ -414,11 +533,11 @@ function buildSearchLinksFromQuery(query, originalSpotifyUrl, itunesLink) {
       url: originalSpotifyUrl,
       isVerified: true
     },
-    itunesLink
+    appleMusicUrl
       ? {
           type: "appleMusic",
-          url: itunesLink,
-          isVerified: false
+          url: appleMusicUrl,
+          isVerified: appleMusicIsVerified
         }
       : {
           type: "appleMusic",

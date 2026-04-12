@@ -144,6 +144,18 @@ button:active {
   animation: none;
 }
 
+@media (min-width: 1024px) {
+  .orb-a {
+    left: -28px;
+    top: 32%;
+  }
+
+  .orb-b {
+    right: -36px;
+    bottom: 26%;
+  }
+}
+
 .app-shell {
   position: relative;
   z-index: 1;
