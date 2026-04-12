@@ -106,7 +106,8 @@ const state = {
   hideResultTimer: null,
   themeSwitchTimer: null,
   isSearchMode: false,
-  isIOSInstallModalOpen: false
+  isIOSInstallModalOpen: false,
+  iosInstallModalHideTimer: null
 };
 
 const els = {
@@ -300,8 +301,15 @@ function initIOSInstallPrompt() {
 
 function openIOSInstallModal() {
   if (!els.iosInstallModal || state.isIOSInstallModalOpen) return;
+  if (state.iosInstallModalHideTimer) {
+    clearTimeout(state.iosInstallModalHideTimer);
+    state.iosInstallModalHideTimer = null;
+  }
   state.isIOSInstallModalOpen = true;
   els.iosInstallModal.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    els.iosInstallModal?.classList.add("is-open");
+  });
   els.iosInstallModal.setAttribute("aria-hidden", "false");
   document.body.classList.add("ios-install-modal-open");
 }
@@ -309,9 +317,13 @@ function openIOSInstallModal() {
 function closeIOSInstallModal() {
   if (!els.iosInstallModal || !state.isIOSInstallModalOpen) return;
   state.isIOSInstallModalOpen = false;
-  els.iosInstallModal.classList.add("hidden");
+  els.iosInstallModal.classList.remove("is-open");
   els.iosInstallModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("ios-install-modal-open");
+  state.iosInstallModalHideTimer = setTimeout(() => {
+    els.iosInstallModal?.classList.add("hidden");
+    state.iosInstallModalHideTimer = null;
+  }, 240);
 }
 
 function bindEvents() {
