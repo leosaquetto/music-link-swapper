@@ -24,7 +24,7 @@
   --radius-lg: 18px;
   --radius-md: 14px;
   --press-scale: 0.985;
-  --control-size: 50px;
+  --control-size: 46px;
   --control-radius: 16px;
   --byline: #ec8189;
   --input-text: #606a7c;
@@ -215,6 +215,12 @@ body.needs-viewport-fill .viewport-fill-spacer {
   gap: 10px;
 }
 
+.topbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .theme-toggle {
   position: relative;
   width: var(--control-size);
@@ -234,17 +240,78 @@ body.needs-viewport-fill .viewport-fill-spacer {
 }
 
 .theme-toggle .button-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .theme-toggle .button-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .theme-toggle.is-switching .button-icon {
   animation: themeToggleFade 220ms ease;
+}
+
+.language-menu {
+  position: relative;
+}
+
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 6px;
+  min-width: max-content;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 170ms ease, transform 170ms ease;
+}
+
+.language-menu.is-open .language-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.language-option {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.language-option:hover {
+  background: rgba(127, 134, 149, 0.16);
+}
+
+.language-option.is-active {
+  background: #ed474c;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .language-option.is-active {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+}
+
+.app-shell.is-language-switching {
+  opacity: 0.9;
+  transform: translateY(1px);
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
 .hero-left {
