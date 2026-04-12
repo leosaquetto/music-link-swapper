@@ -17,10 +17,12 @@ const REQUEST_TIMEOUT_MS = 6_000;
 const MAX_IN_FLIGHT_REQUESTS = 40;
 const MAX_QUERY_LENGTH = 160;
 const MAX_LINK_LENGTH = 500;
+const SAMPLE_RESULT_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const spotifyUrlCache = new Map();
 const spotifyQueryCache = new Map();
 const spotifyNegativeCache = new Map();
+const sampleResultCache = new Map();
 const requestRateLimitStore = new Map();
 let inFlightRequests = 0;
 const metrics = {
@@ -40,6 +42,23 @@ const SONGLINK_PRIORITY_HOSTS = [
   "soundcloud.com",
   "qobuz.com"
 ];
+
+const SAMPLE_CACHEABLE_LINKS = new Set([
+  "https://music.apple.com/br/album/who-will-you-follow/1891104460?i=1891104594",
+  "https://music.apple.com/br/album/swim/1868862375?i=1868862384",
+  "https://music.apple.com/br/album/choka-choka/1891400123?i=1891400226",
+  "https://music.apple.com/br/album/life-boat/1871085677?i=1871085701",
+  "https://music.apple.com/br/album/space/1884652117?i=1884652125",
+  "https://music.apple.com/br/album/zombie/1874720357?i=1874720787",
+  "https://music.apple.com/br/album/orange-county-feat-bizarrap-kara-jackson-anoushka-shankar/1837237742?i=1837237867",
+  "https://music.apple.com/br/album/i-could-have-sworn/1852602431?i=1852602432",
+  "https://music.apple.com/br/album/pink-lemonade/1852384560?i=1852384561",
+  "https://music.apple.com/br/album/pixelated-kisses/1849706656?i=1849706661",
+  "https://music.apple.com/br/album/carlas-song/1870984032?i=1870984054",
+  "https://music.apple.com/br/album/canzone-estiva/1882460107?i=1882460109",
+  "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
+  "https://music.apple.com/br/album/golden/1820264137?i=1820264150"
+].map(normalizeSampleLink));
 
 export default async function handler(req, res) {
   metrics.requests += 1;
@@ -112,6 +131,14 @@ export default async function handler(req, res) {
       });
     }
 
+    const sampleCacheKey = buildSampleCacheKey(link);
+    if (sampleCacheKey) {
+      const cachedResult = readSampleResultCache(sampleCacheKey);
+      if (cachedResult) {
+        return res.status(200).json({ ok: true, data: cachedResult });
+      }
+    }
+
     const platform = detectPlatformFromUrl(link);
     const shouldUseSongLinkFirst = shouldPrioritizeSongLink(link);
 
@@ -128,6 +155,9 @@ export default async function handler(req, res) {
         ? mergeLinkResults(primaryResult.data, enrichmentResult.data)
         : primaryResult.data;
 
+      if (sampleCacheKey) {
+        writeSampleResultCache(sampleCacheKey, mergedData, SAMPLE_RESULT_CACHE_TTL_MS);
+      }
       return res.status(200).json({ ok: true, data: mergedData });
     }
 
@@ -136,12 +166,18 @@ export default async function handler(req, res) {
       : await fetchSongLinkAsFallback(link);
 
     if (fallbackResult.ok) {
+      if (sampleCacheKey) {
+        writeSampleResultCache(sampleCacheKey, fallbackResult.data, SAMPLE_RESULT_CACHE_TTL_MS);
+      }
       return res.status(200).json({ ok: true, data: fallbackResult.data });
     }
 
     if (platform === "spotify") {
       const spotifyFallback = await buildSpotifySearchFallback(link);
       if (spotifyFallback.ok) {
+        if (sampleCacheKey) {
+          writeSampleResultCache(sampleCacheKey, spotifyFallback.data, SAMPLE_RESULT_CACHE_TTL_MS);
+        }
         return res.status(200).json({ ok: true, data: spotifyFallback.data });
       }
     }
@@ -332,6 +368,39 @@ function normalizeSpotifyUrl(link) {
   } catch (_error) {
     return String(link || "").trim();
   }
+}
+
+function normalizeSampleLink(link) {
+  try {
+    const parsed = new URL(String(link || "").trim());
+    parsed.hash = "";
+    return parsed.toString();
+  } catch (_error) {
+    return String(link || "").trim();
+  }
+}
+
+function buildSampleCacheKey(link) {
+  const normalized = normalizeSampleLink(link);
+  if (!SAMPLE_CACHEABLE_LINKS.has(normalized)) return null;
+  return `sample:${normalized}`;
+}
+
+function readSampleResultCache(key) {
+  const entry = sampleResultCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    sampleResultCache.delete(key);
+    return null;
+  }
+  return cloneJson(entry.value);
+}
+
+function writeSampleResultCache(key, value, ttlMs) {
+  sampleResultCache.set(key, {
+    value: cloneJson(value),
+    expiresAt: Date.now() + ttlMs
+  });
 }
 
 function withCurrentSpotifyUrl(result, spotifyUrl) {
