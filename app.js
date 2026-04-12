@@ -858,10 +858,12 @@ function renderResult(result) {
       section.appendChild(controlsWrap);
     }
 
-    const title = document.createElement("p");
-    title.className = "group-title";
-    title.textContent = groupName;
-    section.appendChild(title);
+    if (!(groupName === "outras" && collapsed)) {
+      const title = document.createElement("p");
+      title.className = "group-title";
+      title.textContent = groupName;
+      section.appendChild(title);
+    }
 
     visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
     section.appendChild(list);
@@ -1150,7 +1152,7 @@ function setLoading(loading) {
     els.convertButton.textContent = state.isSearchMode ? "pesquisando..." : "swapando...";
     return;
   }
-  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap";
+  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap ⇄";
 }
 
 function resetForm({ announce = false } = {}) {

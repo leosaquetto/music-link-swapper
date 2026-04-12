@@ -1398,9 +1398,9 @@ h2 {
 }
 
 :root:not([data-theme="dark"]) .tiny-icon-button.is-active {
-  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
-  color: #071208;
-  box-shadow: 0 8px 20px rgba(52, 199, 89, 0.28);
+  background: #ed474c;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(237, 71, 76, 0.28);
 }
 
 :root:not([data-theme="dark"]) .platform-item {
