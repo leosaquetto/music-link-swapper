@@ -185,7 +185,7 @@ button:active {
 }
 
 body.needs-viewport-fill .viewport-fill-spacer {
-  height: clamp(28px, 8vh, 72px);
+  height: clamp(8px, 2.8vh, 22px);
 }
 
 .card {
@@ -373,8 +373,8 @@ h1 {
 }
 
 .tiny-icon-button .button-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   transform: translateX(-0.75px);
 }
 
@@ -420,12 +420,12 @@ h1 {
     box-shadow 180ms ease,
     background 220ms ease,
     color 220ms ease;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .text-input::placeholder {
   color: var(--soft);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .text-input:focus {
@@ -561,8 +561,8 @@ h1 {
 
 .chip.icon-chip svg,
 .chip.icon-chip img {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: block;
   flex: 0 0 auto;
   transition: color 220ms ease;
@@ -765,16 +765,16 @@ h2 {
 }
 
 .legend-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .legend-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
 }
 
 .legend-icon.is-verified {
@@ -993,7 +993,7 @@ h2 {
 .footer {
   text-align: center;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   padding: 10px 0 8px;
   display: grid;
   gap: 6px;
@@ -1014,7 +1014,7 @@ body.needs-viewport-fill .footer {
   grid-auto-columns: max-content;
   justify-content: center;
   gap: 8px;
-  width: min(100%, 294px);
+  width: min(100%, 320px);
   margin: 0 auto 14px;
 }
 
@@ -1023,8 +1023,8 @@ body.needs-viewport-fill .footer {
   border-radius: 12px;
   background: rgba(246, 248, 253, 0.9);
   color: #ed474c;
-  min-height: 42px;
-  padding: 5px 8px;
+  min-height: 46px;
+  padding: 6px 9px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1033,8 +1033,8 @@ body.needs-viewport-fill .footer {
 }
 
 .ios-badge-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1053,13 +1053,13 @@ body.needs-viewport-fill .footer {
 }
 
 .ios-badge-text small {
-  font-size: 8px;
+  font-size: 8.5px;
   color: #ed474c;
   font-weight: 600;
 }
 
 .ios-badge-text strong {
-  font-size: 11px;
+  font-size: 12px;
   color: #ed474c;
   font-weight: 700;
 }
@@ -1107,13 +1107,20 @@ body.needs-viewport-fill .footer {
 .ios-install-sheet h2 {
   font-size: 24px;
   line-height: 1.14;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
-.ios-install-description,
-.ios-install-tip {
-  font-size: 13px;
+.ios-install-mockup {
+  width: min(100%, 240px);
+  margin: 4px auto 8px;
   color: var(--muted);
+}
+
+.ios-install-mockup svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .ios-install-steps {
@@ -1130,6 +1137,18 @@ body.needs-viewport-fill .footer {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+
+.step-number {
+  min-width: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.step-accent {
+  color: #0a84ff;
+  font-weight: 700;
 }
 
 .step-icon {
@@ -1409,7 +1428,7 @@ body.ios-install-modal-open {
 
   .tiny-button {
     padding: 7px 10px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .platform-item {
