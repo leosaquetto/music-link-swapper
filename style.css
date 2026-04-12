@@ -786,6 +786,10 @@ h2 {
   color: #8e8e93;
 }
 
+.platform-badge.is-not-found {
+  color: #8e8e93;
+}
+
 .platform-actions {
   display: inline-flex;
   gap: 8px;

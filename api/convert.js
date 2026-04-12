@@ -792,6 +792,25 @@ function mergeLinkResults(primaryData, enrichmentData) {
     }
 
     const existing = byType.get(key);
+    const existingIsSearch = isSearchLikeUrl(existing?.url, key);
+    const incomingIsSearch = isSearchLikeUrl(item?.url, key);
+
+    if (existingIsSearch && !incomingIsSearch) {
+      byType.set(key, {
+        ...item,
+        isVerified: Boolean(item?.isVerified)
+      });
+      continue;
+    }
+
+    if (!existingIsSearch && incomingIsSearch) {
+      byType.set(key, {
+        ...existing,
+        isVerified: Boolean(existing?.isVerified)
+      });
+      continue;
+    }
+
     byType.set(key, {
       ...existing,
       isVerified: Boolean(existing?.isVerified || item?.isVerified)
@@ -802,4 +821,22 @@ function mergeLinkResults(primaryData, enrichmentData) {
     ...primaryData,
     links: Array.from(byType.values())
   };
+}
+
+function isSearchLikeUrl(url, type = "") {
+  const lower = String(url || "").toLowerCase();
+  const key = String(type || "").toLowerCase();
+
+  if (!lower) return false;
+  if (key === "youtube" || key === "youtubeMusic".toLowerCase()) {
+    return lower.includes("search_query=") || lower.includes("/search");
+  }
+  if (key === "deezer") return lower.includes("deezer.com/search");
+  if (key === "soundcloud") return lower.includes("soundcloud.com/search");
+  if (key === "tidal") return lower.includes("tidal.com/search");
+  if (key === "qobuz") return lower.includes("qobuz.com") && lower.includes("/search");
+  if (key === "amazonmusic" || key === "amazonstore") return lower.includes("music.amazon.com/search");
+  if (key === "applemusic" || key === "itunes") return lower.includes("music.apple.com") && lower.includes("/search");
+
+  return /[?&](q|query|search_query|term)=/.test(lower) && lower.includes("search");
 }
