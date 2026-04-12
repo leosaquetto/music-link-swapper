@@ -45,10 +45,14 @@ const STREAMING_HOST_HINTS = [
   "music.amazon.com",
   "amazon.com/music"
 ];
+const RECENT_SWAPS_STORAGE_KEY = "mls-recent-swaps";
+const MAX_RECENT_SWAPS = 5;
 
 const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
 
 const SVG_ICONS = {
+  history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>`,
+  link: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20" aria-hidden="true"><path fill="currentColor" d="M9.47 14.53a1 1 0 0 1 0-1.41l4.24-4.24a1 1 0 0 1 1.41 1.41l-4.24 4.24a1 1 0 0 1-1.41 0Zm-3.54 3.54a4 4 0 0 1 0-5.66l2.12-2.12a1 1 0 1 1 1.41 1.41L7.34 13.8a2 2 0 0 0 2.83 2.83l2.12-2.12a1 1 0 0 1 1.41 1.41l-2.12 2.12a4 4 0 0 1-5.66 0ZM10.3 8.7a1 1 0 0 1 0-1.4l2.12-2.13a4 4 0 0 1 5.66 5.66l-2.12 2.12a1 1 0 1 1-1.41-1.41l2.12-2.12a2 2 0 0 0-2.83-2.83L11.71 8.7a1 1 0 0 1-1.41 0Z"/></svg>`,
   shuffle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3,8H5.28a6,6,0,0,1,4.51,2.05L13.21,14a6,6,0,0,0,4.51,2H21"/><polyline points="19 14 21 16 19 18"/><path d="M21,8H17.72a6,6,0,0,0-4.51,2.05L9.79,14a6,6,0,0,1-4.51,2H3"/><polyline points="19 6 21 8 19 10"/></g></svg>`,
   swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410.489 410.489" aria-hidden="true"><path fill="currentColor" d="M370.446,256.623l36.079-81.654c2.257-5.125,3.328-10.356,3.356-15.262c1.167-5.059,0.708-10.519-1.854-15.482c-3.356-6.55-9.477-10.643-16.209-11.876c-2.696-1.252-5.604-2.247-8.759-2.897l-87.459-17.939c-16.715-3.452-32.397,4.102-35.008,16.839c-2.611,12.747,8.807,25.848,25.531,29.261l33.211,6.837L186.99,232.726c-11.15,5.709-15.51,19.422-9.773,30.553c5.767,11.131,19.44,15.481,30.561,9.744l134.631-69.396l-15.022,34.004c-6.885,15.616-2.84,32.513,9.056,37.782C348.338,280.654,363.562,272.239,370.446,256.623z"/><path fill="currentColor" d="M74.067,135.093c-11.905-5.26-27.129,3.146-34.023,18.762l-36.08,81.654c-2.256,5.125-3.328,10.355-3.356,15.28c-1.167,5.049-0.708,10.5,1.855,15.463c3.366,6.55,9.476,10.643,16.208,11.877c2.696,1.252,5.613,2.247,8.769,2.897l87.458,17.958c16.706,3.433,32.388-4.121,34.999-16.858c2.61-12.729-8.807-25.848-25.532-29.262l-33.211-6.827l132.344-68.267c11.15-5.728,15.521-19.44,9.773-30.571c-5.767-11.131-19.431-15.482-30.561-9.744L68.081,206.87l15.023-34.014C90.007,157.259,85.972,140.343,74.067,135.093z"/></svg>`,
   telegram: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="M256 0C114.62 0 0 114.62 0 256s114.62 256 256 256s256-114.62 256-256S397.38 0 256 0Zm118.77 174.93l-41.37 195.03c-3.12 13.86-11.28 17.28-22.84 10.77l-63.11-46.52l-30.44 29.3c-3.37 3.37-6.19 6.19-12.68 6.19l4.54-64.33l117.12-105.84c5.09-4.54-1.12-7.09-7.87-2.55L173.4 288.22l-62.29-19.46c-13.56-4.25-13.86-13.56 2.82-20.08l243.5-93.85c11.28-4.25 21.14 2.55 17.34 20.1Z"/></svg>`,
@@ -124,7 +128,11 @@ const state = {
   themeSwitchTimer: null,
   isSearchMode: false,
   isIOSInstallModalOpen: false,
-  iosInstallModalHideTimer: null
+  iosInstallModalHideTimer: null,
+  isRecentSwapsModalOpen: false,
+  recentSwapsModalHideTimer: null,
+  recentSwaps: [],
+  shuffleInProgress: false
 };
 
 const els = {
@@ -135,6 +143,7 @@ const els = {
   pasteButton: document.getElementById("pasteButton"),
   useSampleButton: document.getElementById("useSampleButton"),
   searchModeButton: document.getElementById("searchModeButton"),
+  recentSwapsButton: document.getElementById("recentSwapsButton"),
   supportedChips: document.getElementById("supportedChips"),
   statusCard: document.getElementById("statusCard"),
   resultCard: document.getElementById("resultCard"),
@@ -146,6 +155,7 @@ const els = {
   resultMeta: document.getElementById("resultMeta"),
   platformGroups: document.getElementById("platformGroups"),
   resultLegend: document.getElementById("resultLegend"),
+  resultDismissButton: document.getElementById("resultDismissButton"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
@@ -156,7 +166,13 @@ const els = {
   iosInstallCta: document.getElementById("iosInstallCta"),
   iosInstallModal: document.getElementById("iosInstallModal"),
   iosInstallBackdrop: document.getElementById("iosInstallBackdrop"),
-  iosInstallClose: document.getElementById("iosInstallClose")
+  iosInstallClose: document.getElementById("iosInstallClose"),
+  recentSwapsModal: document.getElementById("recentSwapsModal"),
+  recentSwapsBackdrop: document.getElementById("recentSwapsBackdrop"),
+  recentSwapsClose: document.getElementById("recentSwapsClose"),
+  recentSwapsList: document.getElementById("recentSwapsList"),
+  clearRecentSwapsButton: document.getElementById("clearRecentSwapsButton"),
+  recentSwapsTitle: document.getElementById("recentSwapsTitle")
 };
 
 if (document.readyState === "loading") {
@@ -181,6 +197,7 @@ function bootstrap() {
   initIOSViewportFillAssist();
   injectButtonIcons();
   renderSupportedChips();
+  hydrateRecentSwaps();
   initTheme();
   initIOSInstallPrompt();
   bindEvents();
@@ -311,6 +328,10 @@ function injectButtonIcons() {
     els.searchModeButton.innerHTML = `<span class="button-icon">${SVG_ICONS.search}</span>`;
   }
 
+  if (els.recentSwapsButton) {
+    els.recentSwapsButton.innerHTML = `<span class="button-icon">${SVG_ICONS.history}</span>`;
+  }
+
   if (els.useSampleButton) {
     els.useSampleButton.innerHTML = `<span class="button-icon">${SVG_ICONS.shuffle}</span>`;
   }
@@ -361,6 +382,36 @@ function closeIOSInstallModal() {
   }, 240);
 }
 
+function openRecentSwapsModal() {
+  if (!els.recentSwapsModal || state.isRecentSwapsModalOpen) return;
+  if (state.recentSwapsModalHideTimer) {
+    clearTimeout(state.recentSwapsModalHideTimer);
+    state.recentSwapsModalHideTimer = null;
+  }
+  renderRecentSwaps();
+  state.isRecentSwapsModalOpen = true;
+  els.recentSwapsButton?.classList.add("is-active");
+  els.recentSwapsModal.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    els.recentSwapsModal?.classList.add("is-open");
+  });
+  els.recentSwapsModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("recent-swaps-modal-open");
+}
+
+function closeRecentSwapsModal() {
+  if (!els.recentSwapsModal || !state.isRecentSwapsModalOpen) return;
+  state.isRecentSwapsModalOpen = false;
+  els.recentSwapsButton?.classList.remove("is-active");
+  els.recentSwapsModal.classList.remove("is-open");
+  els.recentSwapsModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("recent-swaps-modal-open");
+  state.recentSwapsModalHideTimer = setTimeout(() => {
+    els.recentSwapsModal?.classList.add("hidden");
+    state.recentSwapsModalHideTimer = null;
+  }, 240);
+}
+
 function bindEvents() {
   els.themeToggle?.addEventListener("click", toggleTheme);
 
@@ -376,9 +427,37 @@ function bindEvents() {
     closeIOSInstallModal();
   });
 
+  els.recentSwapsButton?.addEventListener("click", event => {
+    pulseActionButton(event.currentTarget, "toggle");
+    openRecentSwapsModal();
+  });
+
+  els.recentSwapsClose?.addEventListener("click", () => {
+    closeRecentSwapsModal();
+  });
+
+  els.recentSwapsBackdrop?.addEventListener("click", () => {
+    closeRecentSwapsModal();
+  });
+
+  els.clearRecentSwapsButton?.addEventListener("click", event => {
+    if (!state.recentSwaps.length) return;
+    state.recentSwaps = [];
+    persistRecentSwaps();
+    renderRecentSwaps();
+    pulseActionButton(event.currentTarget);
+    triggerHaptic("light");
+    showFloatingToast("histórico removido.");
+  });
+
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && state.isIOSInstallModalOpen) {
       closeIOSInstallModal();
+      return;
+    }
+
+    if (event.key === "Escape" && state.isRecentSwapsModalOpen) {
+      closeRecentSwapsModal();
     }
   });
 
@@ -408,6 +487,11 @@ function bindEvents() {
     resetForm({ announce: true });
   });
 
+  els.resultDismissButton?.addEventListener("click", event => {
+    pulseActionButton(event.currentTarget);
+    resetForm();
+  });
+
   els.pasteButton?.addEventListener("click", async () => {
     const pasted = await smartPasteIntoInput({ announce: true, autoConvert: true });
 
@@ -421,11 +505,12 @@ function bindEvents() {
 
   els.useSampleButton?.addEventListener("click", event => {
     const randomSample = pickRandomSampleLink();
-    els.input.value = randomSample;
+    state.shuffleInProgress = true;
+    els.input.value = "sorteando um swap...";
     hideStatus();
     softlyDismissKeyboard();
     pulseActionButton(event.currentTarget);
-    onConvert({ shouldScrollToStatus: true });
+    onConvert({ shouldScrollToStatus: true, forcedLink: randomSample, fromShuffle: true });
   });
 
   els.copyPrimaryButton?.addEventListener("click", async event => {
@@ -634,9 +719,9 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
   }
 }
 
-async function onConvert({ shouldScrollToStatus = false } = {}) {
+async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromShuffle = false } = {}) {
   const rawInput = els.input.value.trim();
-  const link = extractUrl(rawInput);
+  const link = forcedLink || extractUrl(rawInput);
   const shouldFallbackToLinkSwap = state.isSearchMode && !!link;
   const modeAtSubmit = state.isSearchMode && !shouldFallbackToLinkSwap;
 
@@ -666,7 +751,7 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
   softlyDismissKeyboard();
   setLoading(true);
   hideResult();
-  showStatus(modeAtSubmit ? "pesquisando..." : "swapando...", "default");
+  showStatus(modeAtSubmit ? "pesquisando..." : "carregando swaps...", "default");
   startCoverShimmer();
 
   try {
@@ -694,7 +779,7 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
       return;
     }
 
-    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link);
+    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link, modeAtSubmit);
     if (!result) {
       stopCoverShimmer();
       showStatus("não encontrei plataformas para esse link.", "error");
@@ -722,6 +807,12 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
     stopCoverShimmer();
     showStatus("deu erro na conversão. tente novamente em instantes.", "error");
   } finally {
+    if (fromShuffle && cleanText(els.input.value) === "sorteando um swap...") {
+      els.input.value = "";
+    }
+    if (fromShuffle) {
+      state.shuffleInProgress = false;
+    }
     setLoading(false);
     state.autoConvertedFromQuery = false;
     state.scrollAfterConvert = false;
@@ -732,7 +823,7 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
   }
 }
 
-function normalizeApiPayload(data, sourceLink = "") {
+function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   const rawTitle = cleanText(data.title || "música encontrada");
   const rawDescription = cleanText(data.description || "");
   const preview = parsePreview(rawTitle, rawDescription);
@@ -747,6 +838,8 @@ function normalizeApiPayload(data, sourceLink = "") {
     album: preview.album || cleanText(data.album || ""),
     image,
     universalLink: data.universalLink || null,
+    originalUrl: sourceLink || "",
+    fromSearchMode: !!fromSearchMode,
     links
   };
 }
@@ -976,6 +1069,7 @@ function renderResult(result) {
   }
 
   renderResultLegend();
+  saveRecentSwap(result);
 }
 
 function createPlatformItem(item) {
@@ -1169,6 +1263,158 @@ function showCoverImage(src) {
 
 function showInlineToast(_container, message) {
   showFloatingToast(message);
+}
+
+function hydrateRecentSwaps() {
+  state.recentSwaps = loadRecentSwaps();
+}
+
+function loadRecentSwaps() {
+  try {
+    const raw = localStorage.getItem(RECENT_SWAPS_STORAGE_KEY);
+    const parsed = JSON.parse(raw || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(item => item && typeof item === "object")
+      .slice(0, MAX_RECENT_SWAPS);
+  } catch (_error) {
+    return [];
+  }
+}
+
+function persistRecentSwaps() {
+  try {
+    localStorage.setItem(RECENT_SWAPS_STORAGE_KEY, JSON.stringify(state.recentSwaps.slice(0, MAX_RECENT_SWAPS)));
+  } catch (_error) {}
+}
+
+function saveRecentSwap(result) {
+  if (!result || !result.title) return;
+  const originalUrl = cleanText(result.originalUrl || state.currentOriginalUrl || "");
+  const sourceKey = detectPlatformKeyFromUrl(originalUrl);
+  const sourceMeta = sourceKey ? PLATFORM_META[sourceKey] : null;
+  const entry = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: cleanText(result.title),
+    artist: cleanText(result.artist || ""),
+    album: cleanText(result.album || ""),
+    image: cleanText(result.image || ""),
+    originalUrl,
+    isManualSearch: !!result.fromSearchMode,
+    queryText: cleanText([result.artist, result.title].filter(Boolean).join(" ")),
+    sourceKey: sourceKey || "",
+    sourceName: sourceMeta?.name || "fonte",
+    savedAt: Date.now()
+  };
+
+  const normalizedNewUrl = normalizeComparisonText(originalUrl);
+  const normalizedTrack = normalizeComparisonText(`${entry.artist} ${entry.title}`);
+  const deduped = state.recentSwaps.filter(item => {
+    const itemUrl = normalizeComparisonText(item.originalUrl || "");
+    const itemTrack = normalizeComparisonText(`${item.artist || ""} ${item.title || ""}`);
+    if (normalizedNewUrl && itemUrl && itemUrl === normalizedNewUrl) return false;
+    if (!normalizedNewUrl && normalizedTrack && itemTrack === normalizedTrack) return false;
+    return true;
+  });
+
+  state.recentSwaps = [entry, ...deduped].slice(0, MAX_RECENT_SWAPS);
+  persistRecentSwaps();
+  if (state.isRecentSwapsModalOpen) {
+    renderRecentSwaps();
+  }
+}
+
+function detectPlatformKeyFromUrl(url) {
+  const lower = String(url || "").toLowerCase();
+  if (!lower) return "";
+  if (lower.includes("music.apple.com")) return "appleMusic";
+  if (lower.includes("spotify")) return "spotify";
+  if (lower.includes("music.youtube.com")) return "youtubeMusic";
+  if (lower.includes("youtube.com") || lower.includes("youtu.be")) return "youtube";
+  if (lower.includes("deezer.com")) return "deezer";
+  if (lower.includes("soundcloud.com")) return "soundCloud";
+  if (lower.includes("tidal.com")) return "tidal";
+  if (lower.includes("qobuz.com")) return "qobuz";
+  if (lower.includes("bandcamp.com")) return "bandcamp";
+  return "";
+}
+
+function renderRecentSwaps() {
+  if (!els.recentSwapsList) return;
+  const swapCount = state.recentSwaps.length;
+  if (els.recentSwapsTitle) {
+    els.recentSwapsTitle.textContent = swapCount === 1 ? "ÚLTIMO SWAP" : "SWAPS RECENTES";
+  }
+  if (els.clearRecentSwapsButton) {
+    els.clearRecentSwapsButton.classList.toggle("hidden", swapCount === 0);
+    const label = els.clearRecentSwapsButton.querySelector("span:last-child");
+    if (label) {
+      label.textContent = swapCount === 1 ? "limpar swap" : "limpar swaps";
+    }
+  }
+
+  if (!state.recentSwaps.length) {
+    els.recentSwapsList.innerHTML = `<p class="recent-empty">ainda não há swaps recentes.</p>`;
+    return;
+  }
+
+  els.recentSwapsList.innerHTML = "";
+  state.recentSwaps.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "recent-swap-card";
+    const sourceIcon = item.sourceKey ? PLATFORM_META[item.sourceKey]?.icon : "";
+    const safeTitle = escapeHtml(item.title || "faixa");
+    const safeArtist = escapeHtml(item.artist || "artista desconhecido");
+    const safeImage = escapeHtml(item.image || "");
+    const sourceName = escapeHtml(item.sourceName || "fonte");
+    const shouldShowSource = !item.isManualSearch && !!sourceIcon;
+    const shouldShowCopy = !item.isManualSearch && !!item.originalUrl;
+
+    card.innerHTML = `
+      <div class="recent-swap-cover-wrap">
+        ${safeImage ? `<img class="recent-swap-cover" src="${safeImage}" alt="capa de ${safeTitle}" loading="lazy" />` : `<div class="recent-swap-cover is-placeholder"></div>`}
+      </div>
+      <div class="recent-swap-copy">
+        <p class="recent-swap-artist">${safeArtist}</p>
+        <p class="recent-swap-title">${safeTitle}</p>
+      </div>
+      ${shouldShowSource ? `<div class="recent-swap-source" title="${sourceName}" aria-label="${sourceName}">${sourceIcon}</div>` : `<div class="recent-swap-source hidden" aria-hidden="true"></div>`}
+      <div class="recent-swap-actions">
+        <button class="mini-action copy ${shouldShowCopy ? "" : "hidden"}" type="button" data-action="copy" aria-label="copiar link" title="copiar link">
+          <span class="button-icon">${SVG_ICONS.link}</span>
+        </button>
+        <button class="mini-action open" type="button" data-action="swap" aria-label="refazer swap" title="refazer swap">
+          <span class="button-icon">${SVG_ICONS.search}</span>
+        </button>
+      </div>
+    `;
+
+    card.querySelector('[data-action="copy"]')?.addEventListener("click", async event => {
+      if (!item.originalUrl) return;
+      await copyText(item.originalUrl);
+      pulseActionButton(event.currentTarget);
+      showFloatingToast("link copiado.");
+    });
+
+    card.querySelector('[data-action="swap"]')?.addEventListener("click", event => {
+      pulseActionButton(event.currentTarget, "open");
+      closeRecentSwapsModal();
+      if (item.originalUrl) {
+        els.input.value = item.originalUrl;
+        onConvert({ shouldScrollToStatus: true, forcedLink: item.originalUrl });
+        return;
+      }
+
+      if (item.queryText) {
+        state.isSearchMode = true;
+        syncSearchModeUI();
+        els.input.value = item.queryText;
+        onConvert({ shouldScrollToStatus: true });
+      }
+    });
+
+    els.recentSwapsList.appendChild(card);
+  });
 }
 
 function softlyDismissKeyboard() {

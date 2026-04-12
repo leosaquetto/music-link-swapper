@@ -378,6 +378,12 @@ h1 {
   transform: none;
 }
 
+#searchModeButton .button-icon,
+#recentSwapsButton .button-icon,
+#useSampleButton .button-icon {
+  transform: translateX(-1.5px);
+}
+
 .tiny-icon-button.is-active {
   background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
   color: #071208;
@@ -601,7 +607,9 @@ h1 {
 }
 
 .result-card {
+  position: relative;
   overflow: visible;
+  padding-bottom: 44px;
 }
 
 .result-header {
@@ -765,6 +773,20 @@ h2 {
   gap: 10px;
   color: var(--muted);
   font-size: 10px;
+}
+
+.result-dismiss-button {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
 }
 
 .legend-item {
@@ -946,7 +968,9 @@ h2 {
 .mini-action.is-pressed-copy,
 .mini-head-action.is-pressed-copy,
 .icon-button.is-pressed-copy,
-.tiny-button.is-pressed-copy {
+.tiny-button.is-pressed-copy,
+.clear-history-button.is-pressed-copy,
+.result-dismiss-button.is-pressed-copy {
   background: var(--danger);
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);
@@ -1140,14 +1164,18 @@ body.needs-viewport-fill .footer {
 .ios-install-sheet h2 {
   font-size: 22px;
   line-height: 1.14;
-  margin: 16px 0 18px;
+  margin: 24px 0 18px;
   text-align: center;
 }
 
 .ios-install-mockup {
   width: min(100%, 240px);
-  margin: 16px auto 16px;
+  margin: 22px auto 24px;
   color: var(--muted);
+}
+
+.ios-app-name {
+  color: #ed474c;
 }
 
 .ios-title-break-iphone {
@@ -1222,6 +1250,181 @@ body.needs-viewport-fill .footer {
 }
 
 body.ios-install-modal-open {
+  overflow: hidden;
+}
+
+.recent-swaps-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1110;
+  display: grid;
+  place-items: end center;
+  padding: 16px 14px calc(14px + env(safe-area-inset-bottom));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.recent-swaps-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.recent-swaps-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 8, 14, 0.56);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.recent-swaps-modal.is-open .recent-swaps-backdrop {
+  opacity: 1;
+}
+
+.recent-swaps-sheet {
+  position: relative;
+  width: min(100%, 470px);
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.34);
+  padding: 18px 18px 16px;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
+  transition: opacity 220ms ease, transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.recent-swaps-modal.is-open .recent-swaps-sheet {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.recent-swaps-sheet h2 {
+  margin: 12px 0 14px;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.recent-swaps-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+.recent-swaps-list {
+  display: grid;
+  gap: 10px;
+  max-height: min(56vh, 420px);
+  overflow: auto;
+}
+
+.recent-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 10px;
+}
+
+.recent-swap-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 28px auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line-soft);
+}
+
+.recent-swap-cover-wrap {
+  width: 48px;
+  height: 48px;
+}
+
+.recent-swap-cover,
+.recent-swap-cover.is-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.recent-swap-cover.is-placeholder {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.recent-swap-copy {
+  min-width: 0;
+}
+
+.recent-swap-artist,
+.recent-swap-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-swap-artist {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.recent-swap-title {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.recent-swap-source {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.recent-swap-source svg {
+  width: 16px;
+  height: 16px;
+}
+
+.recent-swap-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recent-swaps-footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.clear-history-button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+body.recent-swaps-modal-open {
   overflow: hidden;
 }
 
@@ -1618,7 +1821,9 @@ body.ios-install-modal-open {
 :root[data-theme="dark"] .mini-action.is-pressed-copy,
 :root[data-theme="dark"] .mini-head-action.is-pressed-copy,
 :root[data-theme="dark"] .icon-button.is-pressed-copy,
-:root[data-theme="dark"] .tiny-button.is-pressed-copy {
+:root[data-theme="dark"] .tiny-button.is-pressed-copy,
+:root[data-theme="dark"] .clear-history-button.is-pressed-copy,
+:root[data-theme="dark"] .result-dismiss-button.is-pressed-copy {
   background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
   color: #071208;
   box-shadow: 0 10px 24px rgba(52, 199, 89, 0.35);
@@ -1644,6 +1849,12 @@ body.ios-install-modal-open {
 }
 
 :root:not([data-theme="dark"]) .platform-item {
+  background: rgba(246, 248, 253, 0.9);
+  border-color: rgba(18, 22, 35, 0.14);
+  box-shadow: 0 8px 20px rgba(25, 32, 50, 0.06);
+}
+
+:root:not([data-theme="dark"]) .recent-swap-card {
   background: rgba(246, 248, 253, 0.9);
   border-color: rgba(18, 22, 35, 0.14);
   box-shadow: 0 8px 20px rgba(25, 32, 50, 0.06);
@@ -1695,7 +1906,9 @@ body.ios-install-modal-open {
 :root:not([data-theme="dark"]) .mini-action.is-pressed-copy,
 :root:not([data-theme="dark"]) .mini-head-action.is-pressed-copy,
 :root:not([data-theme="dark"]) .icon-button.is-pressed-copy,
-:root:not([data-theme="dark"]) .tiny-button.is-pressed-copy {
+:root:not([data-theme="dark"]) .tiny-button.is-pressed-copy,
+:root:not([data-theme="dark"]) .clear-history-button.is-pressed-copy,
+:root:not([data-theme="dark"]) .result-dismiss-button.is-pressed-copy {
   background: #ed474c;
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);
@@ -1706,4 +1919,11 @@ body.ios-install-modal-open {
   color: #071208;
   border-color: rgba(52, 199, 89, 0.3);
   box-shadow: 0 18px 44px rgba(12, 44, 23, 0.42);
+}
+
+:root[data-theme="dark"] .ios-app-name {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
