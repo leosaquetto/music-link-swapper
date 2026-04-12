@@ -31,6 +31,8 @@ const STREAMING_HOST_HINTS = [
   "amazon.com/music"
 ];
 
+const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
+
 const SVG_ICONS = {
   telegram: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="M256 0C114.62 0 0 114.62 0 256s114.62 256 256 256s256-114.62 256-256S397.38 0 256 0Zm118.77 174.93l-41.37 195.03c-3.12 13.86-11.28 17.28-22.84 10.77l-63.11-46.52l-30.44 29.3c-3.37 3.37-6.19 6.19-12.68 6.19l4.54-64.33l117.12-105.84c5.09-4.54-1.12-7.09-7.87-2.55L173.4 288.22l-62.29-19.46c-13.56-4.25-13.86-13.56 2.82-20.08l243.5-93.85c11.28-4.25 21.14 2.55 17.34 20.1Z"/></svg>`,
   paste: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7.5 6h1.67A3.001 3.001 0 0 0 12 8h6a3.001 3.001 0 0 0 2.83-2h1.67A1.5 1.5 0 0 1 24 7.5a1 1 0 1 0 2 0A3.5 3.5 0 0 0 22.5 4h-1.67A3.001 3.001 0 0 0 18 2h-6a3.001 3.001 0 0 0-2.83 2H7.5A3.5 3.5 0 0 0 4 7.5v19A3.5 3.5 0 0 0 7.5 30H12a1 1 0 1 0 0-2H7.5A1.5 1.5 0 0 1 6 26.5v-19A1.5 1.5 0 0 1 7.5 6ZM12 4h6a1 1 0 1 1 0 2h-6a1 1 0 1 1 0-2Zm5.5 6a3.5 3.5 0 0 0-3.5 3.5v13a3.5 3.5 0 0 0 3.5 3.5h8a3.5 3.5 0 0 0 3.5-3.5v-13a3.5 3.5 0 0 0-3.5-3.5h-8ZM16 13.5a1.5 1.5 0 0 1 1.5-1.5h8a1.5 1.5 0 0 1 1.5 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-8a1.5 1.5 0 0 1-1.5-1.5v-13Z"/></svg>`,
@@ -106,6 +108,7 @@ const state = {
 };
 
 const els = {
+  inputLabel: document.getElementById("inputLabel"),
   input: document.getElementById("linkInput"),
   convertButton: document.getElementById("convertButton"),
   clearButton: document.getElementById("clearButton"),
@@ -281,12 +284,18 @@ function bindEvents() {
 
   els.searchModeButton?.addEventListener("click", event => {
     state.isSearchMode = !state.isSearchMode;
-    pulseActionButton(event.currentTarget);
+    pulseActionButton(event.currentTarget, "toggle");
     syncSearchModeUI();
 
     if (state.isSearchMode) {
-      els.input?.focus();
+      if (els.input) {
+        els.input.focus({ preventScroll: true });
+        const valueLength = els.input.value?.length || 0;
+        els.input.setSelectionRange(valueLength, valueLength);
+      }
       showFloatingToast("modo pesquisa ativado.");
+    } else {
+      softlyDismissKeyboard();
     }
   });
 
@@ -524,10 +533,16 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
 async function onConvert({ shouldScrollToStatus = false } = {}) {
   const rawInput = els.input.value.trim();
   const link = extractUrl(rawInput);
-  const modeAtSubmit = state.isSearchMode;
+  const shouldFallbackToLinkSwap = state.isSearchMode && !!link;
+  const modeAtSubmit = state.isSearchMode && !shouldFallbackToLinkSwap;
+
+  if (shouldFallbackToLinkSwap) {
+    state.isSearchMode = false;
+    syncSearchModeUI();
+  }
   state.scrollAfterConvert = shouldScrollToStatus;
 
-  if (state.isSearchMode) {
+  if (modeAtSubmit) {
     if (!rawInput || rawInput.length < 3) {
       showStatus("digite artista + música para pesquisar.", "error");
       return;
@@ -791,40 +806,67 @@ function renderResult(result) {
     if (!items.length) continue;
 
     const section = document.createElement("section");
-    const title = document.createElement("p");
-    title.className = "group-title";
-    title.textContent = groupName;
-    section.appendChild(title);
+    section.className = "platform-group-section";
 
     const list = document.createElement("div");
     list.className = "platform-list";
     const isOutras = groupName === "outras";
-    const defaultVisible = 3;
-    const collapsed = isOutras && items.length > defaultVisible;
-    const visibleItems = collapsed ? items.slice(0, defaultVisible) : items;
-
-    visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
-    section.appendChild(list);
+    const defaultVisible = 0;
+    const collapsed = isOutras && items.length > 0;
+    const visibleItems = collapsed ? [] : items;
 
     if (collapsed) {
+      const controlsWrap = document.createElement("div");
+      controlsWrap.className = "see-more-wrap";
       const expandButton = document.createElement("button");
       expandButton.type = "button";
       expandButton.className = "tiny-button see-more-button";
       expandButton.textContent = "ver mais";
+      list.style.maxHeight = "0px";
+      list.style.opacity = "0";
       expandButton.addEventListener("click", event => {
         const expanded = list.classList.toggle("is-expanded");
         pulseActionButton(event.currentTarget);
         if (expanded) {
-          items.slice(defaultVisible).forEach(item => list.appendChild(createPlatformItem(item)));
+          items.forEach(item => list.appendChild(createPlatformItem(item)));
+          requestAnimationFrame(() => {
+            list.style.maxHeight = `${list.scrollHeight}px`;
+            list.style.opacity = "1";
+          });
+          setTimeout(() => {
+            if (list.classList.contains("is-expanded")) {
+              list.style.maxHeight = "none";
+            }
+          }, 260);
           expandButton.textContent = "ver menos";
         } else {
-          const current = Array.from(list.children);
-          current.slice(defaultVisible).forEach(node => node.remove());
+          const currentHeight = list.scrollHeight;
+          list.style.maxHeight = `${currentHeight}px`;
+          requestAnimationFrame(() => {
+            list.style.maxHeight = "0px";
+            list.style.opacity = "0";
+          });
+          setTimeout(() => {
+            if (list.classList.contains("is-expanded")) return;
+            const current = Array.from(list.children);
+            current.forEach(node => node.remove());
+          }, 240);
           expandButton.textContent = "ver mais";
         }
       });
-      section.appendChild(expandButton);
+      controlsWrap.appendChild(expandButton);
+      section.appendChild(controlsWrap);
     }
+
+    if (!(groupName === "outras" && collapsed)) {
+      const title = document.createElement("p");
+      title.className = "group-title";
+      title.textContent = groupName;
+      section.appendChild(title);
+    }
+
+    visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
+    section.appendChild(list);
 
     els.platformGroups.appendChild(section);
   }
@@ -909,7 +951,7 @@ function pulseActionButton(button, variant = "copy") {
   void button.offsetWidth;
   button.classList.add(pressedClass);
 
-  const timeoutMs = variant === "open" ? 320 : 1000;
+  const timeoutMs = variant === "open" ? 320 : variant === "toggle" ? 150 : 1000;
   const timer = setTimeout(() => {
     button.classList.remove(pressedClass);
     resetTimers.delete(button);
@@ -1110,7 +1152,7 @@ function setLoading(loading) {
     els.convertButton.textContent = state.isSearchMode ? "pesquisando..." : "swapando...";
     return;
   }
-  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap";
+  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap ⇄";
 }
 
 function resetForm({ announce = false } = {}) {
@@ -1135,7 +1177,12 @@ function syncSearchModeUI() {
   if (els.searchModeButton) {
     els.searchModeButton.classList.toggle("is-active", state.isSearchMode);
   }
+  if (els.inputLabel) {
+    els.inputLabel.textContent = state.isSearchMode ? "pesquisa por nome" : "link da música";
+  }
   if (els.input) {
+    els.input.type = state.isSearchMode ? "text" : "url";
+    els.input.setAttribute("inputmode", state.isSearchMode ? "search" : "url");
     els.input.placeholder = state.isSearchMode
       ? "digite o nome do artista + música"
       : "cole o link da música aqui";
@@ -1162,6 +1209,7 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
     if (!item || !item.url || item.notAvailable) continue;
 
     let type = normalizePlatformKey(item.type);
+    if (IGNORED_PLATFORM_KEYS.has(String(type || "").toLowerCase())) continue;
     const linkIsYouTubeMusic = isYouTubeMusicUrl(item.url || "");
     if (type === "youtube" && (cameFromYouTubeMusic || linkIsYouTubeMusic)) {
       type = "youtubeMusic";
@@ -1212,7 +1260,7 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
 function addSearchFallbackLinks(normalized, seen, searchQuery) {
   if (!searchQuery) return;
 
-  const fallbackTypes = ["youtube", "youtubeMusic", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
+  const fallbackTypes = ["appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
 
   for (const type of fallbackTypes) {
     const hasRealLink = normalized.some(item => item.key === type && !item.isSearchResult);
@@ -1253,6 +1301,7 @@ function buildSearchUrlForPlatform(type, query) {
   const encoded = encodeURIComponent(query);
 
   if (type === "youtubeMusic") return `https://music.youtube.com/search?q=${encoded}`;
+  if (type === "appleMusic") return `https://music.apple.com/br/search?term=${encoded}`;
   if (type === "youtube") return `https://www.youtube.com/results?search_query=${encoded}`;
   if (type === "deezer") return `https://www.deezer.com/search/${encoded}`;
   if (type === "soundCloud") return `https://soundcloud.com/search?q=${encoded}`;

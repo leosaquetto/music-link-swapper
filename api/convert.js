@@ -5,10 +5,20 @@ const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
 const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
 const SPOTIFY_NEGATIVE_CACHE_TTL_MS = 2 * 60 * 1000;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 60;
 
 const spotifyUrlCache = new Map();
 const spotifyQueryCache = new Map();
 const spotifyNegativeCache = new Map();
+const requestRateLimitStore = new Map();
+const metrics = {
+  requests: 0,
+  rateLimited: 0,
+  errors: 0,
+  spotifyCacheHit: 0,
+  spotifyCacheMiss: 0
+};
 
 const SONGLINK_PRIORITY_HOSTS = [
   "pandora.com",
@@ -20,6 +30,9 @@ const SONGLINK_PRIORITY_HOSTS = [
 ];
 
 export default async function handler(req, res) {
+  metrics.requests += 1;
+  emitMetricsHeartbeat();
+
   if (req.method !== "POST") {
     return res.status(405).json({
       ok: false,
@@ -28,6 +41,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    const rateLimit = enforceRateLimit(req, res);
+    if (!rateLimit.allowed) {
+      metrics.rateLimited += 1;
+      return res.status(429).json({
+        ok: false,
+        error: "muitas requisições, tente novamente em instantes"
+      });
+    }
+
     const { link, adapters, queryMode, query } = req.body || {};
 
     if (queryMode) {
@@ -95,6 +117,7 @@ export default async function handler(req, res) {
       error: buildFriendlyPlatformError(platform, primaryResult.error || fallbackResult.error)
     });
   } catch (_error) {
+    metrics.errors += 1;
     return res.status(500).json({
       ok: false,
       error: "erro interno ao converter"
@@ -172,15 +195,17 @@ async function buildSpotifySearchFallback(link) {
       return failedResult;
     }
 
+    const metadataPayload = pickBestMetadata(
+      { title: metadata.title, description: metadata.description || normalizedQuery.artist || "resultado por busca" },
+      primaryFromApple.ok ? primaryFromApple.data : songLinkFromApple.ok ? songLinkFromApple.data : {},
+      { image: metadata.image || "" }
+    );
+
     const successResult = {
       ok: true,
       status: 200,
       data: {
-        title: metadata.title,
-        description: metadata.description || normalizedQuery.artist || "resultado por busca",
-        album: "",
-        image: metadata.image || "",
-        universalLink: "",
+        ...metadataPayload,
         links
       }
     };
@@ -244,15 +269,19 @@ async function buildSearchFallbackFromQuery(query) {
     };
   }
 
+  const metadataPayload = pickBestMetadata(
+    {
+      title: normalizedQuery.title || query,
+      description: normalizedQuery.artist || ""
+    },
+    primaryFromApple.ok ? primaryFromApple.data : songLinkFromApple.ok ? songLinkFromApple.data : {}
+  );
+
   return {
     ok: true,
     status: 200,
     data: {
-      title: normalizedQuery.title || query,
-      description: normalizedQuery.artist || "",
-      album: "",
-      image: "",
-      universalLink: "",
+      ...metadataPayload,
       links
     }
   };
@@ -288,13 +317,18 @@ function withCurrentSpotifyUrl(result, spotifyUrl) {
 
 function readCache(cache, key) {
   const entry = cache.get(key);
-  if (!entry) return null;
-
-  if (entry.expiresAt <= Date.now()) {
-    cache.delete(key);
+  if (!entry) {
+    metrics.spotifyCacheMiss += 1;
     return null;
   }
 
+  if (entry.expiresAt <= Date.now()) {
+    cache.delete(key);
+    metrics.spotifyCacheMiss += 1;
+    return null;
+  }
+
+  metrics.spotifyCacheHit += 1;
   return cloneJson(entry.value);
 }
 
@@ -307,6 +341,71 @@ function writeCache(cache, key, value, ttlMs) {
 
 function deleteCache(cache, key) {
   cache.delete(key);
+}
+
+function enforceRateLimit(req, res) {
+  const now = Date.now();
+  const key = resolveRateLimitKey(req);
+  const current = requestRateLimitStore.get(key);
+
+  if (!current || current.resetAt <= now) {
+    requestRateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
+    res.setHeader("X-RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX_REQUESTS - 1)));
+    return { allowed: true };
+  }
+
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const retryAfterSeconds = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+    res.setHeader("Retry-After", String(retryAfterSeconds));
+    res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
+    res.setHeader("X-RateLimit-Remaining", "0");
+    return { allowed: false };
+  }
+
+  current.count += 1;
+  requestRateLimitStore.set(key, current);
+  res.setHeader("X-RateLimit-Limit", String(RATE_LIMIT_MAX_REQUESTS));
+  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, RATE_LIMIT_MAX_REQUESTS - current.count)));
+  return { allowed: true };
+}
+
+function resolveRateLimitKey(req) {
+  const ip =
+    String(req.headers?.["x-forwarded-for"] || "")
+      .split(",")[0]
+      .trim() ||
+    req.socket?.remoteAddress ||
+    "unknown-ip";
+  const apiKey = String(req.headers?.["x-api-key"] || "anon").trim();
+  return `${ip}|${apiKey}`;
+}
+
+let nextMetricsLogAt = Date.now() + 60_000;
+
+function emitMetricsHeartbeat() {
+  const now = Date.now();
+  if (now < nextMetricsLogAt) return;
+
+  nextMetricsLogAt = now + 60_000;
+  console.log(
+    JSON.stringify({
+      scope: "api.convert",
+      metrics,
+      timestamp: new Date(now).toISOString()
+    })
+  );
+}
+
+function logProviderError(provider, status, message) {
+  console.warn(
+    JSON.stringify({
+      scope: "api.convert.provider_error",
+      provider,
+      status,
+      message: String(message || "unknown_error")
+    })
+  );
 }
 
 function cloneJson(value) {
@@ -661,6 +760,18 @@ function buildSearchLinksFromQuery(query, originalSpotifyUrl, appleMusicResult) 
   return links.filter(item => item.url);
 }
 
+function pickBestMetadata(baseData, enrichedData, fallback = {}) {
+  const base = baseData || {};
+  const enriched = enrichedData || {};
+  return {
+    title: enriched.title || base.title || fallback.title || "música encontrada",
+    description: enriched.description || base.description || fallback.description || "",
+    album: enriched.album || base.album || fallback.album || "",
+    image: enriched.image || base.image || fallback.image || "",
+    universalLink: enriched.universalLink || base.universalLink || fallback.universalLink || ""
+  };
+}
+
 async function fetchPrimaryApi(link, adapters) {
   try {
     const upstream = await fetch(PRIMARY_API_URL, {
@@ -694,6 +805,8 @@ async function fetchPrimaryApi(link, adapters) {
         data?.error ||
         data?.details ||
         "erro ao consultar a api externa";
+      metrics.errors += 1;
+      logProviderError("primary_api", upstream.status, upstreamMessage);
 
       return {
         ok: false,
@@ -708,6 +821,8 @@ async function fetchPrimaryApi(link, adapters) {
       data
     };
   } catch (_error) {
+    metrics.errors += 1;
+    logProviderError("primary_api", 502, "network_error");
     return {
       ok: false,
       status: 502,
@@ -730,6 +845,8 @@ async function fetchSongLink(link, { markVerified = false } = {}) {
     const data = await upstream.json();
 
     if (!upstream.ok) {
+      metrics.errors += 1;
+      logProviderError("songlink", upstream.status, data?.message || data?.error || "upstream_error");
       return {
         ok: false,
         status: upstream.status,
@@ -752,6 +869,8 @@ async function fetchSongLink(link, { markVerified = false } = {}) {
       data: normalized
     };
   } catch (_error) {
+    metrics.errors += 1;
+    logProviderError("songlink", 502, "network_error");
     return {
       ok: false,
       status: 502,
