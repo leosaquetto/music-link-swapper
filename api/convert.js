@@ -28,7 +28,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { link, adapters } = req.body || {};
+    const { link, adapters, queryMode, query } = req.body || {};
+
+    if (queryMode) {
+      if (!query || typeof query !== "string" || !query.trim()) {
+        return res.status(400).json({
+          ok: false,
+          error: "consulta inválida"
+        });
+      }
+
+      const fallbackByQuery = await buildSearchFallbackFromQuery(query.trim());
+      if (fallbackByQuery.ok) {
+        return res.status(200).json({ ok: true, data: fallbackByQuery.data });
+      }
+
+      return res.status(fallbackByQuery.status || 502).json({
+        ok: false,
+        error: fallbackByQuery.error || "não consegui pesquisar agora"
+      });
+    }
 
     if (!link || typeof link !== "string") {
       return res.status(400).json({
@@ -158,7 +177,7 @@ async function buildSpotifySearchFallback(link) {
       status: 200,
       data: {
         title: metadata.title,
-        description: metadata.description || "resultado por busca",
+        description: metadata.description || normalizedQuery.artist || "resultado por busca",
         album: "",
         image: metadata.image || "",
         universalLink: "",
@@ -179,6 +198,64 @@ async function buildSpotifySearchFallback(link) {
     writeCache(spotifyNegativeCache, negativeCacheKey, failedResult, SPOTIFY_NEGATIVE_CACHE_TTL_MS);
     return failedResult;
   }
+}
+
+async function buildSearchFallbackFromQuery(query) {
+  const normalizedQuery = buildSpotifyQueryFromMetadata({
+    title: query,
+    description: ""
+  });
+
+  if (!normalizedQuery.query) {
+    return {
+      ok: false,
+      status: 400,
+      error: "consulta inválida"
+    };
+  }
+
+  const [appleMusicResult] = await Promise.all([
+    fetchAppleMusicLinkFromItunes(normalizedQuery.query, normalizedQuery)
+  ]);
+  const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, "", appleMusicResult).filter(
+    item => String(item.type || "").toLowerCase() !== "spotify"
+  );
+
+  const [songLinkFromApple, primaryFromApple] = appleMusicResult.url
+    ? await Promise.all([
+        fetchSongLink(appleMusicResult.url, { markVerified: true }),
+        fetchPrimaryApi(appleMusicResult.url)
+      ])
+    : [{ ok: false }, { ok: false }];
+
+  const songLinkMergedLinks = songLinkFromApple.ok
+    ? mergeLinkResults({ links: baseLinks }, songLinkFromApple.data).links
+    : baseLinks;
+
+  const links = primaryFromApple.ok
+    ? mergeLinkResults({ links: songLinkMergedLinks }, primaryFromApple.data).links
+    : songLinkMergedLinks;
+
+  if (!links.length) {
+    return {
+      ok: false,
+      status: 404,
+      error: "nenhum resultado encontrado"
+    };
+  }
+
+  return {
+    ok: true,
+    status: 200,
+    data: {
+      title: normalizedQuery.title || query,
+      description: normalizedQuery.artist || "",
+      album: "",
+      image: "",
+      universalLink: "",
+      links
+    }
+  };
 }
 
 function normalizeSpotifyUrl(link) {

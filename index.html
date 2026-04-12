@@ -63,7 +63,10 @@
         <section class="card form-card reveal reveal-delay-1">
           <div class="label-row">
             <label class="label" for="linkInput">link da música</label>
-            <button id="useSampleButton" class="tiny-button" type="button">usar exemplo</button>
+            <div class="label-actions">
+              <button id="searchModeButton" class="tiny-button tiny-icon-button" type="button" aria-label="modo pesquisa" title="modo pesquisa"></button>
+              <button id="useSampleButton" class="tiny-button" type="button">usar exemplo</button>
+            </div>
           </div>
 
           <div class="input-row">
@@ -153,6 +156,7 @@
           </div>
 
           <div id="platformGroups" class="platform-groups"></div>
+          <div id="resultLegend" class="result-legend hidden" aria-live="polite"></div>
         </section>
       </main>
 

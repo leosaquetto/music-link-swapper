@@ -37,7 +37,7 @@ const SVG_ICONS = {
   clear: `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M46.4375 -0.03125C46.269531 -0.0390625 46.097656 -0.0234375 45.9375 0C45.265625 0.09375 44.6875 0.421875 44.28125 1.03125L44.25 1.09375L44.21875 1.125L35.65625 17.21875C34.691406 16.859375 33.734375 16.648438 32.84375 16.625C31.882813 16.601563 30.976563 16.75 30.15625 17.09375C28.574219 17.753906 27.378906 19.046875 26.59375 20.6875C26.558594 20.738281 26.527344 20.789063 26.5 20.84375C26.496094 20.851563 26.503906 20.867188 26.5 20.875C26.488281 20.894531 26.476563 20.917969 26.46875 20.9375C26.457031 20.976563 26.445313 21.019531 26.4375 21.0625C25.894531 22.417969 25.269531 23.636719 24.5625 24.71875C24.554688 24.730469 24.539063 24.738281 24.53125 24.75C24.441406 24.828125 24.367188 24.925781 24.3125 25.03125C24.308594 25.039063 24.316406 25.054688 24.3125 25.0625C24.277344 25.113281 24.246094 25.164063 24.21875 25.21875C21.832031 28.636719 18.722656 30.695313 15.78125 31.96875C11.773438 33.703125 7.9375 33.886719 7.09375 33.8125C6.691406 33.773438 6.304688 33.976563 6.113281 34.332031C5.925781 34.6875 5.964844 35.125 6.21875 35.4375C17.613281 49.5 34.375 50 34.375 50C34.574219 50.003906 34.769531 49.949219 34.9375 49.84375C34.9375 49.84375 37.007813 48.53125 39.5 45.40625C41.371094 43.058594 43.503906 39.664063 45.34375 34.96875C45.355469 34.957031 45.363281 34.949219 45.375 34.9375C45.605469 34.722656 45.722656 34.410156 45.6875 34.09375C45.6875 34.082031 45.6875 34.074219 45.6875 34.0625C46.171875 32.753906 46.640625 31.378906 47.0625 29.875C47.078125 29.8125 47.089844 29.75 47.09375 29.6875C47.09375 29.675781 47.09375 29.667969 47.09375 29.65625C48.425781 26.21875 46.941406 22.433594 43.75 20.78125L49.9375 3.625L49.9375 3.59375L49.96875 3.5625C50.171875 2.851563 49.9375 2.167969 49.5625 1.625C49.207031 1.113281 48.6875 0.710938 48.0625 0.4375L48.0625 0.40625C48.042969 0.398438 48.019531 0.414063 48 0.40625C47.988281 0.402344 47.980469 0.378906 47.96875 0.375C47.480469 0.144531 46.945313 -0.0117188 46.4375 -0.03125 Z M 46.3125 2.0625C46.539063 2.027344 46.835938 2.027344 47.15625 2.1875L47.1875 2.21875L47.21875 2.21875C47.542969 2.347656 47.8125 2.566406 47.9375 2.75C48.0625 2.933594 48.027344 3.042969 48.03125 3.03125L41.9375 19.9375C41.203125 19.605469 40.695313 19.371094 39.65625 18.90625C38.882813 18.558594 38.148438 18.222656 37.5 17.9375L45.9375 2.15625C45.929688 2.164063 46.085938 2.097656 46.3125 2.0625 Z M 32.8125 18.625C33.507813 18.644531 34.269531 18.785156 35.125 19.125C35.144531 19.136719 35.167969 19.148438 35.1875 19.15625C35.414063 19.511719 35.839844 19.6875 36.25 19.59375C36.363281 19.640625 36.351563 19.636719 36.46875 19.6875C37.144531 19.980469 37.996094 20.339844 38.84375 20.71875C40.085938 21.273438 40.871094 21.613281 41.59375 21.9375C41.613281 21.960938 41.632813 21.980469 41.65625 22C41.871094 22.296875 42.230469 22.453125 42.59375 22.40625C42.605469 22.40625 42.613281 22.40625 42.625 22.40625C45.015625 23.5 46.070313 26.105469 45.25 28.625C44.855469 28.613281 44.554688 28.632813 43.8125 28.46875C43.257813 28.347656 42.71875 28.152344 42.3125 27.90625C41.90625 27.660156 41.671875 27.417969 41.5625 27.09375C41.476563 26.8125 41.269531 26.585938 40.996094 26.472656C40.726563 26.355469 40.417969 26.367188 40.15625 26.5C39.820313 26.667969 38.972656 26.605469 38.21875 26.21875C37.84375 26.027344 37.507813 25.757813 37.28125 25.53125C37.054688 25.304688 36.992188 25.089844 37 25.125C36.945313 24.832031 36.765625 24.578125 36.503906 24.433594C36.246094 24.289063 35.933594 24.269531 35.65625 24.375C35.628906 24.386719 35.296875 24.417969 34.90625 24.34375C34.515625 24.269531 34.0625 24.109375 33.625 23.90625C33.1875 23.703125 32.785156 23.457031 32.53125 23.25C32.277344 23.042969 32.253906 22.828125 32.28125 23.09375C32.214844 22.566406 31.75 22.179688 31.21875 22.21875C30.214844 22.3125 29.273438 21.574219 28.71875 21.09375C29.304688 20.105469 30.03125 19.316406 30.9375 18.9375C31.492188 18.707031 32.117188 18.605469 32.8125 18.625 Z M 27.8125 22.96875C28.507813 23.46875 29.472656 23.988281 30.625 24.09375C30.808594 24.363281 31.007813 24.582031 31.25 24.78125C31.683594 25.140625 32.21875 25.457031 32.78125 25.71875C33.34375 25.980469 33.933594 26.199219 34.53125 26.3125C34.839844 26.371094 35.15625 26.253906 35.46875 26.25C35.617188 26.476563 35.683594 26.777344 35.875 26.96875C36.28125 27.375 36.765625 27.71875 37.3125 28C38.125 28.417969 39.101563 28.5625 40.0625 28.4375C40.390625 28.929688 40.785156 29.34375 41.25 29.625C41.933594 30.035156 42.679688 30.285156 43.375 30.4375C43.863281 30.542969 44.308594 30.589844 44.71875 30.625C44.441406 31.523438 44.140625 32.367188 43.84375 33.1875C43.484375 33.175781 43.042969 33.15625 42.5625 33.0625C41.46875 32.851563 40.433594 32.367188 40 31.53125C39.765625 31.09375 39.246094 30.894531 38.78125 31.0625C38.285156 31.238281 37.386719 31.164063 36.625 30.8125C35.863281 30.460938 35.285156 29.851563 35.15625 29.40625C35.074219 29.136719 34.878906 28.914063 34.621094 28.796875C34.367188 28.675781 34.074219 28.671875 33.8125 28.78125C33.570313 28.882813 32.625 28.855469 31.84375 28.5C31.0625 28.144531 30.558594 27.546875 30.5 27.21875C30.449219 26.941406 30.285156 26.703125 30.046875 26.554688C29.808594 26.40625 29.519531 26.363281 29.25 26.4375C28.304688 26.691406 27.566406 26.355469 26.96875 25.90625C26.761719 25.753906 26.609375 25.585938 26.46875 25.4375C26.953125 24.667969 27.402344 23.851563 27.8125 22.96875 Z M 25.3125 27.09375C25.460938 27.230469 25.601563 27.363281 25.78125 27.5C26.519531 28.054688 27.65625 28.449219 28.9375 28.375C29.402344 29.246094 30.15625 29.914063 31.03125 30.3125C31.894531 30.707031 32.816406 30.832031 33.71875 30.71875C34.21875 31.535156 34.914063 32.226563 35.78125 32.625C36.707031 33.050781 37.746094 33.160156 38.75 33C39.683594 34.167969 41.011719 34.804688 42.1875 35.03125C42.5 35.089844 42.808594 35.128906 43.09375 35.15625C41.429688 39.175781 39.566406 42.117188 37.9375 44.15625C35.851563 46.769531 34.441406 47.757813 34.125 47.96875C33.769531 47.953125 31.164063 47.769531 27.5 46.75C27.800781 46.554688 28.125 46.351563 28.46875 46.09375C30.136719 44.84375 32.320313 42.804688 34.4375 39.65625C34.660156 39.332031 34.675781 38.910156 34.472656 38.574219C34.269531 38.234375 33.890625 38.046875 33.5 38.09375C33.207031 38.125 32.945313 38.285156 32.78125 38.53125C30.796875 41.484375 28.753906 43.375 27.25 44.5C25.820313 45.570313 24.992188 45.902344 24.90625 45.9375C22.65625 45.144531 20.164063 44.058594 17.625 42.53125C17.992188 42.410156 18.382813 42.25 18.8125 42.0625C20.710938 41.234375 23.25 39.6875 25.84375 36.78125C26.15625 36.46875 26.226563 35.988281 26.019531 35.601563C25.808594 35.210938 25.371094 35.003906 24.9375 35.09375C24.707031 35.132813 24.496094 35.257813 24.34375 35.4375C21.9375 38.128906 19.683594 39.496094 18.03125 40.21875C16.378906 40.941406 15.4375 41 15.4375 41C15.394531 41.007813 15.351563 41.019531 15.3125 41.03125C13.238281 39.570313 11.167969 37.792969 9.21875 35.65625C11.121094 35.507813 13.570313 35.121094 16.59375 33.8125C19.578125 32.519531 22.761719 30.410156 25.3125 27.09375Z"/></svg>`,
   copy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18.327 7.286h-8.044a1.932 1.932 0 0 0-1.925 1.938v10.088c0 1.07.862 1.938 1.925 1.938h8.044a1.932 1.932 0 0 0 1.925-1.938V9.224c0-1.07-.862-1.938-1.925-1.938"/><path d="M15.642 7.286V4.688c0-.514-.203-1.007-.564-1.37a1.918 1.918 0 0 0-1.361-.568H5.673c-.51 0-1 .204-1.36.568a1.945 1.945 0 0 0-.565 1.37v10.088c0 .514.203 1.007.564 1.37c.361.364.85.568 1.361.568h2.685"/></g></svg>`,
   open: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15" d="M7 17L17 7m0 0H9m8 0v8"/></svg>`,
-  search: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true"><path d="M561.6,511.7c-66.3,66.3-170.3,76.5-248.3,24.4-78-52.1-108.3-152.1-72.4-238.7,35.9-86.7,128-135.9,220-117.6,92,18.3,158.2,99.1,158.2,192.9,0,52.1-20.7,102.1-57.6,139Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48px"/><path d="M171.2,624l112.4-112.4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48px"/></svg>`,
+  search: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true"><path d="M561.6,511.7c-66.3,66.3-170.3,76.5-248.3,24.4-78-52.1-108.3-152.1-72.4-238.7,35.9-86.7,128-135.9,220-117.6,92,18.3,158.2,99.1,158.2,192.9,0,52.1-20.7,102.1-57.6,139Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="72px"/><path d="M171.2,624l112.4-112.4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="72px"/></svg>`,
   share: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 16V4m0 0l-4 4m4-4l4 4"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M5 13.5v3.25A2.25 2.25 0 0 0 7.25 19h9.5A2.25 2.25 0 0 0 19 16.75V13.5"/></svg>`,
   moon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.08 2.56a1 1 0 0 1 1.27 1.22a8.03 8.03 0 0 0 9.87 9.87a1 1 0 0 1 1.22 1.27A10 10 0 1 1 9.08 2.56Z"/></svg>`,
   sun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"/></g></svg>`,
@@ -101,7 +101,8 @@ const state = {
   activeButtonResetTimers: new WeakMap(),
   scrollAfterConvert: false,
   hideResultTimer: null,
-  themeSwitchTimer: null
+  themeSwitchTimer: null,
+  isSearchMode: false
 };
 
 const els = {
@@ -110,6 +111,7 @@ const els = {
   clearButton: document.getElementById("clearButton"),
   pasteButton: document.getElementById("pasteButton"),
   useSampleButton: document.getElementById("useSampleButton"),
+  searchModeButton: document.getElementById("searchModeButton"),
   supportedChips: document.getElementById("supportedChips"),
   statusCard: document.getElementById("statusCard"),
   resultCard: document.getElementById("resultCard"),
@@ -120,6 +122,7 @@ const els = {
   resultTitle: document.getElementById("resultTitle"),
   resultMeta: document.getElementById("resultMeta"),
   platformGroups: document.getElementById("platformGroups"),
+  resultLegend: document.getElementById("resultLegend"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
@@ -261,6 +264,12 @@ function injectButtonIcons() {
   if (els.themeToggle) {
     syncThemeToggleIcon();
   }
+
+  if (els.searchModeButton) {
+    els.searchModeButton.innerHTML = `<span class="button-icon">${SVG_ICONS.search}</span>`;
+  }
+
+  syncSearchModeUI();
 }
 
 function bindEvents() {
@@ -268,6 +277,17 @@ function bindEvents() {
 
   els.convertButton?.addEventListener("click", () => {
     onConvert({ shouldScrollToStatus: true });
+  });
+
+  els.searchModeButton?.addEventListener("click", event => {
+    state.isSearchMode = !state.isSearchMode;
+    pulseActionButton(event.currentTarget);
+    syncSearchModeUI();
+
+    if (state.isSearchMode) {
+      els.input?.focus();
+      showFloatingToast("modo pesquisa ativado.");
+    }
   });
 
   els.clearButton?.addEventListener("click", event => {
@@ -502,23 +522,32 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
 }
 
 async function onConvert({ shouldScrollToStatus = false } = {}) {
-  const link = extractUrl(els.input.value.trim());
+  const rawInput = els.input.value.trim();
+  const link = extractUrl(rawInput);
+  const modeAtSubmit = state.isSearchMode;
   state.scrollAfterConvert = shouldScrollToStatus;
 
-  if (!link) {
-    showStatus("cole um link válido para continuar.", "error");
-    return;
-  }
+  if (state.isSearchMode) {
+    if (!rawInput || rawInput.length < 3) {
+      showStatus("digite artista + música para pesquisar.", "error");
+      return;
+    }
+  } else {
+    if (!link) {
+      showStatus("cole um link válido para continuar.", "error");
+      return;
+    }
 
-  if (!isSupportedStreamingUrl(link)) {
-    showStatus("isso não parece um link de streaming suportado.", "error");
-    return;
+    if (!isSupportedStreamingUrl(link)) {
+      showStatus("isso não parece um link de streaming suportado.", "error");
+      return;
+    }
   }
 
   softlyDismissKeyboard();
   setLoading(true);
   hideResult();
-  showStatus("swapando...", "default");
+  showStatus(modeAtSubmit ? "pesquisando..." : "swapando...", "default");
   startCoverShimmer();
 
   try {
@@ -529,7 +558,9 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
       },
       body: JSON.stringify({
         link,
-        adapters: REQUESTED_ADAPTERS
+        adapters: REQUESTED_ADAPTERS,
+        queryMode: modeAtSubmit,
+        query: modeAtSubmit ? rawInput : undefined
       })
     });
 
@@ -544,18 +575,19 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
       return;
     }
 
-    const result = normalizeApiPayload(payload.data, link);
+    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link);
     if (!result) {
       stopCoverShimmer();
       showStatus("não encontrei plataformas para esse link.", "error");
       return;
     }
 
-    state.currentOriginalUrl = link;
+    state.currentOriginalUrl = modeAtSubmit ? null : link;
     state.currentResult = result;
     renderResult(result);
+    const directCount = result.links.filter(item => !item.isSearchResult).length;
     showStatus(
-      `${result.links.length} swap${result.links.length === 1 ? "" : "s"} encontrado${result.links.length === 1 ? "" : "s"}!`,
+      `${directCount} swap${directCount === 1 ? "" : "s"} encontrado${directCount === 1 ? "" : "s"}!`,
       "success"
     );
     els.input.value = "";
@@ -574,6 +606,10 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
     setLoading(false);
     state.autoConvertedFromQuery = false;
     state.scrollAfterConvert = false;
+    if (modeAtSubmit) {
+      state.isSearchMode = false;
+      syncSearchModeUI();
+    }
   }
 }
 
@@ -762,11 +798,38 @@ function renderResult(result) {
 
     const list = document.createElement("div");
     list.className = "platform-list";
+    const isOutras = groupName === "outras";
+    const defaultVisible = 3;
+    const collapsed = isOutras && items.length > defaultVisible;
+    const visibleItems = collapsed ? items.slice(0, defaultVisible) : items;
 
-    items.forEach(item => list.appendChild(createPlatformItem(item)));
+    visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
     section.appendChild(list);
+
+    if (collapsed) {
+      const expandButton = document.createElement("button");
+      expandButton.type = "button";
+      expandButton.className = "tiny-button see-more-button";
+      expandButton.textContent = "ver mais";
+      expandButton.addEventListener("click", event => {
+        const expanded = list.classList.toggle("is-expanded");
+        pulseActionButton(event.currentTarget);
+        if (expanded) {
+          items.slice(defaultVisible).forEach(item => list.appendChild(createPlatformItem(item)));
+          expandButton.textContent = "ver menos";
+        } else {
+          const current = Array.from(list.children);
+          current.slice(defaultVisible).forEach(node => node.remove());
+          expandButton.textContent = "ver mais";
+        }
+      });
+      section.appendChild(expandButton);
+    }
+
     els.platformGroups.appendChild(section);
   }
+
+  renderResultLegend();
 }
 
 function createPlatformItem(item) {
@@ -980,6 +1043,8 @@ function hideResult() {
       els.copyPrimaryButton.classList.add("hidden");
       els.sharePrimaryButton.classList.add("hidden");
       els.copyOriginalButton.classList.add("hidden");
+      els.resultLegend?.classList.add("hidden");
+      if (els.resultLegend) els.resultLegend.innerHTML = "";
       hideCoverImage();
       els.resultCard.classList.remove("is-exiting");
       els.resultCard.classList.add("hidden");
@@ -991,6 +1056,8 @@ function hideResult() {
   els.copyPrimaryButton.classList.add("hidden");
   els.sharePrimaryButton.classList.add("hidden");
   els.copyOriginalButton.classList.add("hidden");
+  els.resultLegend?.classList.add("hidden");
+  if (els.resultLegend) els.resultLegend.innerHTML = "";
   hideCoverImage();
 }
 
@@ -1039,7 +1106,11 @@ function showFloatingToast(message) {
 
 function setLoading(loading) {
   els.convertButton.disabled = loading;
-  els.convertButton.textContent = loading ? "swapando..." : "swap";
+  if (loading) {
+    els.convertButton.textContent = state.isSearchMode ? "pesquisando..." : "swapando...";
+    return;
+  }
+  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap";
 }
 
 function resetForm({ announce = false } = {}) {
@@ -1052,10 +1123,34 @@ function resetForm({ announce = false } = {}) {
   state.currentOriginalUrl = null;
   state.autoConvertedFromQuery = false;
   state.lastAutoUrl = "";
+  state.isSearchMode = false;
+  syncSearchModeUI();
 
   if (announce) {
     showFloatingToast("campo de busca apagado.");
   }
+}
+
+function syncSearchModeUI() {
+  if (els.searchModeButton) {
+    els.searchModeButton.classList.toggle("is-active", state.isSearchMode);
+  }
+  if (els.input) {
+    els.input.placeholder = state.isSearchMode
+      ? "digite o nome do artista + música"
+      : "cole o link da música aqui";
+  }
+  setLoading(false);
+}
+
+function renderResultLegend() {
+  if (!els.resultLegend) return;
+  els.resultLegend.classList.remove("hidden");
+  els.resultLegend.innerHTML = `
+    <span class="legend-item"><span class="legend-icon is-verified">${SVG_ICONS.verified}</span> verificado</span>
+    <span class="legend-item"><span class="legend-icon is-found">${SVG_ICONS.found}</span> identificado</span>
+    <span class="legend-item"><span class="legend-icon is-not-found">${SVG_ICONS.notLocated}</span> não localizado</span>
+  `;
 }
 
 function normalizeLinks(links, sourceLink = "", searchQuery = "") {
