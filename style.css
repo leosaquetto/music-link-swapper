@@ -343,7 +343,7 @@ h1 {
 }
 
 .tiny-button {
-  border: 1px solid var(--line);
+  border: 0;
   background: rgba(18, 22, 35, 0.05);
   color: var(--muted);
   padding: 8px 12px;
