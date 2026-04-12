@@ -37,12 +37,14 @@ const SVG_ICONS = {
   clear: `<svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M46.4375 -0.03125C46.269531 -0.0390625 46.097656 -0.0234375 45.9375 0C45.265625 0.09375 44.6875 0.421875 44.28125 1.03125L44.25 1.09375L44.21875 1.125L35.65625 17.21875C34.691406 16.859375 33.734375 16.648438 32.84375 16.625C31.882813 16.601563 30.976563 16.75 30.15625 17.09375C28.574219 17.753906 27.378906 19.046875 26.59375 20.6875C26.558594 20.738281 26.527344 20.789063 26.5 20.84375C26.496094 20.851563 26.503906 20.867188 26.5 20.875C26.488281 20.894531 26.476563 20.917969 26.46875 20.9375C26.457031 20.976563 26.445313 21.019531 26.4375 21.0625C25.894531 22.417969 25.269531 23.636719 24.5625 24.71875C24.554688 24.730469 24.539063 24.738281 24.53125 24.75C24.441406 24.828125 24.367188 24.925781 24.3125 25.03125C24.308594 25.039063 24.316406 25.054688 24.3125 25.0625C24.277344 25.113281 24.246094 25.164063 24.21875 25.21875C21.832031 28.636719 18.722656 30.695313 15.78125 31.96875C11.773438 33.703125 7.9375 33.886719 7.09375 33.8125C6.691406 33.773438 6.304688 33.976563 6.113281 34.332031C5.925781 34.6875 5.964844 35.125 6.21875 35.4375C17.613281 49.5 34.375 50 34.375 50C34.574219 50.003906 34.769531 49.949219 34.9375 49.84375C34.9375 49.84375 37.007813 48.53125 39.5 45.40625C41.371094 43.058594 43.503906 39.664063 45.34375 34.96875C45.355469 34.957031 45.363281 34.949219 45.375 34.9375C45.605469 34.722656 45.722656 34.410156 45.6875 34.09375C45.6875 34.082031 45.6875 34.074219 45.6875 34.0625C46.171875 32.753906 46.640625 31.378906 47.0625 29.875C47.078125 29.8125 47.089844 29.75 47.09375 29.6875C47.09375 29.675781 47.09375 29.667969 47.09375 29.65625C48.425781 26.21875 46.941406 22.433594 43.75 20.78125L49.9375 3.625L49.9375 3.59375L49.96875 3.5625C50.171875 2.851563 49.9375 2.167969 49.5625 1.625C49.207031 1.113281 48.6875 0.710938 48.0625 0.4375L48.0625 0.40625C48.042969 0.398438 48.019531 0.414063 48 0.40625C47.988281 0.402344 47.980469 0.378906 47.96875 0.375C47.480469 0.144531 46.945313 -0.0117188 46.4375 -0.03125 Z M 46.3125 2.0625C46.539063 2.027344 46.835938 2.027344 47.15625 2.1875L47.1875 2.21875L47.21875 2.21875C47.542969 2.347656 47.8125 2.566406 47.9375 2.75C48.0625 2.933594 48.027344 3.042969 48.03125 3.03125L41.9375 19.9375C41.203125 19.605469 40.695313 19.371094 39.65625 18.90625C38.882813 18.558594 38.148438 18.222656 37.5 17.9375L45.9375 2.15625C45.929688 2.164063 46.085938 2.097656 46.3125 2.0625 Z M 32.8125 18.625C33.507813 18.644531 34.269531 18.785156 35.125 19.125C35.144531 19.136719 35.167969 19.148438 35.1875 19.15625C35.414063 19.511719 35.839844 19.6875 36.25 19.59375C36.363281 19.640625 36.351563 19.636719 36.46875 19.6875C37.144531 19.980469 37.996094 20.339844 38.84375 20.71875C40.085938 21.273438 40.871094 21.613281 41.59375 21.9375C41.613281 21.960938 41.632813 21.980469 41.65625 22C41.871094 22.296875 42.230469 22.453125 42.59375 22.40625C42.605469 22.40625 42.613281 22.40625 42.625 22.40625C45.015625 23.5 46.070313 26.105469 45.25 28.625C44.855469 28.613281 44.554688 28.632813 43.8125 28.46875C43.257813 28.347656 42.71875 28.152344 42.3125 27.90625C41.90625 27.660156 41.671875 27.417969 41.5625 27.09375C41.476563 26.8125 41.269531 26.585938 40.996094 26.472656C40.726563 26.355469 40.417969 26.367188 40.15625 26.5C39.820313 26.667969 38.972656 26.605469 38.21875 26.21875C37.84375 26.027344 37.507813 25.757813 37.28125 25.53125C37.054688 25.304688 36.992188 25.089844 37 25.125C36.945313 24.832031 36.765625 24.578125 36.503906 24.433594C36.246094 24.289063 35.933594 24.269531 35.65625 24.375C35.628906 24.386719 35.296875 24.417969 34.90625 24.34375C34.515625 24.269531 34.0625 24.109375 33.625 23.90625C33.1875 23.703125 32.785156 23.457031 32.53125 23.25C32.277344 23.042969 32.253906 22.828125 32.28125 23.09375C32.214844 22.566406 31.75 22.179688 31.21875 22.21875C30.214844 22.3125 29.273438 21.574219 28.71875 21.09375C29.304688 20.105469 30.03125 19.316406 30.9375 18.9375C31.492188 18.707031 32.117188 18.605469 32.8125 18.625 Z M 27.8125 22.96875C28.507813 23.46875 29.472656 23.988281 30.625 24.09375C30.808594 24.363281 31.007813 24.582031 31.25 24.78125C31.683594 25.140625 32.21875 25.457031 32.78125 25.71875C33.34375 25.980469 33.933594 26.199219 34.53125 26.3125C34.839844 26.371094 35.15625 26.253906 35.46875 26.25C35.617188 26.476563 35.683594 26.777344 35.875 26.96875C36.28125 27.375 36.765625 27.71875 37.3125 28C38.125 28.417969 39.101563 28.5625 40.0625 28.4375C40.390625 28.929688 40.785156 29.34375 41.25 29.625C41.933594 30.035156 42.679688 30.285156 43.375 30.4375C43.863281 30.542969 44.308594 30.589844 44.71875 30.625C44.441406 31.523438 44.140625 32.367188 43.84375 33.1875C43.484375 33.175781 43.042969 33.15625 42.5625 33.0625C41.46875 32.851563 40.433594 32.367188 40 31.53125C39.765625 31.09375 39.246094 30.894531 38.78125 31.0625C38.285156 31.238281 37.386719 31.164063 36.625 30.8125C35.863281 30.460938 35.285156 29.851563 35.15625 29.40625C35.074219 29.136719 34.878906 28.914063 34.621094 28.796875C34.367188 28.675781 34.074219 28.671875 33.8125 28.78125C33.570313 28.882813 32.625 28.855469 31.84375 28.5C31.0625 28.144531 30.558594 27.546875 30.5 27.21875C30.449219 26.941406 30.285156 26.703125 30.046875 26.554688C29.808594 26.40625 29.519531 26.363281 29.25 26.4375C28.304688 26.691406 27.566406 26.355469 26.96875 25.90625C26.761719 25.753906 26.609375 25.585938 26.46875 25.4375C26.953125 24.667969 27.402344 23.851563 27.8125 22.96875 Z M 25.3125 27.09375C25.460938 27.230469 25.601563 27.363281 25.78125 27.5C26.519531 28.054688 27.65625 28.449219 28.9375 28.375C29.402344 29.246094 30.15625 29.914063 31.03125 30.3125C31.894531 30.707031 32.816406 30.832031 33.71875 30.71875C34.21875 31.535156 34.914063 32.226563 35.78125 32.625C36.707031 33.050781 37.746094 33.160156 38.75 33C39.683594 34.167969 41.011719 34.804688 42.1875 35.03125C42.5 35.089844 42.808594 35.128906 43.09375 35.15625C41.429688 39.175781 39.566406 42.117188 37.9375 44.15625C35.851563 46.769531 34.441406 47.757813 34.125 47.96875C33.769531 47.953125 31.164063 47.769531 27.5 46.75C27.800781 46.554688 28.125 46.351563 28.46875 46.09375C30.136719 44.84375 32.320313 42.804688 34.4375 39.65625C34.660156 39.332031 34.675781 38.910156 34.472656 38.574219C34.269531 38.234375 33.890625 38.046875 33.5 38.09375C33.207031 38.125 32.945313 38.285156 32.78125 38.53125C30.796875 41.484375 28.753906 43.375 27.25 44.5C25.820313 45.570313 24.992188 45.902344 24.90625 45.9375C22.65625 45.144531 20.164063 44.058594 17.625 42.53125C17.992188 42.410156 18.382813 42.25 18.8125 42.0625C20.710938 41.234375 23.25 39.6875 25.84375 36.78125C26.15625 36.46875 26.226563 35.988281 26.019531 35.601563C25.808594 35.210938 25.371094 35.003906 24.9375 35.09375C24.707031 35.132813 24.496094 35.257813 24.34375 35.4375C21.9375 38.128906 19.683594 39.496094 18.03125 40.21875C16.378906 40.941406 15.4375 41 15.4375 41C15.394531 41.007813 15.351563 41.019531 15.3125 41.03125C13.238281 39.570313 11.167969 37.792969 9.21875 35.65625C11.121094 35.507813 13.570313 35.121094 16.59375 33.8125C19.578125 32.519531 22.761719 30.410156 25.3125 27.09375Z"/></svg>`,
   copy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18.327 7.286h-8.044a1.932 1.932 0 0 0-1.925 1.938v10.088c0 1.07.862 1.938 1.925 1.938h8.044a1.932 1.932 0 0 0 1.925-1.938V9.224c0-1.07-.862-1.938-1.925-1.938"/><path d="M15.642 7.286V4.688c0-.514-.203-1.007-.564-1.37a1.918 1.918 0 0 0-1.361-.568H5.673c-.51 0-1 .204-1.36.568a1.945 1.945 0 0 0-.565 1.37v10.088c0 .514.203 1.007.564 1.37c.361.364.85.568 1.361.568h2.685"/></g></svg>`,
   open: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.15" d="M7 17L17 7m0 0H9m8 0v8"/></svg>`,
+  search: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true"><path d="M561.6,511.7c-66.3,66.3-170.3,76.5-248.3,24.4-78-52.1-108.3-152.1-72.4-238.7,35.9-86.7,128-135.9,220-117.6,92,18.3,158.2,99.1,158.2,192.9,0,52.1-20.7,102.1-57.6,139Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="72px"/><path d="M171.2,624l112.4-112.4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="72px"/></svg>`,
   share: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 16V4m0 0l-4 4m4-4l4 4"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M5 13.5v3.25A2.25 2.25 0 0 0 7.25 19h9.5A2.25 2.25 0 0 0 19 16.75V13.5"/></svg>`,
   moon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.08 2.56a1 1 0 0 1 1.27 1.22a8.03 8.03 0 0 0 9.87 9.87a1 1 0 0 1 1.22 1.27A10 10 0 1 1 9.08 2.56Z"/></svg>`,
   sun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"/></g></svg>`,
   unlink: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 54.971 54.971" aria-hidden="true"><g fill="currentColor"><path d="M51.173,3.801c-5.068-5.068-13.315-5.066-18.384,0l-9.192,9.192c-0.781,0.781-0.781,2.047,0,2.828c0.781,0.781,2.047,0.781,2.828,0l9.192-9.192c1.691-1.69,3.951-2.622,6.363-2.622c2.413,0,4.673,0.932,6.364,2.623s2.623,3.951,2.623,6.364c0,2.412-0.932,4.672-2.623,6.363L36.325,31.379c-3.51,3.508-9.219,3.508-12.729,0c-0.781-0.781-2.047-0.781-2.828,0s-0.781,2.048,0,2.828c2.534,2.534,5.863,3.801,9.192,3.801s6.658-1.267,9.192-3.801l12.021-12.021c2.447-2.446,3.795-5.711,3.795-9.192C54.968,9.512,53.62,6.248,51.173,3.801z"/><path d="M27.132,40.57l-7.778,7.778c-1.691,1.691-3.951,2.623-6.364,2.623c-2.412,0-4.673-0.932-6.364-2.623c-3.509-3.509-3.509-9.219,0-12.728L17.94,24.306c1.691-1.69,3.951-2.622,6.364-2.622c2.412,0,4.672,0.932,6.363,2.622c0.781,0.781,2.047,0.781,2.828,0s0.781-2.047,0-2.828c-5.067-5.067-13.314-5.068-18.384,0L3.797,32.793c-2.446,2.446-3.794,5.711-3.794,9.192c0,3.48,1.348,6.745,3.795,9.191c2.446,2.447,5.711,3.795,9.191,3.795c3.481,0,6.746-1.348,9.192-3.795l7.778-7.778c0.781-0.781,0.781-2.047,0-2.828S27.913,39.789,27.132,40.57z"/></g></svg>`,
   verified: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.55879 3.6972C10.7552 2.02216 13.2447 2.02216 14.4412 3.6972L14.6317 3.96387C14.8422 4.25867 15.1958 4.41652 15.5558 4.37652L16.4048 4.28218C18.3156 4.06988 19.9301 5.68439 19.7178 7.59513L19.6235 8.44415C19.5835 8.8042 19.7413 9.15774 20.0361 9.36831L20.3028 9.55879C21.9778 10.7552 21.9778 13.2447 20.3028 14.4412L20.0361 14.6317C19.7413 14.8422 19.5835 15.1958 19.6235 15.5558L19.7178 16.4048C19.9301 18.3156 18.3156 19.9301 16.4048 19.7178L15.5558 19.6235C15.1958 19.5835 14.8422 19.7413 14.6317 20.0361L14.4412 20.3028C13.2447 21.9778 10.7553 21.9778 9.55879 20.3028L9.36831 20.0361C9.15774 19.7413 8.8042 19.5835 8.44414 19.6235L7.59513 19.7178C5.68439 19.9301 4.06988 18.3156 4.28218 16.4048L4.37652 15.5558C4.41652 15.1958 4.25867 14.8422 3.96387 14.6317L3.6972 14.4412C2.02216 13.2447 2.02216 10.7553 3.6972 9.55879L3.96387 9.36831C4.25867 9.15774 4.41652 8.8042 4.37652 8.44414L4.28218 7.59513C4.06988 5.68439 5.68439 4.06988 7.59513 4.28218L8.44415 4.37652C8.8042 4.41652 9.15774 4.25867 9.36831 3.96387L9.55879 3.6972ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L11.8882 14.526C11.3977 15.0166 10.6023 15.0166 10.1118 14.526L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
   found: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L12.0243 14.3899C11.4586 14.9556 10.5414 14.9556 9.97568 14.3899L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
+  notLocated: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM9.00006 9C9.55234 9 10.0001 9.44772 10.0001 10V10.0112C10.0001 10.5635 9.55234 11.0112 9.00006 11.0112C8.44777 11.0112 8.00006 10.5635 8.00006 10.0112V10C8.00006 9.44772 8.44777 9 9.00006 9ZM7.39948 16.7996C7.84107 17.1313 8.46793 17.0422 8.79962 16.6006C9.53108 15.6268 10.6924 15 12.0004 15C13.3084 15 14.4698 15.6268 15.2012 16.6006C15.5329 17.0422 16.1598 17.1313 16.6014 16.7996C17.043 16.4679 17.132 15.841 16.8004 15.3994C15.7074 13.9443 13.9641 13 12.0004 13C10.0368 13 8.29344 13.9443 7.20049 15.3994C6.8688 15.841 6.95789 16.4679 7.39948 16.7996ZM16.0001 10C16.0001 9.44772 15.5523 9 15.0001 9C14.4478 9 14.0001 9.44772 14.0001 10V10.0112C14.0001 10.5635 14.4478 11.0112 15.0001 11.0112C15.5523 11.0112 16.0001 10.5635 16.0001 10.0112V10Z" fill="currentColor"/></svg>`,
   spotify: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.9 10.9C14.7 9 9.35 8.8 6.3 9.75c-.5.15-1-.15-1.15-.6c-.15-.5.15-1 .6-1.15c3.55-1.05 9.4-.85 13.1 1.35c.45.25.6.85.35 1.3c-.25.35-.85.5-1.3.25m-.1 2.8c-.25.35-.7.5-1.05.25c-2.7-1.65-6.8-2.15-9.95-1.15c-.4.1-.85-.1-.95-.5c-.1-.4.1-.85.5-.95c3.65-1.1 8.15-.55 11.25 1.35c.3.15.45.65.2 1m-1.2 2.75c-.2.3-.55.4-.85.2c-2.35-1.45-5.3-1.75-8.8-.95c-.35.1-.65-.15-.75-.45c-.1-.35.15-.65.45-.75c3.8-.85 7.1-.5 9.7 1.1c.35.15.4.55.25.85M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></svg>`,
   qobuz: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 25" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 13.4434C12.521 13.4434 12.9434 13.021 12.9434 12.5C12.9434 11.979 12.521 11.5566 12 11.5566C11.479 11.5566 11.0566 11.979 11.0566 12.5C11.0566 13.021 11.479 13.4434 12 13.4434ZM12 15.7075C13.7715 15.7075 15.2075 14.2715 15.2075 12.5C15.2075 10.7285 13.7715 9.29245 12 9.29245C10.2285 9.29245 8.79245 10.7285 8.79245 12.5C8.79245 14.2715 10.2285 15.7075 12 15.7075Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.5C17.5228 2.5 22 6.97715 22 12.5C22 14.8535 21.1869 17.0172 19.8264 18.7254L21.9029 20.8019L20.3019 22.4029L18.2254 20.3264C16.5172 21.6869 14.3535 22.5 12 22.5C6.47715 22.5 2 18.0228 2 12.5C2 6.97715 6.47715 2.5 12 2.5ZM19.7358 12.5C19.7358 8.22761 16.2724 4.76415 12 4.76415C7.72761 4.76415 4.26415 8.22761 4.26415 12.5C4.26415 16.7724 7.72761 20.2358 12 20.2358C13.7278 20.2358 15.3234 19.6694 16.611 18.712L15.1618 17.2628C14.7197 16.8207 14.7197 16.1039 15.1618 15.6618C15.6039 15.2197 16.3207 15.2197 16.7628 15.6618L18.212 17.111C19.1694 15.8234 19.7358 14.2278 19.7358 12.5Z" fill="currentColor"/></svg>`,
   pandora: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M25.401 0h-18.803c-3.599 0-6.599 2.964-6.599 6.599v18.803c0 3.599 2.959 6.599 6.599 6.599h18.803c3.635 0 6.599-2.964 6.599-6.599v-18.803c0-3.599-2.964-6.599-6.599-6.599zM16.5 21.083h-1.64v3.72c0 0.479-0.401 0.859-0.86 0.859h-5.14v-19.317h8.739c4.245 0 7.527 2.197 7.527 7.197 0 4.74-3.641 7.537-8.604 7.537h-0.021z"/></svg>`,
@@ -87,6 +89,8 @@ const SUPPORTED_PLATFORM_CHIPS = [
   "qobuz"
 ];
 
+const HIDDEN_PLATFORM_KEYS = new Set(["audios", "boomplay", "napster", "yandex"]);
+
 const state = {
   currentResult: null,
   currentOriginalUrl: null,
@@ -99,15 +103,18 @@ const state = {
   activeButtonResetTimers: new WeakMap(),
   scrollAfterConvert: false,
   hideResultTimer: null,
-  themeSwitchTimer: null
+  themeSwitchTimer: null,
+  isSearchMode: false
 };
 
 const els = {
   input: document.getElementById("linkInput"),
+  inputLabel: document.querySelector('label[for="linkInput"]'),
   convertButton: document.getElementById("convertButton"),
   clearButton: document.getElementById("clearButton"),
   pasteButton: document.getElementById("pasteButton"),
   useSampleButton: document.getElementById("useSampleButton"),
+  searchModeButton: document.getElementById("searchModeButton"),
   supportedChips: document.getElementById("supportedChips"),
   statusCard: document.getElementById("statusCard"),
   resultCard: document.getElementById("resultCard"),
@@ -118,6 +125,7 @@ const els = {
   resultTitle: document.getElementById("resultTitle"),
   resultMeta: document.getElementById("resultMeta"),
   platformGroups: document.getElementById("platformGroups"),
+  resultLegend: document.getElementById("resultLegend"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
@@ -259,6 +267,12 @@ function injectButtonIcons() {
   if (els.themeToggle) {
     syncThemeToggleIcon();
   }
+
+  if (els.searchModeButton) {
+    els.searchModeButton.innerHTML = `<span class="button-icon">${SVG_ICONS.search}</span>`;
+  }
+
+  syncSearchModeUI();
 }
 
 function bindEvents() {
@@ -266,6 +280,17 @@ function bindEvents() {
 
   els.convertButton?.addEventListener("click", () => {
     onConvert({ shouldScrollToStatus: true });
+  });
+
+  els.searchModeButton?.addEventListener("click", event => {
+    state.isSearchMode = !state.isSearchMode;
+    pulseActionButton(event.currentTarget);
+    syncSearchModeUI();
+
+    if (state.isSearchMode) {
+      els.input?.focus();
+      showFloatingToast("modo pesquisa ativado.");
+    }
   });
 
   els.clearButton?.addEventListener("click", event => {
@@ -500,23 +525,32 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
 }
 
 async function onConvert({ shouldScrollToStatus = false } = {}) {
-  const link = extractUrl(els.input.value.trim());
+  const rawInput = els.input.value.trim();
+  const link = extractUrl(rawInput);
+  const modeAtSubmit = state.isSearchMode;
   state.scrollAfterConvert = shouldScrollToStatus;
 
-  if (!link) {
-    showStatus("cole um link válido para continuar.", "error");
-    return;
-  }
+  if (state.isSearchMode) {
+    if (!rawInput || rawInput.length < 3) {
+      showStatus("digite artista + música para pesquisar.", "error");
+      return;
+    }
+  } else {
+    if (!link) {
+      showStatus("cole um link válido para continuar.", "error");
+      return;
+    }
 
-  if (!isSupportedStreamingUrl(link)) {
-    showStatus("isso não parece um link de streaming suportado.", "error");
-    return;
+    if (!isSupportedStreamingUrl(link)) {
+      showStatus("isso não parece um link de streaming suportado.", "error");
+      return;
+    }
   }
 
   softlyDismissKeyboard();
   setLoading(true);
   hideResult();
-  showStatus("swapando...", "default");
+  showStatus(modeAtSubmit ? "pesquisando..." : "swapando...", "default");
   startCoverShimmer();
 
   try {
@@ -527,7 +561,9 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
       },
       body: JSON.stringify({
         link,
-        adapters: REQUESTED_ADAPTERS
+        adapters: REQUESTED_ADAPTERS,
+        queryMode: modeAtSubmit,
+        query: modeAtSubmit ? rawInput : undefined
       })
     });
 
@@ -542,18 +578,19 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
       return;
     }
 
-    const result = normalizeApiPayload(payload.data, link);
+    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link);
     if (!result) {
       stopCoverShimmer();
       showStatus("não encontrei plataformas para esse link.", "error");
       return;
     }
 
-    state.currentOriginalUrl = link;
+    state.currentOriginalUrl = modeAtSubmit ? null : link;
     state.currentResult = result;
     renderResult(result);
+    const directCount = result.links.filter(item => !item.isSearchResult).length;
     showStatus(
-      `${result.links.length} swap${result.links.length === 1 ? "" : "s"} encontrado${result.links.length === 1 ? "" : "s"}!`,
+      `${directCount} swap${directCount === 1 ? "" : "s"} encontrado${directCount === 1 ? "" : "s"}!`,
       "success"
     );
     els.input.value = "";
@@ -572,16 +609,20 @@ async function onConvert({ shouldScrollToStatus = false } = {}) {
     setLoading(false);
     state.autoConvertedFromQuery = false;
     state.scrollAfterConvert = false;
+    if (modeAtSubmit) {
+      state.isSearchMode = false;
+      syncSearchModeUI();
+    }
   }
 }
 
 function normalizeApiPayload(data, sourceLink = "") {
-  const links = normalizeLinks(data.links, sourceLink);
-  if (!links.length) return null;
-
   const rawTitle = cleanText(data.title || "música encontrada");
   const rawDescription = cleanText(data.description || "");
   const preview = parsePreview(rawTitle, rawDescription);
+  const searchQuery = [preview.title, preview.artist].filter(Boolean).join(" ").trim();
+  const links = normalizeLinks(data.links, sourceLink, searchQuery);
+  if (!links.length) return null;
   const image = normalizeArtworkUrl(data.image || null);
 
   return {
@@ -760,14 +801,40 @@ function renderResult(result) {
 
     const list = document.createElement("div");
     list.className = "platform-list";
-
+    const isOutras = groupName === "outras";
+    const collapsed = isOutras && items.length > 0;
     items.forEach(item => list.appendChild(createPlatformItem(item)));
+    if (collapsed) {
+      list.classList.add("is-collapsible");
+    }
     section.appendChild(list);
+
+    if (collapsed) {
+      const expandButton = document.createElement("button");
+      expandButton.type = "button";
+      expandButton.className = "tiny-button see-more-button";
+      expandButton.textContent = "ver mais";
+      expandButton.addEventListener("click", event => {
+        const expanded = list.classList.toggle("is-expanded");
+        pulseActionButton(event.currentTarget);
+        expandButton.textContent = expanded ? "ver menos" : "ver mais";
+      });
+      section.appendChild(expandButton);
+    }
+
     els.platformGroups.appendChild(section);
   }
+
+  renderResultLegend();
 }
 
 function createPlatformItem(item) {
+  const badgeClass = item.isSearchResult ? "is-not-found" : item.isVerified ? "is-verified" : "is-found";
+  const badgeLabel = item.isSearchResult ? "não localizado" : item.isVerified ? "verificado" : "identificado";
+  const badgeIcon = item.isSearchResult ? SVG_ICONS.notLocated : item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
+  const openIcon = item.isSearchResult ? SVG_ICONS.search : SVG_ICONS.open;
+  const openLabel = item.isSearchResult ? "buscar" : "abrir";
+
   const row = document.createElement("article");
   row.className = "platform-item";
 
@@ -776,8 +843,8 @@ function createPlatformItem(item) {
     <div class="platform-copy">
       <div class="platform-name-row">
         <div class="platform-name">${escapeHtml(item.name)}</div>
-        <div class="platform-badge ${item.isVerified ? "is-verified" : "is-found"}" aria-label="${item.isVerified ? "verificado" : "encontrado"}">
-          ${item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found}
+        <div class="platform-badge ${badgeClass}" aria-label="${badgeLabel}">
+          ${badgeIcon}
         </div>
       </div>
     </div>
@@ -788,8 +855,8 @@ function createPlatformItem(item) {
       <button class="mini-action share" type="button" data-action="share" aria-label="compartilhar" title="compartilhar">
         <span class="button-icon">${SVG_ICONS.share}</span>
       </button>
-      <button class="mini-action open" type="button" data-action="open" aria-label="abrir" title="abrir">
-        <span class="button-icon">${SVG_ICONS.open}</span>
+      <button class="mini-action open" type="button" data-action="open" aria-label="${openLabel}" title="${openLabel}">
+        <span class="button-icon">${openIcon}</span>
       </button>
     </div>
   `;
@@ -972,6 +1039,8 @@ function hideResult() {
       els.copyPrimaryButton.classList.add("hidden");
       els.sharePrimaryButton.classList.add("hidden");
       els.copyOriginalButton.classList.add("hidden");
+      els.resultLegend?.classList.add("hidden");
+      if (els.resultLegend) els.resultLegend.innerHTML = "";
       hideCoverImage();
       els.resultCard.classList.remove("is-exiting");
       els.resultCard.classList.add("hidden");
@@ -983,6 +1052,8 @@ function hideResult() {
   els.copyPrimaryButton.classList.add("hidden");
   els.sharePrimaryButton.classList.add("hidden");
   els.copyOriginalButton.classList.add("hidden");
+  els.resultLegend?.classList.add("hidden");
+  if (els.resultLegend) els.resultLegend.innerHTML = "";
   hideCoverImage();
 }
 
@@ -1031,7 +1102,11 @@ function showFloatingToast(message) {
 
 function setLoading(loading) {
   els.convertButton.disabled = loading;
-  els.convertButton.textContent = loading ? "swapando..." : "swap";
+  if (loading) {
+    els.convertButton.textContent = state.isSearchMode ? "pesquisando..." : "swapando...";
+    return;
+  }
+  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap";
 }
 
 function resetForm({ announce = false } = {}) {
@@ -1044,13 +1119,42 @@ function resetForm({ announce = false } = {}) {
   state.currentOriginalUrl = null;
   state.autoConvertedFromQuery = false;
   state.lastAutoUrl = "";
+  state.isSearchMode = false;
+  syncSearchModeUI();
 
   if (announce) {
     showFloatingToast("campo de busca apagado.");
   }
 }
 
-function normalizeLinks(links, sourceLink = "") {
+function syncSearchModeUI() {
+  if (els.searchModeButton) {
+    els.searchModeButton.classList.toggle("is-active", state.isSearchMode);
+  }
+  if (els.input) {
+    els.input.type = state.isSearchMode ? "text" : "url";
+    els.input.inputMode = state.isSearchMode ? "search" : "url";
+    els.input.placeholder = state.isSearchMode
+      ? "digite o nome do artista + música"
+      : "cole o link da música aqui";
+  }
+  if (els.inputLabel) {
+    els.inputLabel.textContent = state.isSearchMode ? "pesquisa por nome" : "link da música";
+  }
+  setLoading(false);
+}
+
+function renderResultLegend() {
+  if (!els.resultLegend) return;
+  els.resultLegend.classList.remove("hidden");
+  els.resultLegend.innerHTML = `
+    <span class="legend-item"><span class="legend-icon is-verified">${SVG_ICONS.verified}</span> verificado</span>
+    <span class="legend-item"><span class="legend-icon is-found">${SVG_ICONS.found}</span> identificado</span>
+    <span class="legend-item"><span class="legend-icon is-not-found">${SVG_ICONS.notLocated}</span> não localizado</span>
+  `;
+}
+
+function normalizeLinks(links, sourceLink = "", searchQuery = "") {
   const seen = new Set();
   const normalized = [];
   const cameFromYouTubeMusic = isYouTubeMusicUrl(sourceLink);
@@ -1059,6 +1163,7 @@ function normalizeLinks(links, sourceLink = "") {
     if (!item || !item.url || item.notAvailable) continue;
 
     let type = normalizePlatformKey(item.type);
+    if (HIDDEN_PLATFORM_KEYS.has(String(type || "").toLowerCase())) continue;
     const linkIsYouTubeMusic = isYouTubeMusicUrl(item.url || "");
     if (type === "youtube" && (cameFromYouTubeMusic || linkIsYouTubeMusic)) {
       type = "youtubeMusic";
@@ -1076,6 +1181,8 @@ function normalizeLinks(links, sourceLink = "") {
     if (seen.has(dedupe)) continue;
     seen.add(dedupe);
 
+    const isSearchResult = isSearchUrlForPlatform(type, item.url);
+
     normalized.push({
       key: type,
       name: meta.name,
@@ -1083,20 +1190,97 @@ function normalizeLinks(links, sourceLink = "") {
       section: meta.section,
       order: meta.order,
       url: item.url,
-      isVerified: !!item.isVerified,
+      isVerified: !!item.isVerified && !isSearchResult,
+      isSearchResult,
       isPrimaryCopy: !!meta.isPrimaryCopy,
       appScheme: meta.appScheme || null
     });
   }
 
+  addSearchFallbackLinks(normalized, seen, searchQuery);
+
   normalized.sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
+    if (a.isSearchResult && !b.isSearchResult) return 1;
+    if (!a.isSearchResult && b.isSearchResult) return -1;
     if (a.isVerified && !b.isVerified) return -1;
     if (!a.isVerified && b.isVerified) return 1;
     return a.name.localeCompare(b.name);
   });
 
   return normalized;
+}
+
+function addSearchFallbackLinks(normalized, seen, searchQuery) {
+  if (!searchQuery) return;
+
+  const fallbackTypes = ["youtube", "youtubeMusic", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
+
+  for (const type of fallbackTypes) {
+    const hasRealLink = normalized.some(item => item.key === type && !item.isSearchResult);
+    if (hasRealLink) continue;
+
+    const searchUrl = buildSearchUrlForPlatform(type, searchQuery);
+    if (!searchUrl) continue;
+
+    const dedupe = `${type}|${searchUrl}`;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
+
+    const meta = PLATFORM_META[type] || {
+      name: prettifyPlatform(type),
+      icon: "•",
+      section: "outras",
+      order: 999,
+      isPrimaryCopy: false,
+      appScheme: null
+    };
+
+    normalized.push({
+      key: type,
+      name: meta.name,
+      icon: meta.icon,
+      section: meta.section,
+      order: meta.order,
+      url: searchUrl,
+      isVerified: false,
+      isSearchResult: true,
+      isPrimaryCopy: !!meta.isPrimaryCopy,
+      appScheme: meta.appScheme || null
+    });
+  }
+}
+
+function buildSearchUrlForPlatform(type, query) {
+  const encoded = encodeURIComponent(query);
+
+  if (type === "youtubeMusic") return `https://music.youtube.com/search?q=${encoded}`;
+  if (type === "youtube") return `https://www.youtube.com/results?search_query=${encoded}`;
+  if (type === "deezer") return `https://www.deezer.com/search/${encoded}`;
+  if (type === "soundCloud") return `https://soundcloud.com/search?q=${encoded}`;
+  if (type === "tidal") return `https://listen.tidal.com/search?q=${encoded}`;
+  if (type === "qobuz") return `https://www.qobuz.com/us-en/search?query=${encoded}`;
+  if (type === "amazonMusic") return `https://music.amazon.com/search/${encoded}`;
+
+  return "";
+}
+
+function isSearchUrlForPlatform(type, url) {
+  const lower = String(url || "").toLowerCase();
+  if (!lower) return false;
+
+  if (type === "youtube") return lower.includes("/results?search_query=");
+  if (type === "youtubeMusic") return lower.includes("music.youtube.com/search");
+  if (type === "deezer") return lower.includes("deezer.com/search");
+  if (type === "soundCloud") return lower.includes("soundcloud.com/search");
+  if (type === "tidal") return lower.includes("tidal.com/search");
+  if (type === "qobuz") return lower.includes("qobuz.com/") && lower.includes("/search");
+  if (type === "amazonMusic") return lower.includes("music.amazon.com/search");
+  if (type === "appleMusic" || type === "itunes") {
+    return lower.includes("music.apple.com") && lower.includes("/search");
+  }
+
+  return /[?&](q|query|search_query|term)=/.test(lower) && lower.includes("search");
 }
 
 function isYouTubeMusicUrl(url) {

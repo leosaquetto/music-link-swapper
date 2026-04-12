@@ -144,6 +144,18 @@ button:active {
   animation: none;
 }
 
+@media (min-width: 1024px) {
+  .orb-a {
+    left: -28px;
+    top: 32%;
+  }
+
+  .orb-b {
+    right: -36px;
+    bottom: 26%;
+  }
+}
+
 .app-shell {
   position: relative;
   z-index: 1;
@@ -317,6 +329,12 @@ h1 {
   margin-bottom: 10px;
 }
 
+.label-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .label {
   color: var(--muted);
   font-size: 12px;
@@ -336,6 +354,33 @@ h1 {
     background 180ms ease,
     color 180ms ease;
   flex: 0 0 auto;
+}
+
+.tiny-icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0.94;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 120ms ease;
+}
+
+.tiny-icon-button .button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tiny-icon-button.is-active {
+  background: #ed474c;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(237, 71, 76, 0.3);
+  opacity: 1;
 }
 
 .input-row {
@@ -669,6 +714,61 @@ h2 {
   min-width: 0;
 }
 
+.platform-list.is-collapsible {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 260ms ease, opacity 220ms ease;
+}
+
+.platform-list.is-collapsible.is-expanded {
+  max-height: 980px;
+  opacity: 1;
+}
+
+.see-more-button {
+  margin: 10px auto 0;
+  display: block;
+}
+
+.result-legend {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.legend-icon.is-verified {
+  color: #ed474c;
+}
+
+.legend-icon.is-found,
+.legend-icon.is-not-found {
+  color: #8e8e93;
+}
+
 .platform-item {
   position: relative;
   display: grid;
@@ -771,6 +871,10 @@ h2 {
 }
 
 .platform-badge.is-found {
+  color: #8e8e93;
+}
+
+.platform-badge.is-not-found {
   color: #8e8e93;
 }
 
@@ -1246,6 +1350,16 @@ h2 {
 }
 
 :root[data-theme="dark"] .platform-badge.is-verified {
+  color: #34c759;
+}
+
+:root[data-theme="dark"] .tiny-icon-button.is-active {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+  box-shadow: 0 10px 24px rgba(52, 199, 89, 0.35);
+}
+
+:root[data-theme="dark"] .legend-icon.is-verified {
   color: #34c759;
 }
 
