@@ -375,7 +375,7 @@ h1 {
 .tiny-icon-button .button-icon {
   width: 17px;
   height: 17px;
-  transform: translateX(-0.75px);
+  transform: none;
 }
 
 .tiny-icon-button.is-active {
@@ -460,6 +460,10 @@ h1 {
   background: #ed474c;
   color: #ffffff;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   box-shadow: 0 10px 26px rgba(237, 71, 76, 0.22);
 }
 
@@ -503,6 +507,11 @@ h1 {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.swap-button-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .supported-chips {
@@ -1131,14 +1140,18 @@ body.needs-viewport-fill .footer {
 .ios-install-sheet h2 {
   font-size: 22px;
   line-height: 1.14;
-  margin-bottom: 10px;
+  margin: 16px 0 18px;
   text-align: center;
 }
 
 .ios-install-mockup {
   width: min(100%, 240px);
-  margin: 10px auto 14px;
+  margin: 16px auto 16px;
   color: var(--muted);
+}
+
+.ios-title-break-iphone {
+  display: inline;
 }
 
 .ios-install-mockup svg {
@@ -1149,12 +1162,19 @@ body.needs-viewport-fill .footer {
 
 .ios-install-steps {
   list-style: none;
-  margin: 12px 0;
+  margin: 14px 0 12px;
   padding-left: 0;
   display: grid;
   gap: 8px;
   font-size: 14px;
   line-height: 1.25;
+}
+
+@media (max-width: 430px) {
+  .ios-title-break-iphone {
+    display: block;
+    white-space: nowrap;
+  }
 }
 
 .ios-install-steps li {

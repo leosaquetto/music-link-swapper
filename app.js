@@ -1,5 +1,20 @@
 const API_URL = "/api/convert";
-const SAMPLE_URL = "https://music.apple.com/br/album/who-will-you-follow/1891104460?i=1891104594";
+const SAMPLE_LINKS = [
+  "https://music.apple.com/br/album/who-will-you-follow/1891104460?i=1891104594",
+  "https://music.apple.com/br/album/swim/1868862375?i=1868862384",
+  "https://music.apple.com/br/album/choka-choka/1891400123?i=1891400226",
+  "https://music.apple.com/br/album/life-boat/1871085677?i=1871085701",
+  "https://music.apple.com/br/album/space/1884652117?i=1884652125",
+  "https://music.apple.com/br/album/zombie/1874720357?i=1874720787",
+  "https://music.apple.com/br/album/orange-county-feat-bizarrap-kara-jackson-anoushka-shankar/1837237742?i=1837237867",
+  "https://music.apple.com/br/album/i-could-have-sworn/1852602431?i=1852602432",
+  "https://music.apple.com/br/album/pink-lemonade/1852384560?i=1852384561",
+  "https://music.apple.com/br/album/pixelated-kisses/1849706656?i=1849706661",
+  "https://music.apple.com/br/album/carlas-song/1870984032?i=1870984054",
+  "https://music.apple.com/br/album/canzone-estiva/1882460107?i=1882460109",
+  "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
+  "https://music.apple.com/br/album/golden/1820264137?i=1820264150"
+];
 const HERO_LOGO_GIF_URL = "https://i.imgur.com/T1uEx9T.gif?v=20260411";
 
 const REQUESTED_ADAPTERS = [
@@ -34,6 +49,8 @@ const STREAMING_HOST_HINTS = [
 const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
 
 const SVG_ICONS = {
+  shuffle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3,8H5.28a6,6,0,0,1,4.51,2.05L13.21,14a6,6,0,0,0,4.51,2H21"/><polyline points="19 14 21 16 19 18"/><path d="M21,8H17.72a6,6,0,0,0-4.51,2.05L9.79,14a6,6,0,0,1-4.51,2H3"/><polyline points="19 6 21 8 19 10"/></g></svg>`,
+  swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410.489 410.489" aria-hidden="true"><path fill="currentColor" d="M370.446,256.623l36.079-81.654c2.257-5.125,3.328-10.356,3.356-15.262c1.167-5.059,0.708-10.519-1.854-15.482c-3.356-6.55-9.477-10.643-16.209-11.876c-2.696-1.252-5.604-2.247-8.759-2.897l-87.459-17.939c-16.715-3.452-32.397,4.102-35.008,16.839c-2.611,12.747,8.807,25.848,25.531,29.261l33.211,6.837L186.99,232.726c-11.15,5.709-15.51,19.422-9.773,30.553c5.767,11.131,19.44,15.481,30.561,9.744l134.631-69.396l-15.022,34.004c-6.885,15.616-2.84,32.513,9.056,37.782C348.338,280.654,363.562,272.239,370.446,256.623z"/><path fill="currentColor" d="M74.067,135.093c-11.905-5.26-27.129,3.146-34.023,18.762l-36.08,81.654c-2.256,5.125-3.328,10.355-3.356,15.28c-1.167,5.049-0.708,10.5,1.855,15.463c3.366,6.55,9.476,10.643,16.208,11.877c2.696,1.252,5.613,2.247,8.769,2.897l87.458,17.958c16.706,3.433,32.388-4.121,34.999-16.858c2.61-12.729-8.807-25.848-25.532-29.262l-33.211-6.827l132.344-68.267c11.15-5.728,15.521-19.44,9.773-30.571c-5.767-11.131-19.431-15.482-30.561-9.744L68.081,206.87l15.023-34.014C90.007,157.259,85.972,140.343,74.067,135.093z"/></svg>`,
   telegram: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="M256 0C114.62 0 0 114.62 0 256s114.62 256 256 256s256-114.62 256-256S397.38 0 256 0Zm118.77 174.93l-41.37 195.03c-3.12 13.86-11.28 17.28-22.84 10.77l-63.11-46.52l-30.44 29.3c-3.37 3.37-6.19 6.19-12.68 6.19l4.54-64.33l117.12-105.84c5.09-4.54-1.12-7.09-7.87-2.55L173.4 288.22l-62.29-19.46c-13.56-4.25-13.86-13.56 2.82-20.08l243.5-93.85c11.28-4.25 21.14 2.55 17.34 20.1Z"/></svg>`,
   paste: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7.5 6h1.67A3.001 3.001 0 0 0 12 8h6a3.001 3.001 0 0 0 2.83-2h1.67A1.5 1.5 0 0 1 24 7.5a1 1 0 1 0 2 0A3.5 3.5 0 0 0 22.5 4h-1.67A3.001 3.001 0 0 0 18 2h-6a3.001 3.001 0 0 0-2.83 2H7.5A3.5 3.5 0 0 0 4 7.5v19A3.5 3.5 0 0 0 7.5 30H12a1 1 0 1 0 0-2H7.5A1.5 1.5 0 0 1 6 26.5v-19A1.5 1.5 0 0 1 7.5 6ZM12 4h6a1 1 0 1 1 0 2h-6a1 1 0 1 1 0-2Zm5.5 6a3.5 3.5 0 0 0-3.5 3.5v13a3.5 3.5 0 0 0 3.5 3.5h8a3.5 3.5 0 0 0 3.5-3.5v-13a3.5 3.5 0 0 0-3.5-3.5h-8ZM16 13.5a1.5 1.5 0 0 1 1.5-1.5h8a1.5 1.5 0 0 1 1.5 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-8a1.5 1.5 0 0 1-1.5-1.5v-13Z"/></svg>`,
   clear: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20" aria-hidden="true"><path d="M5.50506 11.4096L6.03539 11.9399L5.50506 11.4096ZM3 14.9522H2.25H3ZM12.5904 18.4949L12.0601 17.9646L12.5904 18.4949ZM9.04776 21V21.75V21ZM11.4096 5.50506L10.8792 4.97473L11.4096 5.50506ZM13.241 17.8444C13.5339 18.1373 14.0088 18.1373 14.3017 17.8444C14.5946 17.5515 14.5946 17.0766 14.3017 16.7837L13.241 17.8444ZM7.21629 9.69832C6.9234 9.40543 6.44852 9.40543 6.15563 9.69832C5.86274 9.99122 5.86274 10.4661 6.15563 10.759L7.21629 9.69832ZM16.073 16.073C16.3659 15.7801 16.3659 15.3053 16.073 15.0124C15.7801 14.7195 15.3053 14.7195 15.0124 15.0124L16.073 16.073ZM18.4676 11.5559C18.1759 11.8499 18.1777 12.3248 18.4718 12.6165C18.7658 12.9083 19.2407 12.9064 19.5324 12.6124L18.4676 11.5559ZM6.03539 11.9399L11.9399 6.03539L10.8792 4.97473L4.97473 10.8792L6.03539 11.9399ZM6.03539 17.9646C5.18538 17.1146 4.60235 16.5293 4.22253 16.0315C3.85592 15.551 3.75 15.2411 3.75 14.9522H2.25C2.25 15.701 2.56159 16.3274 3.03 16.9414C3.48521 17.538 4.1547 18.2052 4.97473 19.0253L6.03539 17.9646ZM4.97473 10.8792C4.1547 11.6993 3.48521 12.3665 3.03 12.9631C2.56159 13.577 2.25 14.2035 2.25 14.9522H3.75C3.75 14.6633 3.85592 14.3535 4.22253 13.873C4.60235 13.3752 5.18538 12.7899 6.03539 11.9399L4.97473 10.8792ZM12.0601 17.9646C11.2101 18.8146 10.6248 19.3977 10.127 19.7775C9.64651 20.1441 9.33665 20.25 9.04776 20.25V21.75C9.79649 21.75 10.423 21.4384 11.0369 20.97C11.6335 20.5148 12.3008 19.8453 13.1208 19.0253L12.0601 17.9646ZM4.97473 19.0253C5.79476 19.8453 6.46201 20.5148 7.05863 20.97C7.67256 21.4384 8.29902 21.75 9.04776 21.75V20.25C8.75886 20.25 8.449 20.1441 7.9685 19.7775C7.47069 19.3977 6.88541 18.8146 6.03539 17.9646L4.97473 19.0253ZM17.9646 6.03539C18.8146 6.88541 19.3977 7.47069 19.7775 7.9685C20.1441 8.449 20.25 8.75886 20.25 9.04776H21.75C21.75 8.29902 21.4384 7.67256 20.97 7.05863C20.5148 6.46201 19.8453 5.79476 19.0253 4.97473L17.9646 6.03539ZM19.0253 4.97473C18.2052 4.1547 17.538 3.48521 16.9414 3.03C16.3274 2.56159 15.701 2.25 14.9522 2.25V3.75C15.2411 3.75 15.551 3.85592 16.0315 4.22253C16.5293 4.60235 17.1146 5.18538 17.9646 6.03539L19.0253 4.97473ZM11.9399 6.03539C12.7899 5.18538 13.3752 4.60235 13.873 4.22253C14.3535 3.85592 14.6633 3.75 14.9522 3.75V2.25C14.2035 2.25 13.577 2.56159 12.9631 3.03C12.3665 3.48521 11.6993 4.1547 10.8792 4.97473L11.9399 6.03539ZM14.3017 16.7837L7.21629 9.69832L6.15563 10.759L13.241 17.8444L14.3017 16.7837ZM15.0124 15.0124L12.0601 17.9646L13.1208 19.0253L16.073 16.073L15.0124 15.0124ZM19.5324 12.6124C20.1932 11.9464 20.7384 11.3759 21.114 10.8404C21.5023 10.2869 21.75 9.71511 21.75 9.04776H20.25C20.25 9.30755 20.1644 9.58207 19.886 9.979C19.5949 10.394 19.1401 10.8781 18.4676 11.5559L19.5324 12.6124Z" fill="currentColor"/><path d="M9 21H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
@@ -142,7 +159,21 @@ const els = {
   iosInstallClose: document.getElementById("iosInstallClose")
 };
 
-bootstrap();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+} else {
+  bootstrap();
+}
+
+window.addEventListener("pageshow", event => {
+  if (!event.persisted) return;
+  forceHeroGifLogo();
+  syncSearchModeUI();
+  updateConvertButtonLabel();
+  window.requestAnimationFrame(() => {
+    window.dispatchEvent(new Event("resize"));
+  });
+});
 
 function bootstrap() {
   forceHeroGifLogo();
@@ -280,6 +311,10 @@ function injectButtonIcons() {
     els.searchModeButton.innerHTML = `<span class="button-icon">${SVG_ICONS.search}</span>`;
   }
 
+  if (els.useSampleButton) {
+    els.useSampleButton.innerHTML = `<span class="button-icon">${SVG_ICONS.shuffle}</span>`;
+  }
+
   syncSearchModeUI();
 }
 
@@ -385,11 +420,11 @@ function bindEvents() {
   });
 
   els.useSampleButton?.addEventListener("click", event => {
-    els.input.value = SAMPLE_URL;
+    const randomSample = pickRandomSampleLink();
+    els.input.value = randomSample;
     hideStatus();
     softlyDismissKeyboard();
     pulseActionButton(event.currentTarget);
-    showFloatingToast("exemplo utilizado.");
     onConvert({ shouldScrollToStatus: true });
   });
 
@@ -1221,7 +1256,22 @@ function setLoading(loading) {
     els.convertButton.textContent = state.isSearchMode ? "pesquisando..." : "swapando...";
     return;
   }
-  els.convertButton.textContent = state.isSearchMode ? "pesquisar" : "swap ⇄";
+  updateConvertButtonLabel();
+}
+
+function updateConvertButtonLabel() {
+  if (!els.convertButton) return;
+  if (state.isSearchMode) {
+    els.convertButton.textContent = "pesquisar";
+    return;
+  }
+
+  els.convertButton.innerHTML = `<span>swap</span><span class="button-icon swap-button-icon">${SVG_ICONS.swap}</span>`;
+}
+
+function pickRandomSampleLink() {
+  const index = Math.floor(Math.random() * SAMPLE_LINKS.length);
+  return SAMPLE_LINKS[index];
 }
 
 function resetForm({ announce = false } = {}) {
