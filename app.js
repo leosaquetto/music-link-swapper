@@ -284,7 +284,7 @@ function bindEvents() {
 
   els.searchModeButton?.addEventListener("click", event => {
     state.isSearchMode = !state.isSearchMode;
-    pulseActionButton(event.currentTarget);
+    pulseActionButton(event.currentTarget, "toggle");
     syncSearchModeUI();
 
     if (state.isSearchMode) {
@@ -806,10 +806,7 @@ function renderResult(result) {
     if (!items.length) continue;
 
     const section = document.createElement("section");
-    const title = document.createElement("p");
-    title.className = "group-title";
-    title.textContent = groupName;
-    section.appendChild(title);
+    section.className = "platform-group-section";
 
     const list = document.createElement("div");
     list.className = "platform-list";
@@ -818,10 +815,9 @@ function renderResult(result) {
     const collapsed = isOutras && items.length > 0;
     const visibleItems = collapsed ? [] : items;
 
-    visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
-    section.appendChild(list);
-
     if (collapsed) {
+      const controlsWrap = document.createElement("div");
+      controlsWrap.className = "see-more-wrap";
       const expandButton = document.createElement("button");
       expandButton.type = "button";
       expandButton.className = "tiny-button see-more-button";
@@ -858,8 +854,17 @@ function renderResult(result) {
           expandButton.textContent = "ver mais";
         }
       });
-      section.appendChild(expandButton);
+      controlsWrap.appendChild(expandButton);
+      section.appendChild(controlsWrap);
     }
+
+    const title = document.createElement("p");
+    title.className = "group-title";
+    title.textContent = groupName;
+    section.appendChild(title);
+
+    visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
+    section.appendChild(list);
 
     els.platformGroups.appendChild(section);
   }
@@ -944,7 +949,7 @@ function pulseActionButton(button, variant = "copy") {
   void button.offsetWidth;
   button.classList.add(pressedClass);
 
-  const timeoutMs = variant === "open" ? 320 : 1000;
+  const timeoutMs = variant === "open" ? 320 : variant === "toggle" ? 150 : 1000;
   const timer = setTimeout(() => {
     button.classList.remove(pressedClass);
     resetTimers.delete(button);

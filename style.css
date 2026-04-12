@@ -701,12 +701,17 @@ h2 {
   min-width: 0;
 }
 
+.platform-group-section {
+  display: grid;
+  gap: 8px;
+}
+
 .group-title {
   color: var(--muted);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .platform-list {
@@ -715,9 +720,14 @@ h2 {
   min-width: 0;
 }
 
+.see-more-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .see-more-button {
-  margin-top: 10px;
-  margin-inline: auto;
+  margin-top: 2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -730,7 +740,7 @@ h2 {
   justify-content: center;
   gap: 10px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .legend-item {
@@ -1385,6 +1395,12 @@ h2 {
 :root:not([data-theme="dark"]) .mini-head-action,
 :root:not([data-theme="dark"]) .tiny-icon-button {
   background: rgba(18, 22, 35, 0.06);
+}
+
+:root:not([data-theme="dark"]) .tiny-icon-button.is-active {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+  box-shadow: 0 8px 20px rgba(52, 199, 89, 0.28);
 }
 
 :root:not([data-theme="dark"]) .platform-item {
