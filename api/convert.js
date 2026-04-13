@@ -61,6 +61,9 @@ const SAMPLE_CACHEABLE_LINKS = new Set([
   "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
   "https://music.apple.com/br/album/golden/1820264137?i=1820264150"
 ].map(normalizeSampleLink));
+const SAMPLE_CACHEABLE_IDENTITIES = new Set(
+  Array.from(SAMPLE_CACHEABLE_LINKS).map(buildSampleLinkIdentity)
+);
 
 export default async function handler(req, res) {
   metrics.requests += 1;
@@ -378,6 +381,15 @@ function normalizeSpotifyUrl(link) {
 function normalizeSampleLink(link) {
   try {
     const parsed = new URL(String(link || "").trim());
+    const host = parsed.hostname.toLowerCase();
+    if (host.includes("music.apple.com")) {
+      const trackId = parsed.searchParams.get("i");
+      parsed.search = "";
+      if (trackId) {
+        parsed.searchParams.set("i", trackId);
+      }
+    }
+
     parsed.hash = "";
     return parsed.toString();
   } catch (_error) {
@@ -385,10 +397,30 @@ function normalizeSampleLink(link) {
   }
 }
 
+function buildSampleLinkIdentity(normalizedLink) {
+  try {
+    const parsed = new URL(String(normalizedLink || "").trim());
+    const host = parsed.hostname.toLowerCase();
+    if (!host.includes("music.apple.com")) return parsed.toString();
+
+    const pathSegments = parsed.pathname.split("/").filter(Boolean);
+    const albumId = pathSegments[pathSegments.length - 1] || "";
+    const trackId = parsed.searchParams.get("i") || "";
+
+    if (albumId && trackId) return `applemusic:track:${albumId}:${trackId}`;
+    if (trackId) return `applemusic:track:${trackId}`;
+
+    return parsed.toString();
+  } catch (_error) {
+    return String(normalizedLink || "").trim();
+  }
+}
+
 function buildSampleCacheKey(link) {
   const normalized = normalizeSampleLink(link);
-  if (!SAMPLE_CACHEABLE_LINKS.has(normalized)) return null;
-  return `sample:${normalized}`;
+  const identity = buildSampleLinkIdentity(normalized);
+  if (!SAMPLE_CACHEABLE_IDENTITIES.has(identity)) return null;
+  return `sample:${identity}`;
 }
 
 function readSampleResultCache(key) {
