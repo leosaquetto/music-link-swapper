@@ -60,7 +60,7 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  touch-action: manipulation;
+  touch-action: auto;
   overscroll-behavior: none;
   background-color: var(--bg);
 }
@@ -2076,6 +2076,17 @@ body.legal-modal-open {
   position: fixed;
   inset: 0;
   z-index: 500;
+  display: grid;
+  place-items: end center;
+  padding: 16px 14px calc(14px + env(safe-area-inset-bottom));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.legal-modal.is-open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .legal-modal .recent-swaps-backdrop {
@@ -2083,24 +2094,25 @@ body.legal-modal-open {
 }
 
 .legal-sheet {
-  position: absolute;
-  left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
-  transform: translateX(-50%) translateY(18px);
-  width: min(95vw, 620px);
+  position: relative;
+  width: min(100%, 620px);
   max-height: min(84vh, 760px);
   background: var(--panel-strong);
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
   opacity: 0;
+  transform: translateY(18px);
   transition: opacity 220ms ease, transform 220ms ease;
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 .legal-modal.is-open .legal-sheet {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 .legal-title {
@@ -2112,11 +2124,15 @@ body.legal-modal-open {
 
 .legal-body {
   max-height: min(68vh, 620px);
-  overflow: auto;
+  min-height: 0;
+  overflow-y: auto;
   font-size: 13px;
   line-height: 1.5;
   color: var(--muted);
   padding-right: 2px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .legal-body p {

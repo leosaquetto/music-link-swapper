@@ -387,6 +387,8 @@ const state = {
   isLegalModalOpen: false,
   legalModalHideTimer: null,
   activeLegalType: "privacy",
+  modalScrollLockDepth: 0,
+  lockedScrollY: 0,
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -734,6 +736,43 @@ function initIOSInstallPrompt() {
   els.iosInstallCta.classList.toggle("hidden", !shouldShowPrompt);
 }
 
+function lockPageScroll(className) {
+  if (className) {
+    document.body.classList.add(className);
+  }
+
+  if (state.modalScrollLockDepth === 0) {
+    state.lockedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${state.lockedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
+  }
+
+  state.modalScrollLockDepth += 1;
+}
+
+function unlockPageScroll(className) {
+  if (className) {
+    document.body.classList.remove(className);
+  }
+
+  if (state.modalScrollLockDepth <= 0) return;
+  state.modalScrollLockDepth -= 1;
+  if (state.modalScrollLockDepth > 0) return;
+
+  const restoreY = state.lockedScrollY || 0;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  document.body.style.overflow = "";
+  window.scrollTo(0, restoreY);
+}
+
 function openIOSInstallModal() {
   if (!els.iosInstallModal || state.isIOSInstallModalOpen) return;
   if (state.iosInstallModalHideTimer) {
@@ -746,7 +785,7 @@ function openIOSInstallModal() {
     els.iosInstallModal?.classList.add("is-open");
   });
   els.iosInstallModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("ios-install-modal-open");
+  lockPageScroll("ios-install-modal-open");
 }
 
 function closeIOSInstallModal() {
@@ -754,7 +793,7 @@ function closeIOSInstallModal() {
   state.isIOSInstallModalOpen = false;
   els.iosInstallModal.classList.remove("is-open");
   els.iosInstallModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("ios-install-modal-open");
+  unlockPageScroll("ios-install-modal-open");
   state.iosInstallModalHideTimer = setTimeout(() => {
     els.iosInstallModal?.classList.add("hidden");
     state.iosInstallModalHideTimer = null;
@@ -775,7 +814,7 @@ function openRecentSwapsModal() {
     els.recentSwapsModal?.classList.add("is-open");
   });
   els.recentSwapsModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("recent-swaps-modal-open");
+  lockPageScroll("recent-swaps-modal-open");
 }
 
 function closeRecentSwapsModal() {
@@ -784,7 +823,7 @@ function closeRecentSwapsModal() {
   els.recentSwapsButton?.classList.remove("is-active");
   els.recentSwapsModal.classList.remove("is-open");
   els.recentSwapsModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("recent-swaps-modal-open");
+  unlockPageScroll("recent-swaps-modal-open");
   state.recentSwapsModalHideTimer = setTimeout(() => {
     els.recentSwapsModal?.classList.add("hidden");
     state.recentSwapsModalHideTimer = null;
@@ -822,7 +861,10 @@ function openLegalModal(type = "privacy") {
     els.legalModal?.classList.add("is-open");
   });
   els.legalModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("legal-modal-open");
+  lockPageScroll("legal-modal-open");
+  if (els.legalModalBody) {
+    els.legalModalBody.scrollTop = 0;
+  }
 }
 
 function closeLegalModal() {
@@ -830,7 +872,7 @@ function closeLegalModal() {
   state.isLegalModalOpen = false;
   els.legalModal.classList.remove("is-open");
   els.legalModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("legal-modal-open");
+  unlockPageScroll("legal-modal-open");
   state.legalModalHideTimer = setTimeout(() => {
     els.legalModal?.classList.add("hidden");
     state.legalModalHideTimer = null;
