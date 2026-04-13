@@ -3,6 +3,7 @@ const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const DEEZER_OEMBED_API_URL = "https://www.deezer.com/oembed";
+const YOUTUBE_OEMBED_API_URL = "https://www.youtube.com/oembed";
 const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
 const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
 const SPOTIFY_NEGATIVE_CACHE_TTL_MS = 2 * 60 * 1000;
@@ -1403,7 +1404,7 @@ function buildSpotifySearchUrlFromResult(data) {
 function isBridgePayloadCompatibleWithAppleTrack(payload, expectedTrackId) {
   if (!expectedTrackId) return true;
   const candidateTrackIds = extractAppleTrackIdsFromPayload(payload);
-  if (!candidateTrackIds.size) return false;
+  if (!candidateTrackIds.size) return true;
   return candidateTrackIds.has(expectedTrackId);
 }
 
@@ -1629,6 +1630,23 @@ async function fetchDeezerMetadata(url) {
   }
 }
 
+async function fetchYoutubeMetadata(url) {
+  try {
+    const response = await fetchWithTimeout(
+      `${YOUTUBE_OEMBED_API_URL}?url=${encodeURIComponent(url)}&format=json`
+    );
+    if (!response.ok) return { title: "", artist: "" };
+    const payload = await response.json();
+
+    return {
+      title: String(payload?.title || "").trim(),
+      artist: String(payload?.author_name || "").trim()
+    };
+  } catch (_error) {
+    return { title: "", artist: "" };
+  }
+}
+
 async function applyFinalAppleTrackCompatibilityGate(data, sourceLink) {
   const sourceAppleTrack = extractAppleTrackInputContext(sourceLink);
   if (!sourceAppleTrack.trackId) return data;
@@ -1659,10 +1677,18 @@ async function shouldKeepLinkForAppleTrack(link, expected) {
   if (!type || !url) return false;
 
   if (type === "applemusic" || type === "itunes") return true;
-  if (type === "youtube" || type === "youtubemusic") return true;
   if (isSearchLikeUrl(url, type)) return true;
 
+  const hintText = buildYoutubeCandidateHintText(link);
+  if (hintText && !isCompatibleTrackHintText(hintText, expected)) {
+    return false;
+  }
+
   try {
+    if (type === "youtube" || type === "youtubemusic") {
+      const metadata = await fetchYoutubeMetadata(url);
+      if (metadata?.title && !isCompatibleTrackMetadata(metadata, expected)) return false;
+    }
     if (type === "spotify") {
       const metadata = await fetchSpotifyMetadata(url);
       if (metadata?.title && !isCompatibleTrackMetadata(metadata, expected)) return false;
@@ -1696,6 +1722,23 @@ function isCompatibleTrackMetadata(metadata, expected) {
   const matchedArtist = candidateArtistTokens.filter(token => expectedArtistSet.has(token)).length;
   const artistRatio = matchedArtist / expectedArtistTokens.length;
   return artistRatio >= 0.4;
+}
+
+function isCompatibleTrackHintText(hintText, expected) {
+  const hintTokens = toQueryTokens(hintText || "");
+  const expectedTitleTokens = toQueryTokens(expected?.expectedTitle || "");
+  if (!hintTokens.length || !expectedTitleTokens.length) return true;
+
+  const hintSet = new Set(hintTokens);
+  const titleMatches = expectedTitleTokens.filter(token => hintSet.has(token)).length;
+  const titleRatio = titleMatches / expectedTitleTokens.length;
+  if (titleRatio < 0.5) return false;
+
+  const expectedArtistTokens = toQueryTokens(expected?.expectedArtist || "");
+  if (!expectedArtistTokens.length) return true;
+  const artistMatches = expectedArtistTokens.filter(token => hintSet.has(token)).length;
+  const artistRatio = artistMatches / expectedArtistTokens.length;
+  return artistRatio >= 0.34;
 }
 
 function dedupeAndNormalizeLinks(links) {
