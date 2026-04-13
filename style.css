@@ -2055,7 +2055,7 @@ body.legal-modal-open {
 }
 
 .footer-legal-links {
-  margin-top: 6px;
+  margin-top: 14px;
   display: inline-flex;
   gap: 6px;
   align-items: center;
@@ -2121,6 +2121,34 @@ body.legal-modal-open {
 
 .legal-body p {
   margin-bottom: 10px;
+}
+
+.legal-body ol,
+.legal-body ul {
+  padding-left: 18px;
+  margin: 0 0 12px;
+}
+
+.legal-body li {
+  margin-bottom: 8px;
+}
+
+.legal-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(127, 134, 149, 0.75) transparent;
+}
+
+.legal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.legal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.legal-body::-webkit-scrollbar-thumb {
+  background: rgba(127, 134, 149, 0.75);
+  border-radius: 999px;
 }
 
 :root[data-theme="dark"] .icon-chip-youTube,
