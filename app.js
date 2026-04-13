@@ -743,11 +743,6 @@ function lockPageScroll(className) {
 
   if (state.modalScrollLockDepth === 0) {
     state.lockedScrollY = window.scrollY || window.pageYOffset || 0;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${state.lockedScrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
   }
 
@@ -763,14 +758,11 @@ function unlockPageScroll(className) {
   state.modalScrollLockDepth -= 1;
   if (state.modalScrollLockDepth > 0) return;
 
-  const restoreY = state.lockedScrollY || 0;
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.width = "";
   document.body.style.overflow = "";
-  window.scrollTo(0, restoreY);
+  const restoreY = state.lockedScrollY || 0;
+  if (Math.abs(window.scrollY - restoreY) > 1) {
+    window.scrollTo(0, restoreY);
+  }
 }
 
 function openIOSInstallModal() {
