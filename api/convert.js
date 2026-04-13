@@ -189,11 +189,10 @@ export default async function handler(req, res) {
         : primaryResult.data;
 
       const finalizedData = await finalizeResultData(preparePayloadForFinalization(mergedData, link));
-      const maybeEnhancedYoutubeData = await maybeEnhanceYoutubeSwap(finalizedData, link);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, maybeEnhancedYoutubeData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: maybeEnhancedYoutubeData });
+      return res.status(200).json({ ok: true, data: finalizedData });
     }
 
     const fallbackResult = shouldUseSongLinkFirst
@@ -202,11 +201,10 @@ export default async function handler(req, res) {
 
     if (fallbackResult.ok) {
       const finalizedData = await finalizeResultData(preparePayloadForFinalization(fallbackResult.data, link));
-      const maybeEnhancedYoutubeData = await maybeEnhanceYoutubeSwap(finalizedData, link);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, maybeEnhancedYoutubeData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: maybeEnhancedYoutubeData });
+      return res.status(200).json({ ok: true, data: finalizedData });
     }
 
     if (platform === "spotify") {
@@ -1138,25 +1136,32 @@ async function classifyYoutubeLinks(links, metadata, groundTruth = {}) {
   const items = Array.isArray(links) ? links.map(item => ({ ...item })) : [];
   const title = String(groundTruth?.title || metadata?.title || "").trim();
   const artist = String(groundTruth?.artist || metadata?.description || "").split("•")[0].trim();
+  const canonicalQuery = [title, artist].filter(Boolean).join(" ").trim();
   const sourceDurationSeconds = Number(groundTruth?.durationMs || metadata?.durationMs || 0) > 0
     ? Number(groundTruth?.durationMs || metadata?.durationMs) / 1000
     : 0;
   const isrc = String(groundTruth?.isrc || metadata?.isrc || "").trim();
+  const decisionCache = new Map();
 
   await Promise.all(
     items.map(async item => {
       const type = String(item?.type || "").toLowerCase();
       if (type !== "youtube" && type !== "youtubemusic") return;
       const targetPlatform = type === "youtubemusic" ? "youtubeMusic" : "youtube";
-      const decision = await chooseYoutubeCandidate({
-        targetPlatform,
-        currentUrl: item?.url,
-        title,
-        artist,
-        sourceDurationSeconds,
-        isrc
-      });
-      item.url = decision.promoteDirect ? decision.url : buildPlatformSearchUrl(targetPlatform, `${title} ${artist}`.trim());
+      const cacheKey = `${targetPlatform}:${canonicalizeYoutubeWatchUrl(item?.url) || String(item?.url || "")}`;
+      let decision = decisionCache.get(cacheKey);
+      if (!decision) {
+        decision = await chooseYoutubeCandidate({
+          targetPlatform,
+          currentUrl: item?.url,
+          title,
+          artist,
+          sourceDurationSeconds,
+          isrc
+        });
+        decisionCache.set(cacheKey, decision);
+      }
+      item.url = decision.promoteDirect ? decision.url : buildPlatformSearchUrl(targetPlatform, canonicalQuery);
       item.isVerified = Boolean(decision.promoteDirect);
       item.confidence = decision.confidence;
       item.score = decision.score;
@@ -1291,17 +1296,7 @@ async function chooseYoutubeCandidate({ targetPlatform, currentUrl, title, artis
     preferAudio,
     isrc
   });
-  const foundCandidate = await findBestYoutubeCandidate({
-    title,
-    artist,
-    sourceDurationSeconds,
-    preferAudio,
-    isrc
-  });
-
-  const winner = [baseCandidate, foundCandidate]
-    .filter(Boolean)
-    .sort((a, b) => b.total - a.total)[0];
+  const winner = baseCandidate;
 
   if (!winner) {
     return {
