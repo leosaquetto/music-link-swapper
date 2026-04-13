@@ -255,6 +255,7 @@ body.needs-viewport-fill .viewport-fill-spacer {
 
 .language-menu {
   position: relative;
+  z-index: 30;
 }
 
 .language-dropdown {
@@ -263,7 +264,7 @@ body.needs-viewport-fill .viewport-fill-spacer {
   right: 0;
   display: grid;
   gap: 6px;
-  min-width: max-content;
+  width: var(--control-size);
   background: var(--panel-strong);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -290,8 +291,12 @@ body.needs-viewport-fill .viewport-fill-spacer {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  padding: 6px 10px;
-  text-align: left;
+  width: 100%;
+  min-height: 34px;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  text-align: center;
 }
 
 .language-option:hover {
@@ -309,9 +314,17 @@ body.needs-viewport-fill .viewport-fill-spacer {
 }
 
 .app-shell.is-language-switching {
-  opacity: 0.9;
+  opacity: 0.88;
   transform: translateY(1px);
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.language-split {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.95;
+  gap: 1px;
 }
 
 .hero-left {
@@ -1098,6 +1111,24 @@ h2 {
   display: grid;
   gap: 4px;
   margin-top: 18px;
+}
+
+.footer-made-by {
+  color: #ed474c;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.made-by-signature {
+  width: min(100%, 320px);
+  margin: 0 auto;
+  color: #ed474c;
+}
+
+.made-by-signature svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 body.needs-viewport-fill .footer {
@@ -1956,6 +1987,11 @@ body.recent-swaps-modal-open {
 
 :root[data-theme="dark"] .footer {
   color: rgba(255, 255, 255, 0.38);
+}
+
+:root[data-theme="dark"] .footer-made-by,
+:root[data-theme="dark"] .made-by-signature {
+  color: var(--accent);
 }
 
 :root[data-theme="dark"] .icon-chip-youTube,
