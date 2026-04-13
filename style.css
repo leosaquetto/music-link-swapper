@@ -511,7 +511,7 @@ h1 {
 }
 
 #clearButton .button-icon svg {
-  transform: scale(0.9);
+  transform: scale(1);
 }
 
 .input-row {
@@ -550,8 +550,8 @@ h1 {
 
 .button-row-compact {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 50px 50px;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) repeat(2, var(--control-size));
+  gap: 8px;
   margin-top: 10px;
   align-items: center;
 }
@@ -690,6 +690,11 @@ h1 {
   display: block;
   flex: 0 0 auto;
   transition: color 220ms ease;
+}
+
+.supported-chips .icon-chip-spotify svg {
+  width: 18px;
+  height: 18px;
 }
 
 .status-card {
@@ -1791,7 +1796,7 @@ body.legal-modal-open {
   }
 
   .button-row-compact {
-    grid-template-columns: minmax(0, 1fr) 50px 50px;
+    grid-template-columns: minmax(0, 1fr) repeat(2, var(--control-size));
     margin-top: 7px;
   }
 
@@ -1852,6 +1857,11 @@ body.legal-modal-open {
   .chip.icon-chip img {
     width: 15px;
     height: 15px;
+  }
+
+  .supported-chips .icon-chip-spotify svg {
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -1919,6 +1929,11 @@ body.legal-modal-open {
   .chip.icon-chip img {
     width: 14px;
     height: 14px;
+  }
+
+  .supported-chips .icon-chip-spotify svg {
+    width: 15px;
+    height: 15px;
   }
 }
 
