@@ -160,10 +160,8 @@ export default async function handler(req, res) {
         ? mergeLinkResults(primaryResult.data, enrichmentResult.data)
         : primaryResult.data;
 
-      const finalizedData = enforceInputTrackGroundTruth(
-        await finalizeResultData(mergedData),
-        link
-      );
+      const groundedData = await enforceInputTrackGroundTruth(mergedData, link);
+      const finalizedData = await finalizeResultData(groundedData);
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
@@ -175,10 +173,8 @@ export default async function handler(req, res) {
       : await fetchSongLinkAsFallback(link);
 
     if (fallbackResult.ok) {
-      const finalizedData = enforceInputTrackGroundTruth(
-        await finalizeResultData(fallbackResult.data),
-        link
-      );
+      const groundedData = await enforceInputTrackGroundTruth(fallbackResult.data, link);
+      const finalizedData = await finalizeResultData(groundedData);
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
@@ -188,10 +184,8 @@ export default async function handler(req, res) {
     if (platform === "spotify") {
       const spotifyFallback = await buildSpotifySearchFallback(link);
       if (spotifyFallback.ok) {
-        const finalizedData = enforceInputTrackGroundTruth(
-          await finalizeResultData(spotifyFallback.data),
-          link
-        );
+        const groundedData = await enforceInputTrackGroundTruth(spotifyFallback.data, link);
+        const finalizedData = await finalizeResultData(groundedData);
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
@@ -1677,9 +1671,9 @@ function canonicalizeMediaUrl(value) {
   }
 }
 
-function enforceInputTrackGroundTruth(data, sourceLink) {
-  const sourceAppleTrackUrl = extractAppleTrackUrl(sourceLink);
-  if (!sourceAppleTrackUrl) return data;
+async function enforceInputTrackGroundTruth(data, sourceLink) {
+  const sourceAppleTrack = extractAppleTrackInputContext(sourceLink);
+  if (!sourceAppleTrack.url) return data;
 
   const links = Array.isArray(data?.links) ? data.links : [];
   const filtered = links.filter(item => {
@@ -1687,12 +1681,24 @@ function enforceInputTrackGroundTruth(data, sourceLink) {
     return type !== "applemusic" && type !== "itunes";
   });
 
+  const appleTrackMetadata = sourceAppleTrack.trackId
+    ? await fetchAppleTrackMetadataById(sourceAppleTrack.trackId)
+    : null;
+
+  const mergedDescription = [appleTrackMetadata?.artist || "", appleTrackMetadata?.album || ""]
+    .filter(Boolean)
+    .join(" • ");
+
   return {
     ...(data || {}),
+    title: appleTrackMetadata?.title || data?.title || "",
+    description: mergedDescription || data?.description || "",
+    album: appleTrackMetadata?.album || data?.album || "",
+    image: appleTrackMetadata?.image || data?.image || "",
     links: dedupeAndNormalizeLinks([
       {
         type: "appleMusic",
-        url: sourceAppleTrackUrl,
+        url: sourceAppleTrack.url,
         isVerified: true
       },
       ...filtered
@@ -1700,14 +1706,40 @@ function enforceInputTrackGroundTruth(data, sourceLink) {
   };
 }
 
-function extractAppleTrackUrl(value) {
+function extractAppleTrackInputContext(value) {
   try {
     const parsed = new URL(String(value || "").trim());
-    if (!parsed.hostname.toLowerCase().includes("music.apple.com")) return "";
-    if (!parsed.searchParams.get("i")) return "";
-    return canonicalizeMediaUrl(parsed.toString());
+    if (!parsed.hostname.toLowerCase().includes("music.apple.com")) return { url: "", trackId: "" };
+    const trackId = parsed.searchParams.get("i") || "";
+    if (!trackId) return { url: "", trackId: "" };
+    return {
+      url: canonicalizeMediaUrl(parsed.toString()),
+      trackId
+    };
   } catch (_error) {
-    return "";
+    return { url: "", trackId: "" };
+  }
+}
+
+async function fetchAppleTrackMetadataById(trackId) {
+  const normalizedTrackId = String(trackId || "").trim();
+  if (!normalizedTrackId) return null;
+
+  try {
+    const response = await fetchWithTimeout(`${ITUNES_SEARCH_API_URL.replace(/\/search$/, "/lookup")}?id=${encodeURIComponent(normalizedTrackId)}&entity=song&limit=1`);
+    if (!response.ok) return null;
+    const payload = await response.json();
+    const firstSong = (Array.isArray(payload?.results) ? payload.results : []).find(item => String(item?.kind || "").toLowerCase() === "song");
+    if (!firstSong) return null;
+
+    return {
+      title: String(firstSong?.trackName || "").trim(),
+      artist: String(firstSong?.artistName || "").trim(),
+      album: String(firstSong?.collectionName || "").trim(),
+      image: String(firstSong?.artworkUrl100 || firstSong?.artworkUrl60 || "").trim()
+    };
+  } catch (_error) {
+    return null;
   }
 }
 
