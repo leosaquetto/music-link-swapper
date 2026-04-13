@@ -404,7 +404,7 @@ function applyLanguage({ lang = state.currentLanguage, announce = false, withTra
     clearTimeout(state.languageSwitchTimer);
     state.languageSwitchTimer = setTimeout(() => {
       els.appShell?.classList.remove("is-language-switching");
-    }, 240);
+    }, 220);
   }
   if (announce) showFloatingToast(t("languageSelected"));
 }

@@ -170,6 +170,7 @@ button:active {
     max(20px, env(safe-area-inset-bottom));
   overflow-x: clip;
   isolation: isolate;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .main-stack {
@@ -217,12 +218,6 @@ body.needs-viewport-fill .viewport-fill-spacer {
   justify-content: flex-end;
   gap: 10px;
   margin-bottom: 8px;
-}
-
-.topbar-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .topbar-controls {
@@ -349,7 +344,6 @@ body.needs-viewport-fill .viewport-fill-spacer {
 .app-shell.is-language-switching {
   opacity: 0.88;
   transform: translateY(1px);
-  transition: opacity 240ms ease, transform 240ms ease;
 }
 
 .language-split {
