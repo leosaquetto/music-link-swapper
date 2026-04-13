@@ -160,7 +160,10 @@ export default async function handler(req, res) {
         ? mergeLinkResults(primaryResult.data, enrichmentResult.data)
         : primaryResult.data;
 
-      const finalizedData = await finalizeResultData(mergedData);
+      const finalizedData = enforceInputTrackGroundTruth(
+        await finalizeResultData(mergedData),
+        link
+      );
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
@@ -172,7 +175,10 @@ export default async function handler(req, res) {
       : await fetchSongLinkAsFallback(link);
 
     if (fallbackResult.ok) {
-      const finalizedData = await finalizeResultData(fallbackResult.data);
+      const finalizedData = enforceInputTrackGroundTruth(
+        await finalizeResultData(fallbackResult.data),
+        link
+      );
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
@@ -182,7 +188,10 @@ export default async function handler(req, res) {
     if (platform === "spotify") {
       const spotifyFallback = await buildSpotifySearchFallback(link);
       if (spotifyFallback.ok) {
-        const finalizedData = await finalizeResultData(spotifyFallback.data);
+        const finalizedData = enforceInputTrackGroundTruth(
+          await finalizeResultData(spotifyFallback.data),
+          link
+        );
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
@@ -1665,6 +1674,40 @@ function canonicalizeMediaUrl(value) {
     return url.toString();
   } catch (_error) {
     return String(value || "").trim();
+  }
+}
+
+function enforceInputTrackGroundTruth(data, sourceLink) {
+  const sourceAppleTrackUrl = extractAppleTrackUrl(sourceLink);
+  if (!sourceAppleTrackUrl) return data;
+
+  const links = Array.isArray(data?.links) ? data.links : [];
+  const filtered = links.filter(item => {
+    const type = String(item?.type || "").toLowerCase();
+    return type !== "applemusic" && type !== "itunes";
+  });
+
+  return {
+    ...(data || {}),
+    links: dedupeAndNormalizeLinks([
+      {
+        type: "appleMusic",
+        url: sourceAppleTrackUrl,
+        isVerified: true
+      },
+      ...filtered
+    ])
+  };
+}
+
+function extractAppleTrackUrl(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    if (!parsed.hostname.toLowerCase().includes("music.apple.com")) return "";
+    if (!parsed.searchParams.get("i")) return "";
+    return canonicalizeMediaUrl(parsed.toString());
+  } catch (_error) {
+    return "";
   }
 }
 
