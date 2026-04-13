@@ -10,9 +10,6 @@ const SAMPLE_LINKS = [
   "https://music.apple.com/br/album/i-could-have-sworn/1852602431?i=1852602432",
   "https://music.apple.com/br/album/pink-lemonade/1852384560?i=1852384561",
   "https://music.apple.com/br/album/pixelated-kisses/1849706656?i=1849706661",
-  "https://music.apple.com/br/album/aperture/1870984032?i=1870984033",
-  "https://music.apple.com/br/album/american-girls/1870984032?i=1870984036",
-  "https://music.apple.com/br/album/ready-steady-go/1870984032?i=1870984038",
   "https://music.apple.com/br/album/carlas-song/1870984032?i=1870984054",
   "https://music.apple.com/br/album/canzone-estiva/1882460107?i=1882460109",
   "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
@@ -299,7 +296,7 @@ const LEGAL_CONTENT = {
   }
 };
 
-const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex", "anghami"]);
+const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
 
 const SVG_ICONS = {
   history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>`,
@@ -1210,50 +1207,28 @@ async function tryAutoPasteFromClipboard() {
 }
 
 async function smartPasteIntoInput({ announce = false, autoConvert = false } = {}) {
-  const applyPastedText = value => {
-    const url = extractUrl(value);
-    if (!url) return false;
-    els.input.value = url;
-    els.input.dispatchEvent(new Event("input", { bubbles: true }));
-    els.input.dispatchEvent(new Event("change", { bubbles: true }));
-    state.lastClipboardText = typeof value === "string" ? value.trim() : "";
-    state.lastAutoUrl = url;
-    softlyDismissKeyboard();
-    if (announce) showFloatingToast("link colado no campo.");
-    if (autoConvert && isSupportedStreamingUrl(url)) {
-      setTimeout(() => onConvert({ shouldScrollToStatus: true }), 60);
-    }
-    return true;
-  };
+  if (!navigator.clipboard?.readText) return false;
 
   try {
-    if (navigator.clipboard?.readText) {
-      const text = await navigator.clipboard.readText();
-      if (applyPastedText(text)) return true;
-    }
-  } catch (_error) {
-    // fallback below
-  }
+    const text = await navigator.clipboard.readText();
+    const url = extractUrl(text);
 
-  try {
-    if (navigator.clipboard?.read) {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (!item.types?.includes("text/plain")) continue;
-        const blob = await item.getType("text/plain");
-        const text = await blob.text();
-        if (applyPastedText(text)) return true;
+    if (url) {
+      els.input.value = url;
+      state.lastClipboardText = typeof text === "string" ? text.trim() : "";
+      state.lastAutoUrl = url;
+      softlyDismissKeyboard();
+      if (announce) showFloatingToast("link colado no campo.");
+      if (autoConvert && isSupportedStreamingUrl(url)) {
+        setTimeout(() => onConvert({ shouldScrollToStatus: true }), 60);
       }
+      return true;
     }
-  } catch (_error) {
-    // fallback below
-  }
 
-  const manual = window.prompt("Cole o link da música:");
-  if (applyPastedText(manual || "")) {
-    return true;
+    return false;
+  } catch (_error) {
+    return false;
   }
-  return false;
 }
 
 async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromShuffle = false } = {}) {
@@ -1358,12 +1333,9 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
 }
 
 function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
-  const canonicalTitle = pickBestUiTitle(data?.groundTruth?.title, data.title, "música encontrada");
-  const canonicalArtist = cleanText(data?.groundTruth?.artist || "");
-  const rawDescription = cleanText(canonicalArtist || data.description || "");
-  const preview = parsePreview(canonicalTitle, rawDescription, {
-    forceArtist: canonicalArtist
-  });
+  const rawTitle = cleanText(data.title || "música encontrada");
+  const rawDescription = cleanText(data.description || "");
+  const preview = parsePreview(rawTitle, rawDescription);
   const searchQuery = [preview.title, preview.artist].filter(Boolean).join(" ").trim();
   const links = normalizeLinks(data.links, sourceLink, searchQuery);
   if (!links.length) return null;
@@ -1372,10 +1344,9 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   return {
     title: preview.title,
     artist: preview.artist,
-    album: cleanText(data?.groundTruth?.album || preview.album || data.album || ""),
+    album: preview.album || cleanText(data.album || ""),
     image,
     universalLink: data.universalLink || null,
-    confidence: data?.groundTruth?.trustAsCanonical ? "high" : "",
     originalUrl: sourceLink || "",
     fromSearchMode: !!fromSearchMode,
     links
@@ -1394,18 +1365,9 @@ function normalizeArtworkUrl(url) {
   return cleanImage;
 }
 
-function parsePreview(title, description, options = {}) {
-  const forceArtist = cleanText(options?.forceArtist || "");
-  const cleanTitleValue = pickBestUiTitle(title, "música encontrada");
+function parsePreview(title, description) {
+  const cleanTitleValue = cleanText(title);
   const cleanDescriptionValue = cleanText(description);
-  if (forceArtist) {
-    const cleanArtist = normalizeComparisonText(forceArtist) === normalizeComparisonText(cleanTitleValue) ? "" : forceArtist;
-    return {
-      title: cleanTitleValue,
-      artist: cleanArtist,
-      album: ""
-    };
-  }
 
   if (!cleanDescriptionValue) {
     return {
@@ -1454,8 +1416,7 @@ function parsePreview(title, description, options = {}) {
 
   return {
     title: cleanTitleValue,
-    artist:
-      normalizeComparisonText(filtered[0] || "") === normalizeComparisonText(cleanTitleValue) ? "" : filtered[0] || "",
+    artist: filtered[0] || "",
     album: filtered.slice(1).join(" • ")
   };
 }
@@ -1493,28 +1454,6 @@ function normalizeComparisonText(value) {
     .replace(/[|•–:-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function isGenericUiLabel(value) {
-  const normalized = normalizeComparisonText(value);
-  if (!normalized) return false;
-  return (
-    normalized === "resultado por busca" ||
-    normalized === "resultado de busca" ||
-    normalized === "search result" ||
-    normalized === "musica encontrada" ||
-    normalized === "song found"
-  );
-}
-
-function pickBestUiTitle(...candidates) {
-  for (const candidate of candidates) {
-    const clean = cleanText(candidate);
-    if (!clean) continue;
-    if (isGenericUiLabel(clean)) continue;
-    return clean;
-  }
-  return "música encontrada";
 }
 
 function renderSupportedChips() {
@@ -2144,13 +2083,19 @@ function renderResultLegend() {
 }
 
 function normalizeLinks(links, sourceLink = "", searchQuery = "") {
-  const byType = new Map();
+  const seen = new Set();
+  const normalized = [];
+  const cameFromYouTubeMusic = isYouTubeMusicUrl(sourceLink);
 
   for (const item of links) {
     if (!item || !item.url || item.notAvailable) continue;
 
     let type = normalizePlatformKey(item.type);
     if (IGNORED_PLATFORM_KEYS.has(String(type || "").toLowerCase())) continue;
+    const linkIsYouTubeMusic = isYouTubeMusicUrl(item.url || "");
+    if (type === "youtube" && (cameFromYouTubeMusic || linkIsYouTubeMusic)) {
+      type = "youtubeMusic";
+    }
     const meta = PLATFORM_META[type] || {
       name: prettifyPlatform(type),
       icon: "•",
@@ -2160,8 +2105,13 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
       appScheme: null
     };
 
+    const dedupe = `${type}|${item.url}`;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
+
     const isSearchResult = isSearchUrlForPlatform(type, item.url);
-    const candidate = {
+
+    normalized.push({
       key: type,
       name: meta.name,
       icon: meta.icon,
@@ -2172,15 +2122,10 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
       isSearchResult,
       isPrimaryCopy: !!meta.isPrimaryCopy,
       appScheme: meta.appScheme || null
-    };
-    const existing = byType.get(type);
-    if (!existing || scoreUiLinkQuality(candidate) > scoreUiLinkQuality(existing)) {
-      byType.set(type, candidate);
-    }
+    });
   }
 
-  const normalized = Array.from(byType.values());
-  addSearchFallbackLinks(normalized, byType, searchQuery);
+  addSearchFallbackLinks(normalized, seen, searchQuery);
 
   normalized.sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
@@ -2194,17 +2139,21 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
   return normalized;
 }
 
-function addSearchFallbackLinks(normalized, byType, searchQuery) {
-  const fallbackTypes = ["spotify", "appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
-  const effectiveQuery = cleanText(searchQuery);
-  if (!effectiveQuery) return;
+function addSearchFallbackLinks(normalized, seen, searchQuery) {
+  if (!searchQuery) return;
+
+  const fallbackTypes = ["appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
 
   for (const type of fallbackTypes) {
-    const existing = byType.get(type);
-    if (existing && !existing.isSearchResult) continue;
+    const hasRealLink = normalized.some(item => item.key === type && !item.isSearchResult);
+    if (hasRealLink) continue;
 
-    const searchUrl = buildSearchUrlForPlatform(type, effectiveQuery);
+    const searchUrl = buildSearchUrlForPlatform(type, searchQuery);
     if (!searchUrl) continue;
+
+    const dedupe = `${type}|${searchUrl}`;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
 
     const meta = PLATFORM_META[type] || {
       name: prettifyPlatform(type),
@@ -2215,7 +2164,7 @@ function addSearchFallbackLinks(normalized, byType, searchQuery) {
       appScheme: null
     };
 
-    const fallbackItem = {
+    normalized.push({
       key: type,
       name: meta.name,
       icon: meta.icon,
@@ -2226,34 +2175,14 @@ function addSearchFallbackLinks(normalized, byType, searchQuery) {
       isSearchResult: true,
       isPrimaryCopy: !!meta.isPrimaryCopy,
       appScheme: meta.appScheme || null
-    };
-    if (!existing || scoreUiLinkQuality(fallbackItem) > scoreUiLinkQuality(existing)) {
-      if (existing) {
-        const index = normalized.findIndex(item => item.key === type);
-        if (index !== -1) normalized[index] = fallbackItem;
-      } else {
-        normalized.push(fallbackItem);
-      }
-      byType.set(type, fallbackItem);
-    }
+    });
   }
-}
-
-function scoreUiLinkQuality(item) {
-  if (!item) return -1;
-  let score = 0;
-  if (!item.isSearchResult) score += 20;
-  if (item.isVerified) score += 20;
-  if ((item.key === "youtube" || item.key === "youtubeMusic") && /[?&]v=/.test(String(item.url || ""))) score += 8;
-  if (item.key === "appleMusic" && String(item.url || "").includes("?i=")) score += 10;
-  return score;
 }
 
 function buildSearchUrlForPlatform(type, query) {
   const encoded = encodeURIComponent(query);
 
   if (type === "youtubeMusic") return `https://music.youtube.com/search?q=${encoded}`;
-  if (type === "spotify") return `https://open.spotify.com/search/${encoded}`;
   if (type === "appleMusic") return `https://music.apple.com/br/search?term=${encoded}`;
   if (type === "youtube") return `https://www.youtube.com/results?search_query=${encoded}`;
   if (type === "deezer") return `https://www.deezer.com/search/${encoded}`;
@@ -2270,7 +2199,6 @@ function isSearchUrlForPlatform(type, url) {
   if (!lower) return false;
 
   if (type === "youtube") return lower.includes("/results?search_query=");
-  if (type === "spotify") return lower.includes("open.spotify.com/search");
   if (type === "youtubeMusic") return lower.includes("music.youtube.com/search");
   if (type === "deezer") return lower.includes("deezer.com/search");
   if (type === "soundCloud") return lower.includes("soundcloud.com/search");
