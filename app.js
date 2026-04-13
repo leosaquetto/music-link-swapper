@@ -73,7 +73,27 @@ const TRANSLATIONS = {
     themeLight: "modo claro",
     themeDark: "modo escuro",
     activateDark: "ativar modo escuro",
-    activateLight: "ativar modo claro"
+    activateLight: "ativar modo claro",
+    recentSwaps: "swaps recentes",
+    latestSwap: "último swap",
+    clearSwap: "limpar swap",
+    clearSwaps: "limpar swaps",
+    noRecentSwaps: "ainda não há swaps recentes.",
+    seeMore: "ver mais",
+    seeLess: "ver menos",
+    primarySection: "principais",
+    othersSection: "outras",
+    verified: "verificado",
+    identified: "identificado",
+    notLocated: "não localizado",
+    linkCopied: "link copiado.",
+    swapsFoundSingle: "1 swap encontrado!",
+    swapsFoundPlural: "{count} swaps encontrados!",
+    topCopied: "principais copiadas.",
+    topShared: "principais compartilhadas.",
+    originalCopied: "link original copiado.",
+    copiedSuffix: "copiado.",
+    sharedSuffix: "compartilhado."
   },
   en: {
     loadingSwap: "swapping...",
@@ -92,7 +112,27 @@ const TRANSLATIONS = {
     themeLight: "light mode",
     themeDark: "dark mode",
     activateDark: "enable dark mode",
-    activateLight: "enable light mode"
+    activateLight: "enable light mode",
+    recentSwaps: "recent swaps",
+    latestSwap: "latest swap",
+    clearSwap: "clear swap",
+    clearSwaps: "clear swaps",
+    noRecentSwaps: "there are no recent swaps yet.",
+    seeMore: "see more",
+    seeLess: "see less",
+    primarySection: "main",
+    othersSection: "others",
+    verified: "verified",
+    identified: "identified",
+    notLocated: "not found",
+    linkCopied: "link copied.",
+    swapsFoundSingle: "1 swap found!",
+    swapsFoundPlural: "{count} swaps found!",
+    topCopied: "main links copied.",
+    topShared: "main links shared.",
+    originalCopied: "original link copied.",
+    copiedSuffix: "copied.",
+    sharedSuffix: "shared."
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
@@ -111,7 +151,27 @@ const TRANSLATIONS = {
     themeLight: "modo claro",
     themeDark: "modo oscuro",
     activateDark: "activar modo oscuro",
-    activateLight: "activar modo claro"
+    activateLight: "activar modo claro",
+    recentSwaps: "swaps recientes",
+    latestSwap: "último swap",
+    clearSwap: "limpiar swap",
+    clearSwaps: "limpiar swaps",
+    noRecentSwaps: "aún no hay swaps recientes.",
+    seeMore: "ver más",
+    seeLess: "ver menos",
+    primarySection: "principales",
+    othersSection: "otros",
+    verified: "verificado",
+    identified: "identificado",
+    notLocated: "no encontrado",
+    linkCopied: "enlace copiado.",
+    swapsFoundSingle: "¡1 swap encontrado!",
+    swapsFoundPlural: "¡{count} swaps encontrados!",
+    topCopied: "principales copiadas.",
+    topShared: "principales compartidas.",
+    originalCopied: "enlace original copiado.",
+    copiedSuffix: "copiado.",
+    sharedSuffix: "compartido."
   },
   "it-it": {
     loadingSwap: "conversione...",
@@ -130,7 +190,27 @@ const TRANSLATIONS = {
     themeLight: "tema chiaro",
     themeDark: "tema scuro",
     activateDark: "attiva tema scuro",
-    activateLight: "attiva tema chiaro"
+    activateLight: "attiva tema chiaro",
+    recentSwaps: "swap recenti",
+    latestSwap: "ultimo swap",
+    clearSwap: "cancella swap",
+    clearSwaps: "cancella swaps",
+    noRecentSwaps: "non ci sono ancora swap recenti.",
+    seeMore: "vedi altro",
+    seeLess: "vedi meno",
+    primarySection: "principali",
+    othersSection: "altri",
+    verified: "verificato",
+    identified: "identificato",
+    notLocated: "non trovato",
+    linkCopied: "link copiato.",
+    swapsFoundSingle: "1 swap trovato!",
+    swapsFoundPlural: "{count} swaps trovati!",
+    topCopied: "principali copiate.",
+    topShared: "principali condivise.",
+    originalCopied: "link originale copiato.",
+    copiedSuffix: "copiato.",
+    sharedSuffix: "condiviso."
   },
   "fr-fr": {
     loadingSwap: "conversion...",
@@ -149,7 +229,27 @@ const TRANSLATIONS = {
     themeLight: "mode clair",
     themeDark: "mode sombre",
     activateDark: "activer le mode sombre",
-    activateLight: "activer le mode clair"
+    activateLight: "activer le mode clair",
+    recentSwaps: "swaps récents",
+    latestSwap: "dernier swap",
+    clearSwap: "effacer le swap",
+    clearSwaps: "effacer les swaps",
+    noRecentSwaps: "il n’y a pas encore de swaps récents.",
+    seeMore: "voir plus",
+    seeLess: "voir moins",
+    primarySection: "principaux",
+    othersSection: "autres",
+    verified: "vérifié",
+    identified: "identifié",
+    notLocated: "non trouvé",
+    linkCopied: "lien copié.",
+    swapsFoundSingle: "1 swap trouvé !",
+    swapsFoundPlural: "{count} swaps trouvés !",
+    topCopied: "principaux copiés.",
+    topShared: "principaux partagés.",
+    originalCopied: "lien original copié.",
+    copiedSuffix: "copié.",
+    sharedSuffix: "partagé."
   }
 };
 
@@ -265,6 +365,7 @@ const els = {
   resultMeta: document.getElementById("resultMeta"),
   platformGroups: document.getElementById("platformGroups"),
   resultLegend: document.getElementById("resultLegend"),
+  resultPoweredBy: document.getElementById("resultPoweredBy"),
   resultDismissButton: document.getElementById("resultDismissButton"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
@@ -342,6 +443,10 @@ function t(key) {
   return TRANSLATIONS[lang][key] ?? TRANSLATIONS["pt-br"][key] ?? key;
 }
 
+function tCount(key, count) {
+  return t(key).replace("{count}", String(count));
+}
+
 function initLanguage() {
   state.currentLanguage = getCurrentLanguage();
   if (els.languageToggle) {
@@ -396,17 +501,21 @@ function applyLanguage({ lang = state.currentLanguage, announce = false, withTra
   if (els.iosInstallAvailability) els.iosInstallAvailability.textContent = t("availableAs");
   if (els.iosShortcutAvailability) els.iosShortcutAvailability.textContent = t("availableAs");
   if (els.footerMadeByText) els.footerMadeByText.textContent = t("madeBy");
+  updateLocalizedStaticCopy();
   syncSearchModeUI();
   updateConvertButtonLabel();
   syncThemeToggleIcon();
-  if (withTransition && els.appShell) {
-    els.appShell.classList.add("is-language-switching");
-    clearTimeout(state.languageSwitchTimer);
-    state.languageSwitchTimer = setTimeout(() => {
-      els.appShell?.classList.remove("is-language-switching");
-    }, 220);
-  }
   if (announce) showFloatingToast(t("languageSelected"));
+}
+
+function updateLocalizedStaticCopy() {
+  if (els.recentSwapsButton) {
+    els.recentSwapsButton.setAttribute("aria-label", t("recentSwaps"));
+    els.recentSwapsButton.setAttribute("title", t("recentSwaps"));
+  }
+  if (els.resultPoweredBy) {
+    els.resultPoweredBy.classList.remove("hidden");
+  }
 }
 
 function initIOSViewportFillAssist() {
@@ -731,7 +840,7 @@ function bindEvents() {
     await copyText(text);
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showFloatingToast("principais copiadas.");
+    showFloatingToast(t("topCopied"));
   });
 
   els.sharePrimaryButton?.addEventListener("click", async event => {
@@ -749,7 +858,7 @@ function bindEvents() {
         });
         pulseActionButton(event.currentTarget);
         triggerHaptic("light");
-        showFloatingToast("principais compartilhadas.");
+        showFloatingToast(t("topShared"));
         return;
       } catch (_error) {}
     }
@@ -757,7 +866,7 @@ function bindEvents() {
     await copyText(text);
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showFloatingToast("principais copiadas.");
+    showFloatingToast(t("topCopied"));
   });
 
   els.copyOriginalButton?.addEventListener("click", async event => {
@@ -765,7 +874,7 @@ function bindEvents() {
     await copyText(state.currentOriginalUrl);
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showFloatingToast("link original copiado.");
+    showFloatingToast(t("originalCopied"));
   });
 
   els.input?.addEventListener("keydown", event => {
@@ -1001,10 +1110,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     state.currentResult = result;
     renderResult(result);
     const directCount = result.links.filter(item => !item.isSearchResult).length;
-    showStatus(
-      `${directCount} swap${directCount === 1 ? "" : "s"} encontrado${directCount === 1 ? "" : "s"}!`,
-      "success"
-    );
+    showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
     els.input.value = "";
 
     if (state.scrollAfterConvert) {
@@ -1229,7 +1335,7 @@ function renderResult(result) {
       const expandButton = document.createElement("button");
       expandButton.type = "button";
       expandButton.className = "tiny-button see-more-button";
-      expandButton.textContent = "ver mais";
+      expandButton.textContent = t("seeMore");
       list.style.maxHeight = "0px";
       list.style.opacity = "0";
       expandButton.addEventListener("click", event => {
@@ -1246,7 +1352,7 @@ function renderResult(result) {
               list.style.maxHeight = "none";
             }
           }, 260);
-          expandButton.textContent = "ver menos";
+          expandButton.textContent = t("seeLess");
         } else {
           const currentHeight = list.scrollHeight;
           list.style.maxHeight = `${currentHeight}px`;
@@ -1259,7 +1365,7 @@ function renderResult(result) {
             const current = Array.from(list.children);
             current.forEach(node => node.remove());
           }, 240);
-          expandButton.textContent = "ver mais";
+          expandButton.textContent = t("seeMore");
         }
       });
       controlsWrap.appendChild(expandButton);
@@ -1269,7 +1375,7 @@ function renderResult(result) {
     if (!(groupName === "outras" && collapsed)) {
       const title = document.createElement("p");
       title.className = "group-title";
-      title.textContent = groupName;
+      title.textContent = groupName === "principais" ? t("primarySection") : t("othersSection");
       section.appendChild(title);
     }
 
@@ -1285,7 +1391,7 @@ function renderResult(result) {
 
 function createPlatformItem(item) {
   const badgeClass = item.isSearchResult ? "is-not-found" : item.isVerified ? "is-verified" : "is-found";
-  const badgeLabel = item.isSearchResult ? "não localizado" : item.isVerified ? "verificado" : "identificado";
+  const badgeLabel = item.isSearchResult ? t("notLocated") : item.isVerified ? t("verified") : t("identified");
   const badgeIcon = item.isSearchResult ? SVG_ICONS.notLocated : item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
   const openIcon = item.isSearchResult ? SVG_ICONS.search : SVG_ICONS.open;
   const openLabel = item.isSearchResult ? "buscar" : "abrir";
@@ -1320,7 +1426,7 @@ function createPlatformItem(item) {
     await copyText(item.url);
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showInlineToast(row, `${item.name} copiado.`);
+    showInlineToast(row, `${item.name} ${t("copiedSuffix")}`);
   });
 
   row.querySelector('[data-action="share"]').addEventListener("click", async event => {
@@ -1329,10 +1435,10 @@ function createPlatformItem(item) {
     triggerHaptic(shared ? "light" : "medium");
 
     if (shared) {
-      showInlineToast(row, `${item.name} compartilhado.`);
+      showInlineToast(row, `${item.name} ${t("sharedSuffix")}`);
     } else {
       await copyText(item.url);
-      showInlineToast(row, `${item.name} copiado.`);
+      showInlineToast(row, `${item.name} ${t("copiedSuffix")}`);
     }
   });
 
@@ -1554,18 +1660,18 @@ function renderRecentSwaps() {
   if (!els.recentSwapsList) return;
   const swapCount = state.recentSwaps.length;
   if (els.recentSwapsTitle) {
-    els.recentSwapsTitle.textContent = swapCount === 1 ? "ÚLTIMO SWAP" : "SWAPS RECENTES";
+    els.recentSwapsTitle.textContent = swapCount === 1 ? t("latestSwap").toUpperCase() : t("recentSwaps").toUpperCase();
   }
   if (els.clearRecentSwapsButton) {
     els.clearRecentSwapsButton.classList.toggle("hidden", swapCount === 0);
     const label = els.clearRecentSwapsButton.querySelector("span:last-child");
     if (label) {
-      label.textContent = swapCount === 1 ? "limpar swap" : "limpar swaps";
+      label.textContent = swapCount === 1 ? t("clearSwap") : t("clearSwaps");
     }
   }
 
   if (!state.recentSwaps.length) {
-    els.recentSwapsList.innerHTML = `<p class="recent-empty">ainda não há swaps recentes.</p>`;
+    els.recentSwapsList.innerHTML = `<p class="recent-empty">${escapeHtml(t("noRecentSwaps"))}</p>`;
     return;
   }
 
@@ -1604,7 +1710,7 @@ function renderRecentSwaps() {
       if (!item.originalUrl) return;
       await copyText(item.originalUrl);
       pulseActionButton(event.currentTarget);
-      showFloatingToast("link copiado.");
+      showFloatingToast(t("linkCopied"));
     });
 
     card.querySelector('[data-action="swap"]')?.addEventListener("click", event => {
@@ -1769,10 +1875,11 @@ function syncSearchModeUI() {
 function renderResultLegend() {
   if (!els.resultLegend) return;
   els.resultLegend.classList.remove("hidden");
+  els.resultPoweredBy?.classList.remove("hidden");
   els.resultLegend.innerHTML = `
-    <span class="legend-item"><span class="legend-icon is-verified">${SVG_ICONS.verified}</span> verificado</span>
-    <span class="legend-item"><span class="legend-icon is-found">${SVG_ICONS.found}</span> identificado</span>
-    <span class="legend-item"><span class="legend-icon is-not-found">${SVG_ICONS.notLocated}</span> não localizado</span>
+    <span class="legend-item"><span class="legend-icon is-verified">${SVG_ICONS.verified}</span> ${t("verified")}</span>
+    <span class="legend-item"><span class="legend-icon is-found">${SVG_ICONS.found}</span> ${t("identified")}</span>
+    <span class="legend-item"><span class="legend-icon is-not-found">${SVG_ICONS.notLocated}</span> ${t("notLocated")}</span>
   `;
 }
 

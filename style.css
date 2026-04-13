@@ -342,8 +342,8 @@ body.needs-viewport-fill .viewport-fill-spacer {
 }
 
 .app-shell.is-language-switching {
-  opacity: 0.88;
-  transform: translateY(1px);
+  opacity: 1;
+  transform: none;
 }
 
 .language-split {
@@ -882,6 +882,13 @@ h2 {
   font-size: 10px;
 }
 
+.result-powered-by {
+  margin-top: 4px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+}
+
 .result-dismiss-button {
   position: absolute;
   right: 12px;
@@ -1141,7 +1148,7 @@ h2 {
 }
 
 .footer-made-by {
-  color: #ed474c;
+  color: var(--text);
   font-weight: 400;
   letter-spacing: 0.02em;
   margin-top: 24px;
@@ -1150,7 +1157,7 @@ h2 {
 .made-by-signature {
   width: min(100%, 160px);
   margin: 0 auto;
-  color: #ed474c;
+  color: var(--text);
   aspect-ratio: 5 / 1;
 }
 
@@ -2034,11 +2041,6 @@ body.recent-swaps-modal-open {
 
 :root[data-theme="dark"] .footer {
   color: rgba(255, 255, 255, 0.38);
-}
-
-:root[data-theme="dark"] .footer-made-by,
-:root[data-theme="dark"] .made-by-signature {
-  color: var(--accent);
 }
 
 :root[data-theme="dark"] .icon-chip-youTube,
