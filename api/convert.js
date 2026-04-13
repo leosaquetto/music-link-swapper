@@ -984,7 +984,77 @@ async function finalizeResultData(data) {
   };
 
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
-  return enrichWithSecondaryFallbacks(spotifyEnriched);
+  const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
+  return enrichWithAppleBridgeFallback(secondaryEnriched);
+}
+
+async function enrichWithAppleBridgeFallback(data) {
+  const next = { ...(data || {}) };
+  const links = Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : [];
+  if (!links.length) return next;
+
+  const presentKeys = new Set(links.map(item => String(item?.type || "").toLowerCase()));
+  const requiresBridge = ["tidal", "amazonmusic", "qobuz", "pandora", "soundcloud", "spotify"].some(
+    key => !presentKeys.has(key)
+  );
+  if (!requiresBridge) return next;
+
+  const appleEntry = links.find(item => {
+    const type = String(item?.type || "").toLowerCase();
+    if (type !== "applemusic" && type !== "itunes") return false;
+    if (!item?.url) return false;
+    return !isSearchLikeUrl(item.url, type);
+  });
+  if (!appleEntry?.url) return maybeInjectSpotifySearchFallback(next, links);
+
+  let mergedLinks = links;
+  const appleUrl = canonicalizeMediaUrl(appleEntry.url);
+
+  try {
+    const [songLinkFromApple, primaryFromApple] = await Promise.all([
+      fetchSongLink(appleUrl, { markVerified: true }),
+      fetchPrimaryApi(appleUrl)
+    ]);
+
+    if (songLinkFromApple.ok) {
+      mergedLinks = mergeLinkResults({ links: mergedLinks }, songLinkFromApple.data).links;
+    }
+    if (primaryFromApple.ok) {
+      mergedLinks = mergeLinkResults({ links: mergedLinks }, primaryFromApple.data).links;
+    }
+  } catch (_error) {
+    return maybeInjectSpotifySearchFallback(next, mergedLinks);
+  }
+
+  return maybeInjectSpotifySearchFallback(next, mergedLinks);
+}
+
+function maybeInjectSpotifySearchFallback(data, links) {
+  const nextLinks = Array.isArray(links) ? links.map(item => ({ ...item })) : [];
+  const hasSpotify = nextLinks.some(item => String(item?.type || "").toLowerCase() === "spotify");
+  if (!hasSpotify) {
+    const spotifySearchUrl = buildSpotifySearchUrlFromResult(data);
+    if (spotifySearchUrl) {
+      nextLinks.push({
+        type: "spotify",
+        url: spotifySearchUrl,
+        isVerified: false
+      });
+    }
+  }
+
+  return {
+    ...data,
+    links: dedupeAndNormalizeLinks(nextLinks)
+  };
+}
+
+function buildSpotifySearchUrlFromResult(data) {
+  const title = String(data?.title || "").trim();
+  const description = String(data?.description || "").split("•")[0].trim();
+  const query = [title, description].filter(Boolean).join(" ").trim();
+  if (!query) return "";
+  return `https://open.spotify.com/search/${encodeURIComponent(query)}`;
 }
 
 function sanitizeMetadataText(value, maxLen = MAX_METADATA_TEXT_LENGTH, options = {}) {
