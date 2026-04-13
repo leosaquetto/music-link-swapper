@@ -1925,9 +1925,10 @@ function mergeLinkResults(primaryData, enrichmentData) {
       continue;
     }
 
+    const bestCandidate = isLinkBetter(item, existing) ? item : existing;
     byType.set(key, {
-      ...existing,
-      isVerified: Boolean(existing?.isVerified || item?.isVerified)
+      ...bestCandidate,
+      isVerified: Boolean(existing?.isVerified || item?.isVerified || bestCandidate?.isVerified)
     });
   }
 
