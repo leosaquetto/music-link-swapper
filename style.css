@@ -1154,6 +1154,13 @@ h2 {
   aspect-ratio: 5 / 1;
 }
 
+.made-by-signature-link {
+  display: block;
+  width: min(100%, 160px);
+  margin: 0 auto;
+  text-decoration: none;
+}
+
 .made-by-signature::before {
   content: "";
   display: block;
