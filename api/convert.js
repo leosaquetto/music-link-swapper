@@ -1005,6 +1005,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 async function finalizeResultData(data) {
   const payload = data || {};
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
+  const youtubeAdjustedLinks = ensureYoutubePlatformPairs(normalizedLinks, payload);
   const imageFromLinks = pickImageFromLinks(normalizedLinks);
   const base = {
     ...payload,
@@ -1012,12 +1013,178 @@ async function finalizeResultData(data) {
     description: sanitizeMetadataText(payload.description, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
     album: sanitizeMetadataText(payload.album, MAX_METADATA_TEXT_LENGTH),
     image: payload.image || imageFromLinks || "",
-    links: normalizedLinks
+    links: youtubeAdjustedLinks
   };
 
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
   return enrichWithAppleBridgeFallback(secondaryEnriched);
+}
+
+function ensureYoutubePlatformPairs(links, payload) {
+  const nextLinks = Array.isArray(links) ? links.map(item => ({ ...item })) : [];
+  if (!nextLinks.length) return nextLinks;
+
+  const originalContext = buildOriginalTrackContext(payload);
+  const youtubeTypes = ["youtube", "youtubemusic"];
+
+  for (const platformKey of youtubeTypes) {
+    const candidates = classifyYoutubeLinks(
+      nextLinks.filter(item => String(item?.type || "").toLowerCase() === platformKey),
+      platformKey,
+      originalContext
+    );
+    if (!candidates.length) continue;
+
+    const chosen = chooseYoutubeCandidate(candidates);
+    if (!chosen) continue;
+    const replacement = maybeRecoverYoutubeLinks(chosen, platformKey, originalContext);
+    if (!replacement) continue;
+
+    const idx = nextLinks.findIndex(item => String(item?.type || "").toLowerCase() === platformKey);
+    if (idx !== -1) nextLinks[idx] = replacement;
+  }
+
+  return nextLinks;
+}
+
+function buildOriginalTrackContext(payload) {
+  const title = String(payload?.title || "").trim();
+  const artist = String(payload?.description || "").split("•")[0].trim();
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  const qualifiers = getTrackQualifiers(`${title} ${artist}`);
+  const durationMs = Number(payload?.durationMs || payload?.duration || 0) || 0;
+  const isrc = String(payload?.isrc || "").trim().toUpperCase();
+
+  return { title, artist, query, qualifiers, durationMs, isrc };
+}
+
+function classifyYoutubeLinks(candidates, platformKey, context) {
+  return (Array.isArray(candidates) ? candidates : []).map((candidate, index) => {
+    const url = String(candidate?.url || "");
+    const lower = url.toLowerCase();
+    const isSearch = isSearchLikeUrl(url, platformKey);
+    const hasDirectVideo = Boolean(getYoutubeVideoId(url));
+    let score = 0;
+
+    if (!isSearch && hasDirectVideo) score += 45;
+    if (isSearch) score -= 30;
+    if (candidate?.isVerified) score += 20;
+    if (index === 0) score += 10;
+
+    if (platformKey === "youtubemusic") {
+      if (lower.includes("music.youtube.com")) score += 12;
+      if (lower.includes("topic") || lower.includes("tema")) score += 8;
+      if (lower.includes("auto-generated") || lower.includes("provided-to-youtube")) score += 6;
+    } else {
+      if (lower.includes("youtube.com/watch")) score += 10;
+      if (
+        lower.includes("official") ||
+        lower.includes("music-video") ||
+        lower.includes("lyric") ||
+        lower.includes("vevo")
+      ) {
+        score += 8;
+      }
+    }
+
+    const candidateQualifiers = getTrackQualifiers(lower.replace(/[-_]/g, " "));
+    const qualifierDelta = scoreQualifierAlignment(context?.qualifiers || new Set(), candidateQualifiers);
+    score += qualifierDelta;
+
+    if (context?.durationMs > 0 && Number(candidate?.durationMs || 0) > 0) {
+      const diff = Math.abs(Number(candidate.durationMs) - context.durationMs);
+      if (diff <= 2000) {
+        score += platformKey === "youtubemusic" ? 14 : 5;
+      } else if (diff > 8000) {
+        score -= platformKey === "youtubemusic" ? 10 : 3;
+      }
+    }
+
+    if (context?.isrc && String(candidate?.isrc || "").toUpperCase() === context.isrc) {
+      score += 12;
+    }
+
+    return {
+      ...candidate,
+      _youtubeScore: score,
+      _youtubeSearchOnly: isSearch || !hasDirectVideo
+    };
+  });
+}
+
+function chooseYoutubeCandidate(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) return null;
+  let best = candidates[0];
+  for (const current of candidates) {
+    if ((current?._youtubeScore || 0) > (best?._youtubeScore || 0)) {
+      best = current;
+    }
+  }
+  return best;
+}
+
+function maybeRecoverYoutubeLinks(candidate, platformKey, context) {
+  if (!candidate?.url) return null;
+  const score = Number(candidate._youtubeScore || 0);
+  const searchFallbackUrl = buildYoutubeSearchFallbackUrl(platformKey, context);
+
+  if (!candidate._youtubeSearchOnly && score >= 50) {
+    return {
+      type: platformKey === "youtubemusic" ? "youtubeMusic" : "youtube",
+      url: canonicalizeMediaUrl(candidate.url),
+      isVerified: true
+    };
+  }
+
+  if (!candidate._youtubeSearchOnly && score >= 20) {
+    const { _youtubeScore, _youtubeSearchOnly, ...cleanCandidate } = candidate;
+    return {
+      ...cleanCandidate,
+      type: platformKey === "youtubemusic" ? "youtubeMusic" : "youtube",
+      url: canonicalizeMediaUrl(candidate.url),
+      isVerified: Boolean(candidate?.isVerified)
+    };
+  }
+
+  return {
+    type: platformKey === "youtubemusic" ? "youtubeMusic" : "youtube",
+    url: searchFallbackUrl || candidate.url,
+    isVerified: false
+  };
+}
+
+function buildYoutubeSearchFallbackUrl(platformKey, context) {
+  const query = normalizeSearchText(context?.query || "").trim();
+  if (!query) return "";
+  const suffix =
+    platformKey === "youtubemusic" ? "" : " official music video";
+  const encoded = encodeURIComponent(`${query}${suffix}`.trim());
+  return platformKey === "youtubemusic"
+    ? `https://music.youtube.com/search?q=${encoded}`
+    : `https://www.youtube.com/results?search_query=${encoded}`;
+}
+
+function getTrackQualifiers(value) {
+  const text = normalizeSearchText(value);
+  const qualifiers = new Set();
+  const known = ["live", "acoustic", "remix", "instrumental", "demo", "session", "karaoke"];
+  for (const term of known) {
+    if (text.includes(term)) qualifiers.add(term);
+  }
+  return qualifiers;
+}
+
+function scoreQualifierAlignment(sourceQualifiers, candidateQualifiers) {
+  if (!sourceQualifiers.size && !candidateQualifiers.size) return 0;
+  let score = 0;
+  for (const q of sourceQualifiers) {
+    score += candidateQualifiers.has(q) ? 4 : -2;
+  }
+  for (const q of candidateQualifiers) {
+    if (!sourceQualifiers.has(q)) score -= 3;
+  }
+  return score;
 }
 
 async function enrichWithAppleBridgeFallback(data) {
