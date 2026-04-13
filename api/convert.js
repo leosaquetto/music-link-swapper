@@ -1029,16 +1029,10 @@ function ensureYoutubePlatformPairs(links, payload) {
   const youtubeTypes = ["youtube", "youtubemusic"];
 
   for (const platformKey of youtubeTypes) {
-    const candidates = classifyYoutubeLinks(
-      nextLinks.filter(item => String(item?.type || "").toLowerCase() === platformKey),
-      platformKey,
-      originalContext
-    );
-    if (!candidates.length) continue;
+    const platformLinks = nextLinks.filter(item => String(item?.type || "").toLowerCase() === platformKey);
+    if (!platformLinks.length) continue;
 
-    const chosen = chooseYoutubeCandidate(candidates);
-    if (!chosen) continue;
-    const replacement = maybeRecoverYoutubeLinks(chosen, platformKey, originalContext);
+    const replacement = resolveYoutubePlatformLink(platformLinks, platformKey, originalContext);
     if (!replacement) continue;
 
     const idx = nextLinks.findIndex(item => String(item?.type || "").toLowerCase() === platformKey);
@@ -1048,9 +1042,19 @@ function ensureYoutubePlatformPairs(links, payload) {
   return nextLinks;
 }
 
+function resolveYoutubePlatformLink(candidates, platformKey, context) {
+  const classified = classifyYoutubeLinks(candidates, platformKey, context);
+  if (!classified.length) return null;
+
+  const chosen = chooseYoutubeCandidate(classified);
+  if (!chosen) return null;
+
+  return maybeRecoverYoutubeLinks(chosen, platformKey, context);
+}
+
 function buildOriginalTrackContext(payload) {
   const title = String(payload?.title || "").trim();
-  const artist = String(payload?.description || "").split("•")[0].trim();
+  const artist = extractArtistFromPayload(payload);
   const query = [title, artist].filter(Boolean).join(" ").trim();
   const qualifiers = getTrackQualifiers(`${title} ${artist}`);
   const durationMs = Number(payload?.durationMs || payload?.duration || 0) || 0;
@@ -1063,52 +1067,55 @@ function classifyYoutubeLinks(candidates, platformKey, context) {
   return (Array.isArray(candidates) ? candidates : []).map((candidate, index) => {
     const url = String(candidate?.url || "");
     const lower = url.toLowerCase();
+    const metadataText = buildYoutubeCandidateHintText(candidate);
     const isSearch = isSearchLikeUrl(url, platformKey);
     const hasDirectVideo = Boolean(getYoutubeVideoId(url));
+    const semanticSignals = collectYoutubeSemanticSignals(platformKey, metadataText);
     let score = 0;
 
-    if (!isSearch && hasDirectVideo) score += 45;
-    if (isSearch) score -= 30;
+    if (!isSearch && hasDirectVideo) score += 42;
+    if (isSearch) score -= 35;
     if (candidate?.isVerified) score += 20;
-    if (index === 0) score += 10;
+    if (index === 0) score += 12;
+    score += semanticSignals.score;
 
     if (platformKey === "youtubemusic") {
-      if (lower.includes("music.youtube.com")) score += 12;
-      if (lower.includes("topic") || lower.includes("tema")) score += 8;
-      if (lower.includes("auto-generated") || lower.includes("provided-to-youtube")) score += 6;
+      if (lower.includes("music.youtube.com")) score += 8;
     } else {
-      if (lower.includes("youtube.com/watch")) score += 10;
-      if (
-        lower.includes("official") ||
-        lower.includes("music-video") ||
-        lower.includes("lyric") ||
-        lower.includes("vevo")
-      ) {
-        score += 8;
-      }
+      if (lower.includes("youtube.com/watch")) score += 8;
     }
 
-    const candidateQualifiers = getTrackQualifiers(lower.replace(/[-_]/g, " "));
+    const candidateQualifiers = getTrackQualifiers(metadataText);
     const qualifierDelta = scoreQualifierAlignment(context?.qualifiers || new Set(), candidateQualifiers);
     score += qualifierDelta;
+
+    const metadataAlignment = scoreMetadataAlignment(context, metadataText);
+    score += metadataAlignment;
 
     if (context?.durationMs > 0 && Number(candidate?.durationMs || 0) > 0) {
       const diff = Math.abs(Number(candidate.durationMs) - context.durationMs);
       if (diff <= 2000) {
-        score += platformKey === "youtubemusic" ? 14 : 5;
+        score += platformKey === "youtubemusic" ? 16 : 6;
       } else if (diff > 8000) {
-        score -= platformKey === "youtubemusic" ? 10 : 3;
+        score -= platformKey === "youtubemusic" ? 12 : 4;
       }
     }
 
     if (context?.isrc && String(candidate?.isrc || "").toUpperCase() === context.isrc) {
-      score += 12;
+      score += 14;
     }
 
     return {
       ...candidate,
       _youtubeScore: score,
-      _youtubeSearchOnly: isSearch || !hasDirectVideo
+      _youtubeSearchOnly: isSearch || !hasDirectVideo,
+      _youtubeSemanticSignals: semanticSignals.matchedSignals,
+      _youtubeHasStrongAnchor:
+        Boolean(candidate?.isVerified) ||
+        (context?.isrc && String(candidate?.isrc || "").toUpperCase() === context.isrc) ||
+        (context?.durationMs > 0 &&
+          Number(candidate?.durationMs || 0) > 0 &&
+          Math.abs(Number(candidate.durationMs) - context.durationMs) <= 2000)
     };
   });
 }
@@ -1128,8 +1135,10 @@ function maybeRecoverYoutubeLinks(candidate, platformKey, context) {
   if (!candidate?.url) return null;
   const score = Number(candidate._youtubeScore || 0);
   const searchFallbackUrl = buildYoutubeSearchFallbackUrl(platformKey, context);
+  const semanticSignals = Number(candidate._youtubeSemanticSignals || 0);
+  const hasStrongAnchor = Boolean(candidate._youtubeHasStrongAnchor);
 
-  if (!candidate._youtubeSearchOnly && score >= 50) {
+  if (!candidate._youtubeSearchOnly && score >= 78 && semanticSignals >= 2 && hasStrongAnchor) {
     return {
       type: platformKey === "youtubemusic" ? "youtubeMusic" : "youtube",
       url: canonicalizeMediaUrl(candidate.url),
@@ -1138,7 +1147,13 @@ function maybeRecoverYoutubeLinks(candidate, platformKey, context) {
   }
 
   if (!candidate._youtubeSearchOnly && score >= 20) {
-    const { _youtubeScore, _youtubeSearchOnly, ...cleanCandidate } = candidate;
+    const {
+      _youtubeScore,
+      _youtubeSearchOnly,
+      _youtubeSemanticSignals,
+      _youtubeHasStrongAnchor,
+      ...cleanCandidate
+    } = candidate;
     return {
       ...cleanCandidate,
       type: platformKey === "youtubemusic" ? "youtubeMusic" : "youtube",
@@ -1168,7 +1183,7 @@ function buildYoutubeSearchFallbackUrl(platformKey, context) {
 function getTrackQualifiers(value) {
   const text = normalizeSearchText(value);
   const qualifiers = new Set();
-  const known = ["live", "acoustic", "remix", "instrumental", "demo", "session", "karaoke"];
+  const known = ["live", "acoustic", "remix", "instrumental", "demo", "session", "karaoke", "edit"];
   for (const term of known) {
     if (text.includes(term)) qualifiers.add(term);
   }
@@ -1184,6 +1199,97 @@ function scoreQualifierAlignment(sourceQualifiers, candidateQualifiers) {
   for (const q of candidateQualifiers) {
     if (!sourceQualifiers.has(q)) score -= 3;
   }
+  return score;
+}
+
+function extractArtistFromPayload(payload) {
+  const directArtist = String(payload?.artist || payload?.artistName || "").trim();
+  if (directArtist) return directArtist;
+
+  const description = String(payload?.description || "").trim();
+  if (!description) return "";
+
+  const firstChunk = description
+    .split(/•|\||-|\n/)
+    .map(item => item.trim())
+    .find(Boolean);
+
+  if (!firstChunk) return "";
+  if (isNoisyMetadataText(normalizeSearchText(firstChunk))) return "";
+  return firstChunk;
+}
+
+function buildYoutubeCandidateHintText(candidate) {
+  const parts = [
+    candidate?.title,
+    candidate?.name,
+    candidate?.trackName,
+    candidate?.artistName,
+    candidate?.description,
+    candidate?.channel,
+    candidate?.channelTitle,
+    candidate?.authorName,
+    candidate?.uploader,
+    candidate?.url
+  ]
+    .map(value => String(value || "").trim())
+    .filter(Boolean);
+
+  return normalizeSearchText(parts.join(" "));
+}
+
+function collectYoutubeSemanticSignals(platformKey, hintText) {
+  const text = normalizeSearchText(hintText || "");
+  let score = 0;
+  let matchedSignals = 0;
+
+  const hasToken = token => text.includes(token);
+  const register = (condition, points) => {
+    if (!condition) return;
+    score += points;
+    matchedSignals += 1;
+  };
+
+  if (platformKey === "youtubemusic") {
+    register(hasToken("topic") || hasToken("tema"), 10);
+    register(hasToken("auto generated by youtube") || hasToken("provided to youtube by"), 10);
+    register(hasToken("art track"), 8);
+    register(hasToken("official audio"), 8);
+  } else {
+    register(hasToken("official music video"), 12);
+    register(hasToken("official video"), 10);
+    register(hasToken("vevo"), 8);
+    register(hasToken("lyric video"), 4);
+  }
+
+  return { score, matchedSignals };
+}
+
+function scoreMetadataAlignment(context, hintText) {
+  const text = normalizeSearchText(hintText || "");
+  if (!text) return 0;
+
+  const titleTokens = toQueryTokens(context?.title || "");
+  const artistTokens = toQueryTokens(context?.artist || "");
+  let score = 0;
+
+  const titleMatches = titleTokens.filter(token => text.includes(token)).length;
+  const artistMatches = artistTokens.filter(token => text.includes(token)).length;
+
+  if (titleTokens.length) {
+    const ratio = titleMatches / titleTokens.length;
+    if (ratio >= 0.8) score += 18;
+    else if (ratio >= 0.5) score += 10;
+    else score -= 10;
+  }
+
+  if (artistTokens.length) {
+    const ratio = artistMatches / artistTokens.length;
+    if (ratio >= 0.8) score += 14;
+    else if (ratio >= 0.5) score += 8;
+    else score -= 8;
+  }
+
   return score;
 }
 
