@@ -1679,7 +1679,8 @@ async function shouldKeepLinkForAppleTrack(link, expected) {
   if (type === "applemusic" || type === "itunes") return true;
   if (isSearchLikeUrl(url, type)) return true;
 
-  const hintText = buildYoutubeCandidateHintText(link);
+  const supportsHintGate = type === "youtube" || type === "youtubemusic";
+  const hintText = supportsHintGate ? buildYoutubeCandidateHintText(link) : "";
   if (hintText && !isCompatibleTrackHintText(hintText, expected)) {
     return false;
   }
@@ -1729,15 +1730,18 @@ function isCompatibleTrackHintText(hintText, expected) {
   const expectedTitleTokens = toQueryTokens(expected?.expectedTitle || "");
   if (!hintTokens.length || !expectedTitleTokens.length) return true;
 
+  if (hintTokens.length < 6) return true;
+
   const hintSet = new Set(hintTokens);
   const titleMatches = expectedTitleTokens.filter(token => hintSet.has(token)).length;
   const titleRatio = titleMatches / expectedTitleTokens.length;
-  if (titleRatio < 0.5) return false;
+  if (titleRatio < 0.34) return false;
 
   const expectedArtistTokens = toQueryTokens(expected?.expectedArtist || "");
   if (!expectedArtistTokens.length) return true;
   const artistMatches = expectedArtistTokens.filter(token => hintSet.has(token)).length;
   const artistRatio = artistMatches / expectedArtistTokens.length;
+  if (!artistMatches) return true;
   return artistRatio >= 0.34;
 }
 
