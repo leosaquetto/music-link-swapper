@@ -46,7 +46,112 @@ const STREAMING_HOST_HINTS = [
   "amazon.com/music"
 ];
 const RECENT_SWAPS_STORAGE_KEY = "mls-recent-swaps";
+const LANGUAGE_STORAGE_KEY = "mls-language";
 const MAX_RECENT_SWAPS = 5;
+const LANGUAGE_OPTIONS = [
+  { label: "PT-BR", value: "pt-br", fullName: "português-brasil" },
+  { label: "EN", value: "en", fullName: "english" },
+  { label: "ES", value: "es-es", fullName: "español" },
+  { label: "IT", value: "it-it", fullName: "italiano" },
+  { label: "FR", value: "fr-fr", fullName: "français" }
+];
+const TRANSLATIONS = {
+  "pt-br": {
+    loadingSwap: "swapando...",
+    loadingSearch: "pesquisando...",
+    swap: "swap",
+    search: "pesquisar",
+    linkLabel: "link da música",
+    searchLabel: "pesquisa por nome",
+    linkPlaceholder: "cole o link da música aqui",
+    searchPlaceholder: "digite o nome do artista + música",
+    byline: "por leo saquetto",
+    subtitle: "qualquer streaming por um só link",
+    availableAs: "Disponível como",
+    madeBy: "feito por 🇧🇷",
+    languageSelected: "português-brasil selecionado.",
+    themeLight: "modo claro",
+    themeDark: "modo escuro",
+    activateDark: "ativar modo escuro",
+    activateLight: "ativar modo claro"
+  },
+  en: {
+    loadingSwap: "swapping...",
+    loadingSearch: "searching...",
+    swap: "swap",
+    search: "search",
+    linkLabel: "song link",
+    searchLabel: "search by name",
+    linkPlaceholder: "paste the song link here",
+    searchPlaceholder: "type artist + song name",
+    byline: "by leo saquetto",
+    subtitle: "any streaming into one link",
+    availableAs: "Available as",
+    madeBy: "made by 🇧🇷",
+    languageSelected: "english selected.",
+    themeLight: "light mode",
+    themeDark: "dark mode",
+    activateDark: "enable dark mode",
+    activateLight: "enable light mode"
+  },
+  "es-es": {
+    loadingSwap: "convirtiendo...",
+    loadingSearch: "buscando...",
+    swap: "swap",
+    search: "buscar",
+    linkLabel: "enlace de la canción",
+    searchLabel: "búsqueda por nombre",
+    linkPlaceholder: "pega aquí el enlace de la canción",
+    searchPlaceholder: "escribe artista + canción",
+    byline: "por leo saquetto",
+    subtitle: "cualquier streaming en un solo enlace",
+    availableAs: "Disponible como",
+    madeBy: "hecho por 🇧🇷",
+    languageSelected: "español seleccionado.",
+    themeLight: "modo claro",
+    themeDark: "modo oscuro",
+    activateDark: "activar modo oscuro",
+    activateLight: "activar modo claro"
+  },
+  "it-it": {
+    loadingSwap: "conversione...",
+    loadingSearch: "ricerca...",
+    swap: "swap",
+    search: "cerca",
+    linkLabel: "link della canzone",
+    searchLabel: "ricerca per nome",
+    linkPlaceholder: "incolla qui il link della canzone",
+    searchPlaceholder: "digita artista + canzone",
+    byline: "di leo saquetto",
+    subtitle: "qualsiasi streaming in un solo link",
+    availableAs: "Disponibile come",
+    madeBy: "fatto da 🇧🇷",
+    languageSelected: "italiano selezionato.",
+    themeLight: "tema chiaro",
+    themeDark: "tema scuro",
+    activateDark: "attiva tema scuro",
+    activateLight: "attiva tema chiaro"
+  },
+  "fr-fr": {
+    loadingSwap: "conversion...",
+    loadingSearch: "recherche...",
+    swap: "swap",
+    search: "rechercher",
+    linkLabel: "lien de la chanson",
+    searchLabel: "recherche par nom",
+    linkPlaceholder: "collez le lien de la chanson ici",
+    searchPlaceholder: "tapez artiste + chanson",
+    byline: "par leo saquetto",
+    subtitle: "n’importe quel streaming en un seul lien",
+    availableAs: "Disponible en",
+    madeBy: "fait par 🇧🇷",
+    languageSelected: "français sélectionné.",
+    themeLight: "mode clair",
+    themeDark: "mode sombre",
+    activateDark: "activer le mode sombre",
+    activateLight: "activer le mode clair"
+  }
+};
 
 const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
 
@@ -65,6 +170,7 @@ const SVG_ICONS = {
   share: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 16V4m0 0l-4 4m4-4l4 4"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M5 13.5v3.25A2.25 2.25 0 0 0 7.25 19h9.5A2.25 2.25 0 0 0 19 16.75V13.5"/></svg>`,
   moon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.08 2.56a1 1 0 0 1 1.27 1.22a8.03 8.03 0 0 0 9.87 9.87a1 1 0 0 1 1.22 1.27A10 10 0 1 1 9.08 2.56Z"/></svg>`,
   sun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"/></g></svg>`,
+  globe: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true"><g fill="currentColor"><path d="M74.66,26C90.48,26,102,37.52,102,53.34V74.66C102,90.48,90.48,102,74.66,102H53.34C37.52,102,26,90.48,26,74.66V53.34a27.39,27.39,0,0,1,7.73-19.58A27.39,27.39,0,0,1,53.34,26H74.66m0-10H53.34C32,16,16,32,16,53.34V74.66C16,96,32,112,53.34,112H74.66C96,112,112,96,112,74.66V53.34C112,32,96,16,74.66,16Z"/><rect x="20.83" y="59" width="86.34" height="10"/><path d="M64,26a8.2,8.2,0,0,1,5.5,1.61,14.31,14.31,0,0,1,3.94,6.07C75.91,40.07,77.12,50,77.12,64s-1.21,23.93-3.68,30.29a14.31,14.31,0,0,1-3.94,6.07A8.2,8.2,0,0,1,64,102a8.2,8.2,0,0,1-5.5-1.61,14.31,14.31,0,0,1-3.94-6.07C52.09,87.93,50.88,78,50.88,64s1.21-23.93,3.68-30.29a14.31,14.31,0,0,1,3.94-6.07A8.2,8.2,0,0,1,64,26m0-10C44.81,16,40.88,37.51,40.88,64S44.81,112,64,112,87.12,90.49,87.12,64,83.19,16,64,16Z"/></g></svg>`,
   unlink: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 54.971 54.971" aria-hidden="true"><g fill="currentColor"><path d="M51.173,3.801c-5.068-5.068-13.315-5.066-18.384,0l-9.192,9.192c-0.781,0.781-0.781,2.047,0,2.828c0.781,0.781,2.047,0.781,2.828,0l9.192-9.192c1.691-1.69,3.951-2.622,6.363-2.622c2.413,0,4.673,0.932,6.364,2.623s2.623,3.951,2.623,6.364c0,2.412-0.932,4.672-2.623,6.363L36.325,31.379c-3.51,3.508-9.219,3.508-12.729,0c-0.781-0.781-2.047-0.781-2.828,0s-0.781,2.048,0,2.828c2.534,2.534,5.863,3.801,9.192,3.801s6.658-1.267,9.192-3.801l12.021-12.021c2.447-2.446,3.795-5.711,3.795-9.192C54.968,9.512,53.62,6.248,51.173,3.801z"/><path d="M27.132,40.57l-7.778,7.778c-1.691,1.691-3.951,2.623-6.364,2.623c-2.412,0-4.673-0.932-6.364-2.623c-3.509-3.509-3.509-9.219,0-12.728L17.94,24.306c1.691-1.69,3.951-2.622,6.364-2.622c2.412,0,4.672,0.932,6.363,2.622c0.781,0.781,2.047,0.781,2.828,0s0.781-2.047,0-2.828c-5.067-5.067-13.314-5.068-18.384,0L3.797,32.793c-2.446,2.446-3.794,5.711-3.794,9.192c0,3.48,1.348,6.745,3.795,9.191c2.446,2.447,5.711,3.795,9.191,3.795c3.481,0,6.746-1.348,9.192-3.795l7.778-7.778c0.781-0.781,0.781-2.047,0-2.828S27.913,39.789,27.132,40.57z"/></g></svg>`,
   verified: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.55879 3.6972C10.7552 2.02216 13.2447 2.02216 14.4412 3.6972L14.6317 3.96387C14.8422 4.25867 15.1958 4.41652 15.5558 4.37652L16.4048 4.28218C18.3156 4.06988 19.9301 5.68439 19.7178 7.59513L19.6235 8.44415C19.5835 8.8042 19.7413 9.15774 20.0361 9.36831L20.3028 9.55879C21.9778 10.7552 21.9778 13.2447 20.3028 14.4412L20.0361 14.6317C19.7413 14.8422 19.5835 15.1958 19.6235 15.5558L19.7178 16.4048C19.9301 18.3156 18.3156 19.9301 16.4048 19.7178L15.5558 19.6235C15.1958 19.5835 14.8422 19.7413 14.6317 20.0361L14.4412 20.3028C13.2447 21.9778 10.7553 21.9778 9.55879 20.3028L9.36831 20.0361C9.15774 19.7413 8.8042 19.5835 8.44414 19.6235L7.59513 19.7178C5.68439 19.9301 4.06988 18.3156 4.28218 16.4048L4.37652 15.5558C4.41652 15.1958 4.25867 14.8422 3.96387 14.6317L3.6972 14.4412C2.02216 13.2447 2.02216 10.7553 3.6972 9.55879L3.96387 9.36831C4.25867 9.15774 4.41652 8.8042 4.37652 8.44414L4.28218 7.59513C4.06988 5.68439 5.68439 4.06988 7.59513 4.28218L8.44415 4.37652C8.8042 4.41652 9.15774 4.25867 9.36831 3.96387L9.55879 3.6972ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L11.8882 14.526C11.3977 15.0166 10.6023 15.0166 10.1118 14.526L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
   found: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.25007 2.38782C8.54878 2.0992 10.1243 2 12 2C13.8757 2 15.4512 2.0992 16.7499 2.38782C18.06 2.67897 19.1488 3.176 19.9864 4.01358C20.824 4.85116 21.321 5.94002 21.6122 7.25007C21.9008 8.54878 22 10.1243 22 12C22 13.8757 21.9008 15.4512 21.6122 16.7499C21.321 18.06 20.824 19.1488 19.9864 19.9864C19.1488 20.824 18.06 21.321 16.7499 21.6122C15.4512 21.9008 13.8757 22 12 22C10.1243 22 8.54878 21.9008 7.25007 21.6122C5.94002 21.321 4.85116 20.824 4.01358 19.9864C3.176 19.1488 2.67897 18.06 2.38782 16.7499C2.0992 15.4512 2 13.8757 2 12C2 10.1243 2.0992 8.54878 2.38782 7.25007C2.67897 5.94002 3.176 4.85116 4.01358 4.01358C4.85116 3.176 5.94002 2.67897 7.25007 2.38782ZM15.7071 9.29289C16.0976 9.68342 16.0976 10.3166 15.7071 10.7071L12.0243 14.3899C11.4586 14.9556 10.5414 14.9556 9.97568 14.3899L8.29289 12.7071C7.90237 12.3166 7.90237 11.6834 8.29289 11.2929C8.68342 10.9024 9.31658 10.9024 9.70711 11.2929L11 12.5858L14.2929 9.29289C14.6834 8.90237 15.3166 8.90237 15.7071 9.29289Z" fill="currentColor"/></svg>`,
@@ -112,6 +218,7 @@ const SUPPORTED_PLATFORM_CHIPS = [
   "pandora",
   "qobuz"
 ];
+const MADE_BY_SIGNATURE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" role="img" aria-label="Leo Saquetto signature"><g fill="currentColor"><path d="M147.7,27.1c-1.1,6.5-2.4,14.1-3.7,21.7-1.2,6.7-2.4,13.3-3.7,19.9-1.9,10.3-7.3,17-15.7,20.2-5.5,2.1-11.2,3.5-17.1,2.4-5-.9-8.2-5.2-8.4-11.1-.2-7.2,1.6-14.1,2.8-21.1,1.4-8.7,3-17.3,4.6-25.9,2.4-13.3,8.2-19.6,19.7-21.6,4.6-.8,9.1-.9,13.6.6,6.1,2.1,8.6,6.5,8,15.1ZM116.1,70.9c0,2.1-.4,3.9,1.2,4.7,1.6.8,3.2.4,4.6-1.1,1.4-1.5,1.9-3.6,2.3-5.7,1.8-10.1,3.6-20.2,5.4-30.3.6-3.2,1.2-6.4,1.6-9.6.3-2.7-.9-3.9-3.2-3.6-2.3.3-3.9,2.1-4.6,5.5-1,5.1-1.9,10.2-2.8,15.3-1.5,8.5-3.1,16.9-4.5,24.9Z"/><path d="M257.5,70.2c2.1,1.4,3.9.6,5.7,0,1.4-.5,1.7-.4,1.5,1.5-1.2,8-4.7,11.5-11.4,11.1-2.7-.2-5-1.4-6-4.5-.5-1.5-1.2-1.6-2.4-1.4-2.8.4-5.5.5-8.3-.2-6.6-1.6-9.8-6.9-8.5-14.7,1.8-11,4.2-21.9,6.2-32.9.7-3.8,1.4-7.6,3.1-11,1.9-3.9,4.5-6.6,8-8.3,6.7-3.1,13.7-3.6,20.6-1.6,6.1,1.8,8.5,6.9,7.2,14.2-2.3,11.9-4.5,23.8-6.9,35.7-1.4,6.7-3.4,9.4-8.7,12.3Z"/><path d="M472.5,74.9c-6.1.2-12.1.5-18.2.7-13.6.3-27.1.5-40.7,1-15.4.5-30.9,1-46.3,1.8-14.3.7-28.6,1.4-43,2.4-15.7,1-31.3,2.1-47,3.3-17.5,1.4-35.1,2.9-52.6,4.5-18.5,1.7-37,3.6-55.4,5.9-8.2,1-16.5,1.4-24.6,3.1-21.3,4.5-42.4,9.7-63.5,15.1-.8.2-1.8,0-2.9,1.4,38.8-6.3,77.3-12.4,115.9-16-17.4,3.9-34.9,7.8-52.6,11.8.8.9,1.3.7,1.8.6,16.1-2.4,32.3-3.8,48.4-5.7,2.4-.3,4.5-.4,6.3.5h0s4.3-.5,4.3-.5c-.1-.2-.3-.5-.4-.7,1.3-.8,2.1-.6,2.7.4l6.4-.8c-.1-.3-.3-.6-.5-1,4-.5,7.7-1,11.3-1.5l117.1-12.9c.3,0,.6-.1,1-.1.9,0,1.9,0,2.8-.2l2.8-.3c.7,0,1.4-.2,2.1-.2.6,0,1.3-.4,1.8-.2l15.7-1.4c13.9-1.3,27.8-2.9,41.8-4.1,22.5-1.9,44.9-4.4,67.4-5.7.4,0,.9.1,1-.7-.9-.6-1.9-.3-2.8-.3Z"/></g></svg>`;
 
 const state = {
   currentResult: null,
@@ -126,6 +233,9 @@ const state = {
   scrollAfterConvert: false,
   hideResultTimer: null,
   themeSwitchTimer: null,
+  languageSwitchTimer: null,
+  currentLanguage: "pt-br",
+  isLanguageMenuOpen: false,
   isSearchMode: false,
   isIOSInstallModalOpen: false,
   iosInstallModalHideTimer: null,
@@ -161,6 +271,14 @@ const els = {
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
   floatingToast: document.getElementById("floatingToast"),
   themeToggle: document.getElementById("themeToggle"),
+  languageToggle: document.getElementById("languageToggle"),
+  languageDropdown: document.getElementById("languageDropdown"),
+  languageMenu: document.getElementById("languageMenu"),
+  appShell: document.getElementById("appShell"),
+  iosInstallAvailability: document.getElementById("iosInstallAvailability"),
+  iosShortcutAvailability: document.getElementById("iosShortcutAvailability"),
+  footerMadeByText: document.getElementById("footerMadeByText"),
+  madeBySignature: document.getElementById("madeBySignature"),
   viewportFillSpacer: document.getElementById("viewportFillSpacer"),
   heroLogo: document.querySelector(".app-logo"),
   iosInstallCta: document.getElementById("iosInstallCta"),
@@ -198,6 +316,7 @@ function bootstrap() {
   injectButtonIcons();
   renderSupportedChips();
   hydrateRecentSwaps();
+  initLanguage();
   initTheme();
   initIOSInstallPrompt();
   bindEvents();
@@ -211,6 +330,86 @@ function forceHeroGifLogo() {
   if (els.heroLogo.src !== HERO_LOGO_GIF_URL) {
     els.heroLogo.src = HERO_LOGO_GIF_URL;
   }
+}
+
+function getCurrentLanguage() {
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  return TRANSLATIONS[saved] ? saved : "pt-br";
+}
+
+function t(key) {
+  const lang = TRANSLATIONS[state.currentLanguage] ? state.currentLanguage : "pt-br";
+  return TRANSLATIONS[lang][key] ?? TRANSLATIONS["pt-br"][key] ?? key;
+}
+
+function initLanguage() {
+  state.currentLanguage = getCurrentLanguage();
+  if (els.languageToggle) {
+    els.languageToggle.innerHTML = `<span class="button-icon">${SVG_ICONS.globe}</span>`;
+  }
+  if (els.madeBySignature) {
+    els.madeBySignature.innerHTML = MADE_BY_SIGNATURE_SVG;
+  }
+  renderLanguageDropdown();
+  applyLanguage({ announce: false, withTransition: false });
+}
+
+function renderLanguageDropdown() {
+  if (!els.languageDropdown) return;
+  els.languageDropdown.innerHTML = LANGUAGE_OPTIONS.map(option => (
+    `<button class="language-option ${option.value === state.currentLanguage ? "is-active" : ""}" type="button" data-language="${option.value}" role="menuitem">${
+      option.label === "PT-BR" ? `<span class="language-split"><span>PT</span><span>BR</span></span>` : option.label
+    }</button>`
+  )).join("");
+  els.languageDropdown.querySelectorAll("[data-language]").forEach(button => {
+    button.addEventListener("click", () => {
+      applyLanguage({ lang: button.getAttribute("data-language"), announce: true, withTransition: true });
+      closeLanguageMenu();
+    });
+  });
+}
+
+function openLanguageMenu() {
+  if (!els.languageMenu || !els.languageDropdown) return;
+  state.isLanguageMenuOpen = true;
+  els.languageMenu.classList.add("is-open");
+  els.languageDropdown.classList.remove("hidden");
+}
+
+function closeLanguageMenu() {
+  if (!els.languageMenu || !els.languageDropdown) return;
+  state.isLanguageMenuOpen = false;
+  els.languageMenu.classList.remove("is-open");
+  els.languageDropdown.classList.add("hidden");
+}
+
+function applyLanguage({ lang = state.currentLanguage, announce = false, withTransition = true } = {}) {
+  state.currentLanguage = TRANSLATIONS[lang] ? lang : "pt-br";
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, state.currentLanguage);
+  document.documentElement.lang = state.currentLanguage;
+  renderLanguageDropdown();
+  if (els.languageToggle) {
+    els.languageToggle.setAttribute("aria-label", "selecionar idioma");
+    els.languageToggle.setAttribute("title", "selecionar idioma");
+  }
+  const bylineEl = document.getElementById("heroByline");
+  const subtitleEl = document.getElementById("heroSubtitle");
+  if (bylineEl) bylineEl.textContent = t("byline");
+  if (subtitleEl) subtitleEl.textContent = t("subtitle");
+  if (els.iosInstallAvailability) els.iosInstallAvailability.textContent = t("availableAs");
+  if (els.iosShortcutAvailability) els.iosShortcutAvailability.textContent = t("availableAs");
+  if (els.footerMadeByText) els.footerMadeByText.textContent = t("madeBy");
+  syncSearchModeUI();
+  updateConvertButtonLabel();
+  syncThemeToggleIcon();
+  if (withTransition && els.appShell) {
+    els.appShell.classList.add("is-language-switching");
+    clearTimeout(state.languageSwitchTimer);
+    state.languageSwitchTimer = setTimeout(() => {
+      els.appShell?.classList.remove("is-language-switching");
+    }, 240);
+  }
+  if (announce) showFloatingToast(t("languageSelected"));
 }
 
 function initIOSViewportFillAssist() {
@@ -414,6 +613,16 @@ function closeRecentSwapsModal() {
 
 function bindEvents() {
   els.themeToggle?.addEventListener("click", toggleTheme);
+  els.languageToggle?.addEventListener("click", event => {
+    event.stopPropagation();
+    if (state.isLanguageMenuOpen) closeLanguageMenu();
+    else openLanguageMenu();
+  });
+  document.addEventListener("click", event => {
+    if (!els.languageMenu?.contains(event.target)) {
+      closeLanguageMenu();
+    }
+  });
 
   els.iosInstallCta?.addEventListener("click", () => {
     openIOSInstallModal();
@@ -451,6 +660,11 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && state.isLanguageMenuOpen) {
+      closeLanguageMenu();
+      return;
+    }
+
     if (event.key === "Escape" && state.isIOSInstallModalOpen) {
       closeIOSInstallModal();
       return;
@@ -751,7 +965,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   softlyDismissKeyboard();
   setLoading(true);
   hideResult();
-  showStatus(modeAtSubmit ? "pesquisando..." : "carregando swaps...", "default");
+  showStatus(modeAtSubmit ? t("loadingSearch") : t("loadingSwap"), "default");
   startCoverShimmer();
 
   try {
@@ -1499,7 +1713,7 @@ function showFloatingToast(message) {
 function setLoading(loading) {
   els.convertButton.disabled = loading;
   if (loading) {
-    els.convertButton.textContent = state.isSearchMode ? "pesquisando..." : "swapando...";
+    els.convertButton.textContent = state.isSearchMode ? t("loadingSearch") : t("loadingSwap");
     return;
   }
   updateConvertButtonLabel();
@@ -1508,11 +1722,11 @@ function setLoading(loading) {
 function updateConvertButtonLabel() {
   if (!els.convertButton) return;
   if (state.isSearchMode) {
-    els.convertButton.textContent = "pesquisar";
+    els.convertButton.textContent = t("search");
     return;
   }
 
-  els.convertButton.innerHTML = `<span>swap</span><span class="button-icon swap-button-icon">${SVG_ICONS.swap}</span>`;
+  els.convertButton.innerHTML = `<span>${escapeHtml(t("swap"))}</span><span class="button-icon swap-button-icon">${SVG_ICONS.swap}</span>`;
 }
 
 function pickRandomSampleLink() {
@@ -1543,14 +1757,14 @@ function syncSearchModeUI() {
     els.searchModeButton.classList.toggle("is-active", state.isSearchMode);
   }
   if (els.inputLabel) {
-    els.inputLabel.textContent = state.isSearchMode ? "pesquisa por nome" : "link da música";
+    els.inputLabel.textContent = state.isSearchMode ? t("searchLabel") : t("linkLabel");
   }
   if (els.input) {
     els.input.type = state.isSearchMode ? "text" : "url";
     els.input.setAttribute("inputmode", state.isSearchMode ? "search" : "url");
     els.input.placeholder = state.isSearchMode
-      ? "digite o nome do artista + música"
-      : "cole o link da música aqui";
+      ? t("searchPlaceholder")
+      : t("linkPlaceholder");
   }
   setLoading(false);
 }
@@ -1830,8 +2044,8 @@ function syncThemeToggleIcon() {
   const isLight = current === "light";
   els.themeToggle.classList.add("is-switching");
   els.themeToggle.innerHTML = `<span class="button-icon">${isLight ? SVG_ICONS.moon : SVG_ICONS.sun}</span>`;
-  els.themeToggle.setAttribute("aria-label", isLight ? "ativar modo escuro" : "ativar modo claro");
-  els.themeToggle.setAttribute("title", isLight ? "modo escuro" : "modo claro");
+  els.themeToggle.setAttribute("aria-label", isLight ? t("activateDark") : t("activateLight"));
+  els.themeToggle.setAttribute("title", isLight ? t("themeDark") : t("themeLight"));
 
   setTimeout(() => {
     els.themeToggle?.classList.remove("is-switching");
