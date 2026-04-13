@@ -29,6 +29,7 @@
   --byline: #ec8189;
   --input-text: #606a7c;
   --page-background: var(--bg);
+  --footer-signature: #7a8091;
 }
 
 :root[data-theme="dark"] {
@@ -49,6 +50,7 @@
   --byline: #34c759;
   --input-text: #c8ccd7;
   --page-background: var(--bg);
+  --footer-signature: #8e8e93;
 }
 
 html,
@@ -1148,7 +1150,7 @@ h2 {
 }
 
 .footer-made-by {
-  color: var(--text);
+  color: var(--footer-signature);
   font-weight: 400;
   letter-spacing: 0.02em;
   margin-top: 24px;
@@ -1157,7 +1159,7 @@ h2 {
 .made-by-signature {
   width: min(100%, 160px);
   margin: 0 auto;
-  color: var(--text);
+  color: var(--footer-signature);
   aspect-ratio: 5 / 1;
 }
 
@@ -1580,9 +1582,18 @@ body.recent-swaps-modal-open {
   overflow: hidden;
 }
 
+body.legal-modal-open {
+  overflow: hidden;
+}
+
 .footer a {
   font-weight: 600;
   text-decoration: underline;
+  color: inherit;
+}
+
+.footer a:visited,
+.result-powered-by a:visited {
   color: inherit;
 }
 
@@ -2041,6 +2052,103 @@ body.recent-swaps-modal-open {
 
 :root[data-theme="dark"] .footer {
   color: rgba(255, 255, 255, 0.38);
+}
+
+.footer-legal-links {
+  margin-top: 14px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.footer-legal-link {
+  border: 0;
+  background: transparent;
+  color: var(--footer-signature);
+  font-size: 10px;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.legal-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+}
+
+.legal-modal .recent-swaps-backdrop {
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.legal-sheet {
+  position: absolute;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(18px);
+  width: min(95vw, 620px);
+  max-height: min(84vh, 760px);
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px 14px 16px;
+  opacity: 0;
+  transition: opacity 220ms ease, transform 220ms ease;
+  overflow: hidden;
+}
+
+.legal-modal.is-open .legal-sheet {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.legal-title {
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 4px 30px 10px 2px;
+}
+
+.legal-body {
+  max-height: min(68vh, 620px);
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  padding-right: 2px;
+}
+
+.legal-body p {
+  margin-bottom: 10px;
+}
+
+.legal-body ol,
+.legal-body ul {
+  padding-left: 18px;
+  margin: 0 0 12px;
+}
+
+.legal-body li {
+  margin-bottom: 8px;
+}
+
+.legal-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(127, 134, 149, 0.75) transparent;
+}
+
+.legal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.legal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.legal-body::-webkit-scrollbar-thumb {
+  background: rgba(127, 134, 149, 0.75);
+  border-radius: 999px;
 }
 
 :root[data-theme="dark"] .icon-chip-youTube,

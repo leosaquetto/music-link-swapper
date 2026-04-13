@@ -194,6 +194,11 @@
         <a class="made-by-signature-link" href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer" aria-label="leo saquetto">
           <div id="madeBySignature" class="made-by-signature" aria-hidden="true"></div>
         </a>
+        <div class="footer-legal-links">
+          <button id="privacyPolicyButton" class="footer-legal-link" type="button">política de privacidade</button>
+          <span aria-hidden="true">·</span>
+          <button id="termsOfUseButton" class="footer-legal-link" type="button">termos de uso</button>
+        </div>
       </footer>
     </div>
 
@@ -239,9 +244,18 @@
             <span class="button-icon" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20"><path fill="currentColor" d="M8 4a1 1 0 0 0-1 1v1H5a1 1 0 1 0 0 2h.2l.8 10A2 2 0 0 0 8 20h8a2 2 0 0 0 2-2l.8-10H19a1 1 0 1 0 0-2h-2V5a1 1 0 0 0-1-1H8Zm7 2H9V5h6v1Zm-6 4a1 1 0 1 1 2 0v6a1 1 0 1 1-2 0v-6Zm4-1a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0v-6a1 1 0 0 0-1-1Z"/></svg>
             </span>
-            <span>limpar swaps</span>
+            <span id="clearRecentSwapsText">limpar swaps</span>
           </button>
         </footer>
+      </section>
+    </div>
+
+    <div id="legalModal" class="legal-modal hidden" aria-hidden="true">
+      <div id="legalBackdrop" class="recent-swaps-backdrop"></div>
+      <section class="legal-sheet" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+        <button id="legalClose" class="recent-swaps-close" type="button" aria-label="fechar">✕</button>
+        <h2 id="legalModalTitle" class="legal-title">política de privacidade</h2>
+        <div id="legalModalBody" class="legal-body"></div>
       </section>
     </div>
 

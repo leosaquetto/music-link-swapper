@@ -93,7 +93,9 @@ const TRANSLATIONS = {
     topShared: "principais compartilhadas.",
     originalCopied: "link original copiado.",
     copiedSuffix: "copiado.",
-    sharedSuffix: "compartilhado."
+    sharedSuffix: "compartilhado.",
+    privacyPolicy: "política de privacidade",
+    termsOfUse: "termos de uso"
   },
   en: {
     loadingSwap: "swapping...",
@@ -132,7 +134,9 @@ const TRANSLATIONS = {
     topShared: "main links shared.",
     originalCopied: "original link copied.",
     copiedSuffix: "copied.",
-    sharedSuffix: "shared."
+    sharedSuffix: "shared.",
+    privacyPolicy: "privacy policy",
+    termsOfUse: "terms of use"
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
@@ -171,7 +175,9 @@ const TRANSLATIONS = {
     topShared: "principales compartidas.",
     originalCopied: "enlace original copiado.",
     copiedSuffix: "copiado.",
-    sharedSuffix: "compartido."
+    sharedSuffix: "compartido.",
+    privacyPolicy: "política de privacidad",
+    termsOfUse: "términos de uso"
   },
   "it-it": {
     loadingSwap: "conversione...",
@@ -210,7 +216,9 @@ const TRANSLATIONS = {
     topShared: "principali condivise.",
     originalCopied: "link originale copiato.",
     copiedSuffix: "copiato.",
-    sharedSuffix: "condiviso."
+    sharedSuffix: "condiviso.",
+    privacyPolicy: "informativa sulla privacy",
+    termsOfUse: "termini di utilizzo"
   },
   "fr-fr": {
     loadingSwap: "conversion...",
@@ -249,7 +257,42 @@ const TRANSLATIONS = {
     topShared: "principaux partagés.",
     originalCopied: "lien original copié.",
     copiedSuffix: "copié.",
-    sharedSuffix: "partagé."
+    sharedSuffix: "partagé.",
+    privacyPolicy: "politique de confidentialité",
+    termsOfUse: "conditions d’utilisation"
+  }
+};
+
+const LEGAL_CONTENT = {
+  "pt-br": {
+    privacyTitle: "política de privacidade",
+    termsTitle: "termos de uso",
+    privacyHtml: `<p><strong>última atualização:</strong> abril de 2026</p><p>este serviço permite converter links de música entre diferentes plataformas de streaming.</p><ol><li><strong>informações processadas</strong><p>quando você utiliza este serviço, links enviados por você podem ser processados para gerar resultados de conversão entre plataformas. dependendo da funcionalidade utilizada, o serviço também pode armazenar preferências locais no seu navegador, como tema, idioma e histórico recente.</p></li><li><strong>armazenamento local</strong><p>este serviço pode usar recursos locais do navegador, como localstorage, para salvar preferências e melhorar a experiência de uso. essas informações ficam armazenadas no seu próprio dispositivo e navegador.</p></li><li><strong>serviços de terceiros</strong><p>para funcionar, este serviço pode depender de provedores, apis e plataformas de terceiros. ao utilizar este serviço, algumas informações técnicas e os links enviados podem ser encaminhados a esses serviços estritamente para viabilizar a conversão e a exibição dos resultados.</p></li><li><strong>dados pessoais</strong><p>este serviço não foi projetado para solicitar cadastro ou coletar mais dados pessoais do que o necessário para seu funcionamento básico. ainda assim, dados técnicos como endereço ip, navegador, dispositivo, logs e informações de acesso podem ser processados pela infraestrutura de hospedagem e por serviços de terceiros.</p></li><li><strong>uso dos dados</strong><p>as informações processadas são utilizadas para:</p><ul><li>executar a conversão de links</li><li>manter o funcionamento, segurança e estabilidade do serviço</li><li>salvar preferências locais e melhorar a experiência do usuário</li><li>prevenir abuso, uso automatizado indevido e falhas técnicas</li></ul></li><li><strong>retenção</strong><p>preferências salvas localmente permanecem no seu navegador até serem removidas por você ou pelo próprio navegador. logs e dados técnicos podem ser mantidos temporariamente pela infraestrutura e por serviços de terceiros, conforme suas próprias políticas.</p></li><li><strong>links externos</strong><p>os resultados podem conter links para serviços e plataformas externas. este serviço não controla o conteúdo, políticas ou práticas dessas plataformas.</p></li><li><strong>alterações</strong><p>esta política pode ser atualizada a qualquer momento para refletir mudanças no serviço, na infraestrutura ou em integrações de terceiros.</p></li><li><strong>contato</strong><p>caso você tenha dúvidas sobre esta política, utilize o canal de contato disponibilizado neste site, quando houver.</p></li></ol>`,
+    termsHtml: `<p><strong>última atualização:</strong> abril de 2026</p><p>ao acessar e utilizar este serviço, você concorda com os termos abaixo.</p><ol><li><strong>objeto do serviço</strong><p>este serviço disponibiliza uma ferramenta para conversão e descoberta de links de música entre plataformas de streaming.</p></li><li><strong>uso permitido</strong><p>você concorda em utilizar este serviço apenas para fins legítimos e de forma compatível com a lei e com estes termos.</p></li><li><strong>uso indevido</strong><p>não é permitido:</p><ul><li>utilizar o serviço de maneira abusiva, automatizada ou que possa comprometer sua estabilidade</li><li>tentar contornar medidas de segurança, limitação de acesso ou proteção contra abuso</li><li>utilizar o serviço para atividades ilícitas ou que violem direitos de terceiros</li></ul></li><li><strong>disponibilidade</strong><p>o serviço pode ser alterado, suspenso, limitado ou interrompido a qualquer momento, com ou sem aviso prévio.</p></li><li><strong>resultados e terceiros</strong><p>os resultados dependem de provedores, plataformas e serviços de terceiros. por isso, disponibilidade, precisão, compatibilidade e funcionamento podem variar sem garantia.</p></li><li><strong>ausência de garantias</strong><p>este serviço é fornecido no estado em que se encontra, sem garantias de disponibilidade contínua, precisão absoluta ou adequação a um propósito específico.</p></li><li><strong>responsabilidade</strong><p>na máxima extensão permitida pela lei aplicável, o operador deste serviço não será responsável por perdas, danos, indisponibilidades, falhas de terceiros ou prejuízos decorrentes do uso ou da impossibilidade de uso do serviço.</p></li><li><strong>links externos</strong><p>este serviço pode exibir links para plataformas e serviços externos. o acesso a esses ambientes ocorre por conta e risco do usuário.</p></li><li><strong>alterações nos termos</strong><p>estes termos podem ser modificados a qualquer momento. o uso continuado do serviço após alterações representa aceitação da versão atualizada.</p></li><li><strong>disposição final</strong><p>caso alguma disposição destes termos seja considerada inválida ou inaplicável, as demais permanecerão em pleno vigor.</p></li></ol>`
+  },
+  en: {
+    privacyTitle: "privacy policy",
+    termsTitle: "terms of use",
+    privacyHtml: `<p><strong>last updated:</strong> april 2026</p><p>this service allows users to convert music links across different streaming platforms.</p><ol><li><strong>information processed</strong><p>when you use this service, links submitted by you may be processed in order to generate conversion results across platforms. depending on the feature used, the service may also store local preferences in your browser, such as theme, language, and recent history.</p></li><li><strong>local storage</strong><p>this service may use local browser storage, such as localstorage, to save preferences and improve the user experience. this information remains stored on your own device and browser.</p></li><li><strong>third-party services</strong><p>to operate, this service may rely on third-party providers, apis, and platforms. by using this service, certain technical information and submitted links may be sent to such services strictly for link conversion and result delivery.</p></li><li><strong>personal data</strong><p>this service is not designed to require account registration or intentionally collect more personal data than necessary for basic operation. however, technical data such as ip address, browser, device, logs, and access information may be processed by the hosting infrastructure and third-party services.</p></li><li><strong>use of information</strong><p>processed information may be used to:</p><ul><li>perform link conversion</li><li>maintain service functionality, security, and stability</li><li>save local preferences and improve user experience</li><li>prevent abuse, improper automated use, and technical failures</li></ul></li><li><strong>retention</strong><p>preferences stored locally remain in your browser until removed by you or by the browser itself. logs and technical data may be temporarily retained by the infrastructure and third-party services according to their own policies.</p></li><li><strong>external links</strong><p>results may contain links to external services and platforms. this service does not control the content, policies, or practices of those platforms.</p></li><li><strong>changes</strong><p>this policy may be updated at any time to reflect changes to the service, infrastructure, or third-party integrations.</p></li><li><strong>contact</strong><p>if you have questions about this policy, please use the contact channel made available on this site, if any.</p></li></ol>`,
+    termsHtml: `<p><strong>last updated:</strong> april 2026</p><p>by accessing and using this service, you agree to the terms below.</p><ol><li><strong>service purpose</strong><p>this service provides a tool for music link conversion and discovery across streaming platforms.</p></li><li><strong>permitted use</strong><p>you agree to use this service only for lawful purposes and in a manner consistent with these terms.</p></li><li><strong>prohibited use</strong><p>you may not:</p><ul><li>use the service in an abusive or automated manner that may harm its stability</li><li>attempt to bypass security measures, access limits, or abuse protections</li><li>use the service for unlawful activities or in ways that violate third-party rights</li></ul></li><li><strong>availability</strong><p>the service may be changed, suspended, limited, or discontinued at any time, with or without prior notice.</p></li><li><strong>results and third parties</strong><p>results depend on third-party providers, platforms, and services. therefore, availability, accuracy, compatibility, and operation may vary without guarantee.</p></li><li><strong>disclaimer of warranties</strong><p>this service is provided on an “as is” basis, without warranties of continuous availability, absolute accuracy, or fitness for a particular purpose.</p></li><li><strong>liability</strong><p>to the maximum extent permitted by applicable law, the operator of this service shall not be liable for losses, damages, unavailability, third-party failures, or any harm arising from the use or inability to use the service.</p></li><li><strong>external links</strong><p>this service may display links to external platforms and services. access to such environments is at the user’s own risk.</p></li><li><strong>changes to these terms</strong><p>these terms may be modified at any time. continued use of the service after changes means acceptance of the updated version.</p></li><li><strong>final provision</strong><p>if any provision of these terms is found invalid or unenforceable, the remaining provisions shall remain in full force and effect.</p></li></ol>`
+  },
+  "es-es": {
+    privacyTitle: "política de privacidad",
+    termsTitle: "términos de uso",
+    privacyHtml: `<p><strong>última actualización:</strong> abril de 2026</p><p>este servicio permite convertir enlaces de música entre diferentes plataformas de streaming.</p><ol><li><strong>información procesada</strong><p>cuando utilizas este servicio, los enlaces enviados por ti pueden ser procesados para generar resultados de conversión entre plataformas. según la funcionalidad utilizada, el servicio también puede almacenar preferencias locales en tu navegador, como tema, idioma e historial reciente.</p></li><li><strong>almacenamiento local</strong><p>este servicio puede usar recursos locales del navegador, como localstorage, para guardar preferencias y mejorar la experiencia de uso. esta información permanece almacenada en tu propio dispositivo y navegador.</p></li><li><strong>servicios de terceros</strong><p>para funcionar, este servicio puede depender de proveedores, apis y plataformas de terceros. al usar este servicio, cierta información técnica y los enlaces enviados pueden ser compartidos con dichos servicios estrictamente para viabilizar la conversión y mostrar los resultados.</p></li><li><strong>datos personales</strong><p>este servicio no fue diseñado para requerir registro ni para recopilar más datos personales de los necesarios para su funcionamiento básico. aun así, datos técnicos como dirección ip, navegador, dispositivo, registros e información de acceso pueden ser procesados por la infraestructura de alojamiento y por servicios de terceros.</p></li><li><strong>uso de los datos</strong><p>la información procesada se utiliza para:</p><ul><li>realizar la conversión de enlaces</li><li>mantener el funcionamiento, la seguridad y la estabilidad del servicio</li><li>guardar preferencias locales y mejorar la experiencia del usuario</li><li>prevenir abuso, uso automatizado indebido y fallas técnicas</li></ul></li><li><strong>retención</strong><p>las preferencias guardadas localmente permanecen en tu navegador hasta que tú o el propio navegador las eliminen. los registros y datos técnicos pueden conservarse temporalmente por la infraestructura y por servicios de terceros según sus propias políticas.</p></li><li><strong>enlaces externos</strong><p>los resultados pueden contener enlaces a servicios y plataformas externas. este servicio no controla el contenido, las políticas ni las prácticas de esas plataformas.</p></li><li><strong>cambios</strong><p>esta política puede actualizarse en cualquier momento para reflejar cambios en el servicio, la infraestructura o integraciones de terceros.</p></li><li><strong>contacto</strong><p>si tienes dudas sobre esta política, utiliza el canal de contacto disponible en este sitio, cuando exista.</p></li></ol>`,
+    termsHtml: `<p><strong>última actualización:</strong> abril de 2026</p><p>al acceder y utilizar este servicio, aceptas los términos siguientes.</p><ol><li><strong>objeto del servicio</strong><p>este servicio ofrece una herramienta para conversión y descubrimiento de enlaces de música entre plataformas de streaming.</p></li><li><strong>uso permitido</strong><p>aceptas utilizar este servicio solo para fines legítimos y de forma compatible con la ley y con estos términos.</p></li><li><strong>uso indebido</strong><p>no está permitido:</p><ul><li>utilizar el servicio de forma abusiva, automatizada o que pueda comprometer su estabilidad</li><li>intentar eludir medidas de seguridad, limitación de acceso o protección contra abuso</li><li>utilizar el servicio para actividades ilícitas o que violen derechos de terceros</li></ul></li><li><strong>disponibilidad</strong><p>el servicio puede ser modificado, suspendido, limitado o interrumpido en cualquier momento, con o sin aviso previo.</p></li><li><strong>resultados y terceros</strong><p>los resultados dependen de proveedores, plataformas y servicios de terceros. por ello, disponibilidad, precisión, compatibilidad y funcionamiento pueden variar sin garantía.</p></li><li><strong>ausencia de garantías</strong><p>este servicio se proporciona “tal como está”, sin garantías de disponibilidad continua, precisión absoluta o adecuación para un propósito específico.</p></li><li><strong>responsabilidad</strong><p>en la máxima medida permitida por la ley aplicable, el operador de este servicio no será responsable por pérdidas, daños, indisponibilidad, fallas de terceros o perjuicios derivados del uso o de la imposibilidad de uso del servicio.</p></li><li><strong>enlaces externos</strong><p>este servicio puede mostrar enlaces a plataformas y servicios externos. el acceso a esos entornos ocurre por cuenta y riesgo del usuario.</p></li><li><strong>cambios en los términos</strong><p>estos términos pueden modificarse en cualquier momento. el uso continuado del servicio tras los cambios implica aceptación de la versión actualizada.</p></li><li><strong>disposición final</strong><p>si alguna disposición de estos términos se considera inválida o inaplicable, las demás permanecerán en pleno vigor y efecto.</p></li></ol>`
+  },
+  "it-it": {
+    privacyTitle: "informativa sulla privacy",
+    termsTitle: "termini di utilizzo",
+    privacyHtml: `<p><strong>ultimo aggiornamento:</strong> aprile 2026</p><p>questo servizio permette di convertire link musicali tra diverse piattaforme di streaming.</p><ol><li><strong>informazioni trattate</strong><p>quando utilizzi questo servizio, i link inviati da te possono essere trattati per generare risultati di conversione tra piattaforme. in base alla funzionalità utilizzata, il servizio può anche salvare preferenze locali nel browser, come tema, lingua e cronologia recente.</p></li><li><strong>archiviazione locale</strong><p>questo servizio può usare risorse locali del browser, come localstorage, per salvare preferenze e migliorare l’esperienza d’uso. queste informazioni restano memorizzate nel tuo dispositivo e nel tuo browser.</p></li><li><strong>servizi di terze parti</strong><p>per funzionare, questo servizio può dipendere da provider, api e piattaforme di terze parti. usando questo servizio, alcune informazioni tecniche e i link inviati possono essere inoltrati a tali servizi esclusivamente per rendere possibile la conversione e la visualizzazione dei risultati.</p></li><li><strong>dati personali</strong><p>questo servizio non è progettato per richiedere registrazione o raccogliere più dati personali del necessario per il funzionamento di base. tuttavia, dati tecnici come indirizzo ip, browser, dispositivo, log e informazioni di accesso possono essere trattati dall’infrastruttura di hosting e da servizi di terze parti.</p></li><li><strong>uso dei dati</strong><p>le informazioni trattate sono utilizzate per:</p><ul><li>eseguire la conversione dei link</li><li>mantenere funzionamento, sicurezza e stabilità del servizio</li><li>salvare preferenze locali e migliorare l’esperienza utente</li><li>prevenire abusi, uso automatizzato improprio e guasti tecnici</li></ul></li><li><strong>conservazione</strong><p>le preferenze salvate localmente restano nel browser finché non vengono rimosse da te o dal browser stesso. log e dati tecnici possono essere conservati temporaneamente dall’infrastruttura e da servizi di terze parti secondo le rispettive policy.</p></li><li><strong>link esterni</strong><p>i risultati possono contenere link a servizi e piattaforme esterne. questo servizio non controlla contenuti, policy o pratiche di tali piattaforme.</p></li><li><strong>modifiche</strong><p>questa informativa può essere aggiornata in qualsiasi momento per riflettere cambiamenti nel servizio, nell’infrastruttura o nelle integrazioni di terze parti.</p></li><li><strong>contatto</strong><p>se hai dubbi su questa informativa, utilizza il canale di contatto disponibile su questo sito, quando presente.</p></li></ol>`,
+    termsHtml: `<p><strong>ultimo aggiornamento:</strong> aprile 2026</p><p>accedendo e utilizzando questo servizio, accetti i termini riportati di seguito.</p><ol><li><strong>oggetto del servizio</strong><p>questo servizio mette a disposizione uno strumento per conversione e scoperta di link musicali tra piattaforme di streaming.</p></li><li><strong>uso consentito</strong><p>accetti di utilizzare questo servizio solo per finalità legittime e in modo conforme alla legge e a questi termini.</p></li><li><strong>uso improprio</strong><p>non è consentito:</p><ul><li>utilizzare il servizio in modo abusivo, automatizzato o tale da comprometterne la stabilità</li><li>tentare di aggirare misure di sicurezza, limiti di accesso o protezioni contro gli abusi</li><li>utilizzare il servizio per attività illecite o che violino diritti di terzi</li></ul></li><li><strong>disponibilità</strong><p>il servizio può essere modificato, sospeso, limitato o interrotto in qualsiasi momento, con o senza preavviso.</p></li><li><strong>risultati e terze parti</strong><p>i risultati dipendono da provider, piattaforme e servizi di terze parti. pertanto, disponibilità, precisione, compatibilità e funzionamento possono variare senza garanzia.</p></li><li><strong>assenza di garanzie</strong><p>questo servizio è fornito “così com’è”, senza garanzie di disponibilità continua, precisione assoluta o idoneità a uno scopo specifico.</p></li><li><strong>responsabilità</strong><p>nella massima misura consentita dalla legge applicabile, l’operatore di questo servizio non sarà responsabile per perdite, danni, indisponibilità, guasti di terzi o pregiudizi derivanti dall’uso o dall’impossibilità di usare il servizio.</p></li><li><strong>link esterni</strong><p>questo servizio può mostrare link a piattaforme e servizi esterni. l’accesso a tali ambienti avviene a rischio dell’utente.</p></li><li><strong>modifiche ai termini</strong><p>questi termini possono essere modificati in qualsiasi momento. l’uso continuato del servizio dopo le modifiche rappresenta accettazione della versione aggiornata.</p></li><li><strong>disposizione finale</strong><p>se una disposizione di questi termini è ritenuta invalida o inapplicabile, le restanti disposizioni resteranno pienamente valide ed efficaci.</p></li></ol>`
+  },
+  "fr-fr": {
+    privacyTitle: "politique de confidentialité",
+    termsTitle: "conditions d’utilisation",
+    privacyHtml: `<p><strong>dernière mise à jour :</strong> avril 2026</p><p>ce service permet de convertir des liens musicaux entre différentes plateformes de streaming.</p><ol><li><strong>informations traitées</strong><p>lorsque vous utilisez ce service, les liens envoyés par vous peuvent être traités afin de générer des résultats de conversion entre plateformes. selon la fonctionnalité utilisée, le service peut également stocker des préférences locales dans votre navigateur, comme le thème, la langue et l’historique récent.</p></li><li><strong>stockage local</strong><p>ce service peut utiliser des ressources locales du navigateur, comme localstorage, pour enregistrer des préférences et améliorer l’expérience d’utilisation. ces informations restent stockées sur votre propre appareil et navigateur.</p></li><li><strong>services tiers</strong><p>pour fonctionner, ce service peut dépendre de fournisseurs, d’apis et de plateformes tiers. en utilisant ce service, certaines informations techniques et les liens envoyés peuvent être transmis à ces services strictement pour permettre la conversion et l’affichage des résultats.</p></li><li><strong>données personnelles</strong><p>ce service n’est pas conçu pour exiger une inscription ni collecter plus de données personnelles que nécessaire à son fonctionnement de base. cependant, des données techniques telles que l’adresse ip, le navigateur, l’appareil, les journaux et les informations d’accès peuvent être traitées par l’infrastructure d’hébergement et par des services tiers.</p></li><li><strong>utilisation des données</strong><p>les informations traitées sont utilisées pour :</p><ul><li>effectuer la conversion de liens</li><li>maintenir le fonctionnement, la sécurité et la stabilité du service</li><li>enregistrer des préférences locales et améliorer l’expérience utilisateur</li><li>prévenir les abus, l’utilisation automatisée abusive et les défaillances techniques</li></ul></li><li><strong>conservation</strong><p>les préférences enregistrées localement restent dans votre navigateur jusqu’à leur suppression par vous ou par le navigateur lui-même. les journaux et données techniques peuvent être conservés temporairement par l’infrastructure et par des services tiers, conformément à leurs propres politiques.</p></li><li><strong>liens externes</strong><p>les résultats peuvent contenir des liens vers des services et plateformes externes. ce service ne contrôle pas le contenu, les politiques ni les pratiques de ces plateformes.</p></li><li><strong>modifications</strong><p>cette politique peut être mise à jour à tout moment pour refléter les changements du service, de l’infrastructure ou des intégrations tierces.</p></li><li><strong>contact</strong><p>si vous avez des questions sur cette politique, utilisez le canal de contact mis à disposition sur ce site, le cas échéant.</p></li></ol>`,
+    termsHtml: `<p><strong>dernière mise à jour :</strong> avril 2026</p><p>en accédant à ce service et en l’utilisant, vous acceptez les conditions ci-dessous.</p><ol><li><strong>objet du service</strong><p>ce service propose un outil de conversion et de découverte de liens musicaux entre plateformes de streaming.</p></li><li><strong>utilisation autorisée</strong><p>vous acceptez d’utiliser ce service uniquement à des fins légitimes et conformément à la loi et aux présentes conditions.</p></li><li><strong>utilisation abusive</strong><p>il est interdit de :</p><ul><li>utiliser le service de manière abusive, automatisée ou susceptible de compromettre sa stabilité</li><li>tenter de contourner les mesures de sécurité, les limites d’accès ou les protections contre les abus</li><li>utiliser le service pour des activités illicites ou violant les droits de tiers</li></ul></li><li><strong>disponibilité</strong><p>le service peut être modifié, suspendu, limité ou interrompu à tout moment, avec ou sans préavis.</p></li><li><strong>résultats et tiers</strong><p>les résultats dépendent de fournisseurs, plateformes et services tiers. par conséquent, la disponibilité, la précision, la compatibilité et le fonctionnement peuvent varier sans garantie.</p></li><li><strong>absence de garanties</strong><p>ce service est fourni “tel quel”, sans garanties de disponibilité continue, de précision absolue ou d’adéquation à un objectif spécifique.</p></li><li><strong>responsabilité</strong><p>dans la limite maximale autorisée par la loi applicable, l’opérateur de ce service ne sera pas responsable des pertes, dommages, indisponibilités, défaillances de tiers ou préjudices découlant de l’utilisation ou de l’impossibilité d’utiliser le service.</p></li><li><strong>liens externes</strong><p>ce service peut afficher des liens vers des plateformes et services externes. l’accès à ces environnements se fait aux risques de l’utilisateur.</p></li><li><strong>modifications des conditions</strong><p>ces conditions peuvent être modifiées à tout moment. l’utilisation continue du service après les modifications vaut acceptation de la version mise à jour.</p></li><li><strong>disposition finale</strong><p>si une disposition de ces conditions est jugée invalide ou inapplicable, les autres dispositions resteront pleinement en vigueur.</p></li></ol>`
   }
 };
 
@@ -341,6 +384,9 @@ const state = {
   iosInstallModalHideTimer: null,
   isRecentSwapsModalOpen: false,
   recentSwapsModalHideTimer: null,
+  isLegalModalOpen: false,
+  legalModalHideTimer: null,
+  activeLegalType: "privacy",
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -391,7 +437,15 @@ const els = {
   recentSwapsClose: document.getElementById("recentSwapsClose"),
   recentSwapsList: document.getElementById("recentSwapsList"),
   clearRecentSwapsButton: document.getElementById("clearRecentSwapsButton"),
-  recentSwapsTitle: document.getElementById("recentSwapsTitle")
+  clearRecentSwapsText: document.getElementById("clearRecentSwapsText"),
+  recentSwapsTitle: document.getElementById("recentSwapsTitle"),
+  privacyPolicyButton: document.getElementById("privacyPolicyButton"),
+  termsOfUseButton: document.getElementById("termsOfUseButton"),
+  legalModal: document.getElementById("legalModal"),
+  legalBackdrop: document.getElementById("legalBackdrop"),
+  legalClose: document.getElementById("legalClose"),
+  legalModalTitle: document.getElementById("legalModalTitle"),
+  legalModalBody: document.getElementById("legalModalBody")
 };
 
 if (document.readyState === "loading") {
@@ -502,6 +556,7 @@ function applyLanguage({ lang = state.currentLanguage, announce = false, withTra
   if (els.iosShortcutAvailability) els.iosShortcutAvailability.textContent = t("availableAs");
   if (els.footerMadeByText) els.footerMadeByText.textContent = t("madeBy");
   updateLocalizedStaticCopy();
+  refreshLocalizedDynamicContent();
   syncSearchModeUI();
   updateConvertButtonLabel();
   syncThemeToggleIcon();
@@ -515,6 +570,25 @@ function updateLocalizedStaticCopy() {
   }
   if (els.resultPoweredBy) {
     els.resultPoweredBy.classList.remove("hidden");
+  }
+  if (els.privacyPolicyButton) els.privacyPolicyButton.textContent = t("privacyPolicy");
+  if (els.termsOfUseButton) els.termsOfUseButton.textContent = t("termsOfUse");
+  if (els.clearRecentSwapsText) els.clearRecentSwapsText.textContent = t("clearSwaps");
+}
+
+function refreshLocalizedDynamicContent() {
+  if (state.currentResult) {
+    renderResult(state.currentResult, { skipSave: true });
+    const directCount = (state.currentResult.links || []).filter(item => !item.isSearchResult).length;
+    if (directCount > 0) {
+      showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
+    }
+  }
+  if (state.isRecentSwapsModalOpen) {
+    renderRecentSwaps();
+  }
+  if (state.isLegalModalOpen) {
+    renderLegalModalContent(state.activeLegalType);
   }
 }
 
@@ -717,6 +791,52 @@ function closeRecentSwapsModal() {
   }, 240);
 }
 
+function getLegalContent() {
+  return LEGAL_CONTENT[state.currentLanguage] || LEGAL_CONTENT["pt-br"];
+}
+
+function renderLegalModalContent(type = "privacy") {
+  const content = getLegalContent();
+  if (!els.legalModalTitle || !els.legalModalBody) return;
+  const isPrivacy = type === "privacy";
+  els.legalModalTitle.textContent = isPrivacy ? content.privacyTitle : content.termsTitle;
+  els.legalModalBody.innerHTML = isPrivacy ? content.privacyHtml : content.termsHtml;
+}
+
+function openLegalModal(type = "privacy") {
+  if (!els.legalModal) return;
+  if (state.isLegalModalOpen) {
+    state.activeLegalType = type;
+    renderLegalModalContent(type);
+    return;
+  }
+  state.activeLegalType = type;
+  if (state.legalModalHideTimer) {
+    clearTimeout(state.legalModalHideTimer);
+    state.legalModalHideTimer = null;
+  }
+  renderLegalModalContent(type);
+  state.isLegalModalOpen = true;
+  els.legalModal.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    els.legalModal?.classList.add("is-open");
+  });
+  els.legalModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("legal-modal-open");
+}
+
+function closeLegalModal() {
+  if (!els.legalModal || !state.isLegalModalOpen) return;
+  state.isLegalModalOpen = false;
+  els.legalModal.classList.remove("is-open");
+  els.legalModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("legal-modal-open");
+  state.legalModalHideTimer = setTimeout(() => {
+    els.legalModal?.classList.add("hidden");
+    state.legalModalHideTimer = null;
+  }, 240);
+}
+
 function bindEvents() {
   els.themeToggle?.addEventListener("click", toggleTheme);
   els.languageToggle?.addEventListener("click", event => {
@@ -754,6 +874,18 @@ function bindEvents() {
   els.recentSwapsBackdrop?.addEventListener("click", () => {
     closeRecentSwapsModal();
   });
+  els.privacyPolicyButton?.addEventListener("click", () => {
+    openLegalModal("privacy");
+  });
+  els.termsOfUseButton?.addEventListener("click", () => {
+    openLegalModal("terms");
+  });
+  els.legalClose?.addEventListener("click", () => {
+    closeLegalModal();
+  });
+  els.legalBackdrop?.addEventListener("click", () => {
+    closeLegalModal();
+  });
 
   els.clearRecentSwapsButton?.addEventListener("click", event => {
     if (!state.recentSwaps.length) return;
@@ -778,6 +910,10 @@ function bindEvents() {
 
     if (event.key === "Escape" && state.isRecentSwapsModalOpen) {
       closeRecentSwapsModal();
+      return;
+    }
+    if (event.key === "Escape" && state.isLegalModalOpen) {
+      closeLegalModal();
     }
   });
 
@@ -1275,7 +1411,7 @@ function renderSupportedChips() {
     .join("");
 }
 
-function renderResult(result) {
+function renderResult(result, { skipSave = false } = {}) {
   clearTimeout(state.hideResultTimer);
   els.resultCard.classList.remove("hidden", "is-exiting");
   els.resultCard.classList.add("result-card-live");
@@ -1314,9 +1450,9 @@ function renderResult(result) {
     els.copyOriginalButton.classList.add("hidden");
   }
 
-  const groups = ["principais", "outras"];
+  const groups = ["primary", "others"];
   for (const groupName of groups) {
-    const items = result.links.filter(item => item.section === groupName);
+    const items = result.links.filter(item => getSectionGroup(item.section) === groupName);
     if (!items.length) continue;
 
     const section = document.createElement("section");
@@ -1324,7 +1460,7 @@ function renderResult(result) {
 
     const list = document.createElement("div");
     list.className = "platform-list";
-    const isOutras = groupName === "outras";
+    const isOutras = groupName === "others";
     const defaultVisible = 0;
     const collapsed = isOutras && items.length > 0;
     const visibleItems = collapsed ? [] : items;
@@ -1372,10 +1508,10 @@ function renderResult(result) {
       section.appendChild(controlsWrap);
     }
 
-    if (!(groupName === "outras" && collapsed)) {
+    if (!(groupName === "others" && collapsed)) {
       const title = document.createElement("p");
       title.className = "group-title";
-      title.textContent = groupName === "principais" ? t("primarySection") : t("othersSection");
+      title.textContent = groupName === "primary" ? t("primarySection") : t("othersSection");
       section.appendChild(title);
     }
 
@@ -1386,7 +1522,14 @@ function renderResult(result) {
   }
 
   renderResultLegend();
-  saveRecentSwap(result);
+  if (!skipSave) saveRecentSwap(result);
+}
+
+function getSectionGroup(sectionName = "") {
+  const normalized = String(sectionName).toLowerCase();
+  return normalized === "principais" || normalized === "main" || normalized === "primary"
+    ? "primary"
+    : "others";
 }
 
 function createPlatformItem(item) {
