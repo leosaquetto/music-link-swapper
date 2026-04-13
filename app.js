@@ -1336,7 +1336,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
 }
 
 function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
-  const canonicalTitle = cleanText(data?.groundTruth?.title || data.title || "música encontrada");
+  const canonicalTitle = pickBestUiTitle(data?.groundTruth?.title, data.title, "música encontrada");
   const canonicalArtist = cleanText(data?.groundTruth?.artist || "");
   const rawDescription = cleanText(canonicalArtist || data.description || "");
   const preview = parsePreview(canonicalTitle, rawDescription, {
@@ -1374,12 +1374,13 @@ function normalizeArtworkUrl(url) {
 
 function parsePreview(title, description, options = {}) {
   const forceArtist = cleanText(options?.forceArtist || "");
-  const cleanTitleValue = cleanText(title);
+  const cleanTitleValue = pickBestUiTitle(title, "música encontrada");
   const cleanDescriptionValue = cleanText(description);
   if (forceArtist) {
+    const cleanArtist = normalizeComparisonText(forceArtist) === normalizeComparisonText(cleanTitleValue) ? "" : forceArtist;
     return {
       title: cleanTitleValue,
-      artist: forceArtist,
+      artist: cleanArtist,
       album: ""
     };
   }
@@ -1431,7 +1432,8 @@ function parsePreview(title, description, options = {}) {
 
   return {
     title: cleanTitleValue,
-    artist: filtered[0] || "",
+    artist:
+      normalizeComparisonText(filtered[0] || "") === normalizeComparisonText(cleanTitleValue) ? "" : filtered[0] || "",
     album: filtered.slice(1).join(" • ")
   };
 }
@@ -1469,6 +1471,28 @@ function normalizeComparisonText(value) {
     .replace(/[|•–:-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function isGenericUiLabel(value) {
+  const normalized = normalizeComparisonText(value);
+  if (!normalized) return false;
+  return (
+    normalized === "resultado por busca" ||
+    normalized === "resultado de busca" ||
+    normalized === "search result" ||
+    normalized === "musica encontrada" ||
+    normalized === "song found"
+  );
+}
+
+function pickBestUiTitle(...candidates) {
+  for (const candidate of candidates) {
+    const clean = cleanText(candidate);
+    if (!clean) continue;
+    if (isGenericUiLabel(clean)) continue;
+    return clean;
+  }
+  return "música encontrada";
 }
 
 function renderSupportedChips() {
