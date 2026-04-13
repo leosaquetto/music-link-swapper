@@ -91,7 +91,7 @@ const SAMPLE_CACHEABLE_LINKS = new Set([
   "https://music.apple.com/br/album/canzone-estiva/1882460107?i=1882460109",
   "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
   "https://music.apple.com/br/album/golden/1820264137?i=1820264150"
-].map(normalizeSampleLink));
+].map(buildSampleCacheIdentity));
 
 export default async function handler(req, res) {
   metrics.requests += 1;
@@ -480,10 +480,26 @@ function normalizeSampleLink(link) {
   }
 }
 
+function buildSampleCacheIdentity(link) {
+  try {
+    const parsed = new URL(normalizeSampleLink(link));
+    const host = parsed.hostname.toLowerCase();
+    if (host.includes("music.apple.com")) {
+      const trackId = parsed.searchParams.get("i");
+      if (trackId) {
+        return `apple-track:${trackId.trim()}`;
+      }
+    }
+    return parsed.toString();
+  } catch (_error) {
+    return normalizeSampleLink(link);
+  }
+}
+
 function buildSampleCacheKey(link) {
-  const normalized = normalizeSampleLink(link);
-  if (!SAMPLE_CACHEABLE_LINKS.has(normalized)) return null;
-  return `sample:${normalized}`;
+  const identity = buildSampleCacheIdentity(link);
+  if (!SAMPLE_CACHEABLE_LINKS.has(identity)) return null;
+  return `sample:${identity}`;
 }
 
 function readSampleResultCache(key) {
