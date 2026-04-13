@@ -145,20 +145,16 @@ export default async function handler(req, res) {
     }
 
     const platform = detectPlatformFromUrl(link);
-    const sourceAppleTrackContext = extractAppleTrackInputContext(link);
-    const expectedAppleTrackId = sourceAppleTrackContext.trackId || "";
     const shouldUseSongLinkFirst = shouldPrioritizeSongLink(link);
 
-    const primaryResultRaw = shouldUseSongLinkFirst
+    const primaryResult = shouldUseSongLinkFirst
       ? await fetchSongLinkAsPrimary(link)
       : await fetchPrimaryApi(link, adapters);
-    const primaryResult = filterProviderResultByAppleTrack(primaryResultRaw, expectedAppleTrackId);
 
     if (primaryResult.ok) {
-      const enrichmentResultRaw = shouldUseSongLinkFirst
+      const enrichmentResult = shouldUseSongLinkFirst
         ? await fetchPrimaryApi(link, adapters)
         : await fetchSongLinkAsFallback(link);
-      const enrichmentResult = filterProviderResultByAppleTrack(enrichmentResultRaw, expectedAppleTrackId);
 
       const mergedData = enrichmentResult.ok
         ? mergeLinkResults(primaryResult.data, enrichmentResult.data)
@@ -166,26 +162,23 @@ export default async function handler(req, res) {
 
       const groundedData = await enforceInputTrackGroundTruth(mergedData, link);
       const finalizedData = await finalizeResultData(groundedData);
-      const guardedData = await applyFinalAppleTrackCompatibilityGate(finalizedData, link);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, guardedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: guardedData });
+      return res.status(200).json({ ok: true, data: finalizedData });
     }
 
-    const fallbackResultRaw = shouldUseSongLinkFirst
+    const fallbackResult = shouldUseSongLinkFirst
       ? await fetchPrimaryApi(link, adapters)
       : await fetchSongLinkAsFallback(link);
-    const fallbackResult = filterProviderResultByAppleTrack(fallbackResultRaw, expectedAppleTrackId);
 
     if (fallbackResult.ok) {
       const groundedData = await enforceInputTrackGroundTruth(fallbackResult.data, link);
       const finalizedData = await finalizeResultData(groundedData);
-      const guardedData = await applyFinalAppleTrackCompatibilityGate(finalizedData, link);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, guardedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: guardedData });
+      return res.status(200).json({ ok: true, data: finalizedData });
     }
 
     if (platform === "spotify") {
@@ -193,11 +186,10 @@ export default async function handler(req, res) {
       if (spotifyFallback.ok) {
         const groundedData = await enforceInputTrackGroundTruth(spotifyFallback.data, link);
         const finalizedData = await finalizeResultData(groundedData);
-        const guardedData = await applyFinalAppleTrackCompatibilityGate(finalizedData, link);
         if (sampleCacheKey) {
-          writeSampleResultCache(sampleCacheKey, guardedData, SAMPLE_RESULT_CACHE_TTL_MS);
+          writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
-        return res.status(200).json({ ok: true, data: guardedData });
+        return res.status(200).json({ ok: true, data: finalizedData });
       }
     }
 
@@ -1629,78 +1621,9 @@ async function fetchDeezerMetadata(url) {
   }
 }
 
-async function applyFinalAppleTrackCompatibilityGate(data, sourceLink) {
-  const sourceAppleTrack = extractAppleTrackInputContext(sourceLink);
-  if (!sourceAppleTrack.trackId) return data;
-
-  const expectedTitle = String(data?.title || "").trim();
-  const expectedArtist = String(data?.description || "").split("•")[0].trim();
-  if (!expectedTitle) return data;
-
-  const links = Array.isArray(data?.links) ? data.links : [];
-  if (!links.length) return data;
-
-  const nextLinks = [];
-  for (const item of links) {
-    if (await shouldKeepLinkForAppleTrack(item, { expectedTitle, expectedArtist })) {
-      nextLinks.push(item);
-    }
-  }
-
-  return {
-    ...data,
-    links: dedupeAndNormalizeLinks(nextLinks)
-  };
-}
-
-async function shouldKeepLinkForAppleTrack(link, expected) {
-  const type = String(link?.type || "").toLowerCase();
-  const url = String(link?.url || "");
-  if (!type || !url) return false;
-
-  if (type === "applemusic" || type === "itunes") return true;
-  if (type === "youtube" || type === "youtubemusic") return true;
-  if (isSearchLikeUrl(url, type)) return true;
-
-  try {
-    if (type === "spotify") {
-      const metadata = await fetchSpotifyMetadata(url);
-      if (metadata?.title && !isCompatibleTrackMetadata(metadata, expected)) return false;
-    }
-    if (type === "deezer") {
-      const metadata = await fetchDeezerMetadata(url);
-      if (metadata?.title && !isCompatibleTrackMetadata(metadata, expected)) return false;
-    }
-  } catch (_error) {
-    return true;
-  }
-
-  return true;
-}
-
-function isCompatibleTrackMetadata(metadata, expected) {
-  const candidateTitleTokens = toQueryTokens(metadata?.title || "");
-  const expectedTitleTokens = toQueryTokens(expected?.expectedTitle || "");
-  if (!candidateTitleTokens.length || !expectedTitleTokens.length) return true;
-
-  const expectedTitleSet = new Set(expectedTitleTokens);
-  const matchedTitle = candidateTitleTokens.filter(token => expectedTitleSet.has(token)).length;
-  const titleRatio = matchedTitle / expectedTitleTokens.length;
-  if (titleRatio < 0.5) return false;
-
-  const expectedArtistTokens = toQueryTokens(expected?.expectedArtist || "");
-  const candidateArtistTokens = toQueryTokens(metadata?.artist || metadata?.description || "");
-  if (!expectedArtistTokens.length || !candidateArtistTokens.length) return true;
-
-  const expectedArtistSet = new Set(expectedArtistTokens);
-  const matchedArtist = candidateArtistTokens.filter(token => expectedArtistSet.has(token)).length;
-  const artistRatio = matchedArtist / expectedArtistTokens.length;
-  return artistRatio >= 0.4;
-}
-
 function dedupeAndNormalizeLinks(links) {
   const byType = new Map();
-  const seenTypeCanonical = new Set();
+  const seenCanonical = new Set();
 
   for (const link of links) {
     const type = String(link?.type || "").trim();
@@ -1708,16 +1631,15 @@ function dedupeAndNormalizeLinks(links) {
     if (!type || !url) continue;
 
     const canonical = canonicalizeMediaUrl(url);
-    const key = type.toLowerCase();
-    const dedupeKey = `${key}|${canonical}`;
-    if (seenTypeCanonical.has(dedupeKey)) continue;
+    if (seenCanonical.has(canonical)) continue;
 
+    const key = type.toLowerCase();
     const current = { ...link, type, url: canonical };
     const existing = byType.get(key);
 
     if (!existing || isLinkBetter(current, existing)) {
       byType.set(key, current);
-      seenTypeCanonical.add(dedupeKey);
+      seenCanonical.add(canonical);
     }
   }
 
@@ -1740,17 +1662,7 @@ function dedupeAndNormalizeLinks(links) {
 function isLinkBetter(candidate, existing) {
   const cScore = scoreLinkQuality(candidate);
   const eScore = scoreLinkQuality(existing);
-  return cScore > eScore;
-}
-
-function filterProviderResultByAppleTrack(result, expectedTrackId) {
-  if (!result?.ok || !expectedTrackId) return result;
-  if (isBridgePayloadCompatibleWithAppleTrack(result.data, expectedTrackId)) return result;
-  return {
-    ok: false,
-    status: 409,
-    error: "provider_payload_track_mismatch"
-  };
+  return cScore >= eScore;
 }
 
 function scoreLinkQuality(item) {
@@ -1824,11 +1736,6 @@ async function enforceInputTrackGroundTruth(data, sourceLink) {
     links: dedupeAndNormalizeLinks([
       {
         type: "appleMusic",
-        url: sourceAppleTrack.url,
-        isVerified: true
-      },
-      {
-        type: "itunes",
         url: sourceAppleTrack.url,
         isVerified: true
       },
@@ -2086,14 +1993,8 @@ function buildFriendlyPlatformError(platform, rawError) {
 }
 
 function shouldPrioritizeSongLink(link) {
-  const normalized = String(link || "").trim();
-  const lower = normalized.toLowerCase();
-  if (SONGLINK_PRIORITY_HOSTS.some(host => lower.includes(host))) return true;
-
-  const appleContext = extractAppleTrackInputContext(normalized);
-  if (appleContext.trackId) return true;
-
-  return false;
+  const lower = String(link || "").toLowerCase();
+  return SONGLINK_PRIORITY_HOSTS.some(host => lower.includes(host));
 }
 
 function mergeLinkResults(primaryData, enrichmentData) {
