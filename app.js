@@ -1210,50 +1210,28 @@ async function tryAutoPasteFromClipboard() {
 }
 
 async function smartPasteIntoInput({ announce = false, autoConvert = false } = {}) {
-  const applyPastedText = value => {
-    const url = extractUrl(value);
-    if (!url) return false;
-    els.input.value = url;
-    els.input.dispatchEvent(new Event("input", { bubbles: true }));
-    els.input.dispatchEvent(new Event("change", { bubbles: true }));
-    state.lastClipboardText = typeof value === "string" ? value.trim() : "";
-    state.lastAutoUrl = url;
-    softlyDismissKeyboard();
-    if (announce) showFloatingToast("link colado no campo.");
-    if (autoConvert && isSupportedStreamingUrl(url)) {
-      setTimeout(() => onConvert({ shouldScrollToStatus: true }), 60);
-    }
-    return true;
-  };
+  if (!navigator.clipboard?.readText) return false;
 
   try {
-    if (navigator.clipboard?.readText) {
-      const text = await navigator.clipboard.readText();
-      if (applyPastedText(text)) return true;
-    }
-  } catch (_error) {
-    // fallback below
-  }
+    const text = await navigator.clipboard.readText();
+    const url = extractUrl(text);
 
-  try {
-    if (navigator.clipboard?.read) {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (!item.types?.includes("text/plain")) continue;
-        const blob = await item.getType("text/plain");
-        const text = await blob.text();
-        if (applyPastedText(text)) return true;
+    if (url) {
+      els.input.value = url;
+      state.lastClipboardText = typeof text === "string" ? text.trim() : "";
+      state.lastAutoUrl = url;
+      softlyDismissKeyboard();
+      if (announce) showFloatingToast("link colado no campo.");
+      if (autoConvert && isSupportedStreamingUrl(url)) {
+        setTimeout(() => onConvert({ shouldScrollToStatus: true }), 60);
       }
+      return true;
     }
-  } catch (_error) {
-    // fallback below
-  }
 
-  const manual = window.prompt("Cole o link da música:");
-  if (applyPastedText(manual || "")) {
-    return true;
+    return false;
+  } catch (_error) {
+    return false;
   }
-  return false;
 }
 
 async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromShuffle = false } = {}) {
@@ -2144,7 +2122,8 @@ function renderResultLegend() {
 }
 
 function normalizeLinks(links, sourceLink = "", searchQuery = "") {
-  const byType = new Map();
+  const seen = new Set();
+  const normalized = [];
 
   for (const item of links) {
     if (!item || !item.url || item.notAvailable) continue;
@@ -2160,8 +2139,13 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
       appScheme: null
     };
 
+    const dedupe = `${type}|${item.url}`;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
+
     const isSearchResult = isSearchUrlForPlatform(type, item.url);
-    const candidate = {
+
+    normalized.push({
       key: type,
       name: meta.name,
       icon: meta.icon,
@@ -2172,15 +2156,10 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
       isSearchResult,
       isPrimaryCopy: !!meta.isPrimaryCopy,
       appScheme: meta.appScheme || null
-    };
-    const existing = byType.get(type);
-    if (!existing || scoreUiLinkQuality(candidate) > scoreUiLinkQuality(existing)) {
-      byType.set(type, candidate);
-    }
+    });
   }
 
-  const normalized = Array.from(byType.values());
-  addSearchFallbackLinks(normalized, byType, searchQuery);
+  addSearchFallbackLinks(normalized, seen, searchQuery);
 
   normalized.sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
@@ -2194,17 +2173,21 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
   return normalized;
 }
 
-function addSearchFallbackLinks(normalized, byType, searchQuery) {
+function addSearchFallbackLinks(normalized, seen, searchQuery) {
+  if (!searchQuery) return;
+
   const fallbackTypes = ["spotify", "appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
-  const effectiveQuery = cleanText(searchQuery);
-  if (!effectiveQuery) return;
 
   for (const type of fallbackTypes) {
-    const existing = byType.get(type);
-    if (existing && !existing.isSearchResult) continue;
+    const hasRealLink = normalized.some(item => item.key === type && !item.isSearchResult);
+    if (hasRealLink) continue;
 
-    const searchUrl = buildSearchUrlForPlatform(type, effectiveQuery);
+    const searchUrl = buildSearchUrlForPlatform(type, searchQuery);
     if (!searchUrl) continue;
+
+    const dedupe = `${type}|${searchUrl}`;
+    if (seen.has(dedupe)) continue;
+    seen.add(dedupe);
 
     const meta = PLATFORM_META[type] || {
       name: prettifyPlatform(type),
@@ -2215,7 +2198,7 @@ function addSearchFallbackLinks(normalized, byType, searchQuery) {
       appScheme: null
     };
 
-    const fallbackItem = {
+    normalized.push({
       key: type,
       name: meta.name,
       icon: meta.icon,
@@ -2226,27 +2209,8 @@ function addSearchFallbackLinks(normalized, byType, searchQuery) {
       isSearchResult: true,
       isPrimaryCopy: !!meta.isPrimaryCopy,
       appScheme: meta.appScheme || null
-    };
-    if (!existing || scoreUiLinkQuality(fallbackItem) > scoreUiLinkQuality(existing)) {
-      if (existing) {
-        const index = normalized.findIndex(item => item.key === type);
-        if (index !== -1) normalized[index] = fallbackItem;
-      } else {
-        normalized.push(fallbackItem);
-      }
-      byType.set(type, fallbackItem);
-    }
+    });
   }
-}
-
-function scoreUiLinkQuality(item) {
-  if (!item) return -1;
-  let score = 0;
-  if (!item.isSearchResult) score += 20;
-  if (item.isVerified) score += 20;
-  if ((item.key === "youtube" || item.key === "youtubeMusic") && /[?&]v=/.test(String(item.url || ""))) score += 8;
-  if (item.key === "appleMusic" && String(item.url || "").includes("?i=")) score += 10;
-  return score;
 }
 
 function buildSearchUrlForPlatform(type, query) {
