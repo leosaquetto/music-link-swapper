@@ -1333,9 +1333,12 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
 }
 
 function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
-  const rawTitle = cleanText(data.title || "música encontrada");
-  const rawDescription = cleanText(data.description || "");
-  const preview = parsePreview(rawTitle, rawDescription);
+  const canonicalTitle = cleanText(data?.groundTruth?.title || data.title || "música encontrada");
+  const canonicalArtist = cleanText(data?.groundTruth?.artist || "");
+  const rawDescription = cleanText(canonicalArtist || data.description || "");
+  const preview = parsePreview(canonicalTitle, rawDescription, {
+    forceArtist: canonicalArtist
+  });
   const searchQuery = [preview.title, preview.artist].filter(Boolean).join(" ").trim();
   const links = normalizeLinks(data.links, sourceLink, searchQuery);
   if (!links.length) return null;
@@ -1344,9 +1347,10 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   return {
     title: preview.title,
     artist: preview.artist,
-    album: preview.album || cleanText(data.album || ""),
+    album: cleanText(data?.groundTruth?.album || preview.album || data.album || ""),
     image,
     universalLink: data.universalLink || null,
+    confidence: data?.groundTruth?.trustAsCanonical ? "high" : "",
     originalUrl: sourceLink || "",
     fromSearchMode: !!fromSearchMode,
     links
@@ -1365,9 +1369,17 @@ function normalizeArtworkUrl(url) {
   return cleanImage;
 }
 
-function parsePreview(title, description) {
+function parsePreview(title, description, options = {}) {
+  const forceArtist = cleanText(options?.forceArtist || "");
   const cleanTitleValue = cleanText(title);
   const cleanDescriptionValue = cleanText(description);
+  if (forceArtist) {
+    return {
+      title: cleanTitleValue,
+      artist: forceArtist,
+      album: ""
+    };
+  }
 
   if (!cleanDescriptionValue) {
     return {
@@ -2085,17 +2097,12 @@ function renderResultLegend() {
 function normalizeLinks(links, sourceLink = "", searchQuery = "") {
   const seen = new Set();
   const normalized = [];
-  const cameFromYouTubeMusic = isYouTubeMusicUrl(sourceLink);
 
   for (const item of links) {
     if (!item || !item.url || item.notAvailable) continue;
 
     let type = normalizePlatformKey(item.type);
     if (IGNORED_PLATFORM_KEYS.has(String(type || "").toLowerCase())) continue;
-    const linkIsYouTubeMusic = isYouTubeMusicUrl(item.url || "");
-    if (type === "youtube" && (cameFromYouTubeMusic || linkIsYouTubeMusic)) {
-      type = "youtubeMusic";
-    }
     const meta = PLATFORM_META[type] || {
       name: prettifyPlatform(type),
       icon: "•",
