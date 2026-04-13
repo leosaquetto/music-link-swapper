@@ -296,7 +296,7 @@ const LEGAL_CONTENT = {
   }
 };
 
-const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex"]);
+const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster", "yandex", "anghami"]);
 
 const SVG_ICONS = {
   history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>`,
@@ -2142,7 +2142,7 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
 function addSearchFallbackLinks(normalized, seen, searchQuery) {
   if (!searchQuery) return;
 
-  const fallbackTypes = ["appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
+  const fallbackTypes = ["spotify", "appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
 
   for (const type of fallbackTypes) {
     const hasRealLink = normalized.some(item => item.key === type && !item.isSearchResult);
@@ -2183,6 +2183,7 @@ function buildSearchUrlForPlatform(type, query) {
   const encoded = encodeURIComponent(query);
 
   if (type === "youtubeMusic") return `https://music.youtube.com/search?q=${encoded}`;
+  if (type === "spotify") return `https://open.spotify.com/search/${encoded}`;
   if (type === "appleMusic") return `https://music.apple.com/br/search?term=${encoded}`;
   if (type === "youtube") return `https://www.youtube.com/results?search_query=${encoded}`;
   if (type === "deezer") return `https://www.deezer.com/search/${encoded}`;
@@ -2199,6 +2200,7 @@ function isSearchUrlForPlatform(type, url) {
   if (!lower) return false;
 
   if (type === "youtube") return lower.includes("/results?search_query=");
+  if (type === "spotify") return lower.includes("open.spotify.com/search");
   if (type === "youtubeMusic") return lower.includes("music.youtube.com/search");
   if (type === "deezer") return lower.includes("deezer.com/search");
   if (type === "soundCloud") return lower.includes("soundcloud.com/search");
