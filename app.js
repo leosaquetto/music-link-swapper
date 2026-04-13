@@ -347,9 +347,6 @@ function initLanguage() {
   if (els.languageToggle) {
     els.languageToggle.innerHTML = `<span class="button-icon">${SVG_ICONS.globe}</span>`;
   }
-  if (els.madeBySignature) {
-    els.madeBySignature.innerHTML = MADE_BY_SIGNATURE_SVG;
-  }
   renderLanguageDropdown();
   applyLanguage({ announce: false, withTransition: false });
 }
@@ -373,14 +370,14 @@ function openLanguageMenu() {
   if (!els.languageMenu || !els.languageDropdown) return;
   state.isLanguageMenuOpen = true;
   els.languageMenu.classList.add("is-open");
-  els.languageDropdown.classList.remove("hidden");
+  els.languageToggle?.classList.add("is-open");
 }
 
 function closeLanguageMenu() {
   if (!els.languageMenu || !els.languageDropdown) return;
   state.isLanguageMenuOpen = false;
   els.languageMenu.classList.remove("is-open");
-  els.languageDropdown.classList.add("hidden");
+  els.languageToggle?.classList.remove("is-open");
 }
 
 function applyLanguage({ lang = state.currentLanguage, announce = false, withTransition = true } = {}) {

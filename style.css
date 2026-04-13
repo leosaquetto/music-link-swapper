@@ -176,6 +176,8 @@ button:active {
   display: grid;
   gap: 12px;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .viewport-fill-spacer {
@@ -203,9 +205,10 @@ body.needs-viewport-fill .viewport-fill-spacer {
 .hero-card {  
   position: relative;
   display: grid;
-  gap: 12px;
+  gap: 20px;
   padding: 0 4px 8px;
   margin-bottom: 8px;
+  z-index: 12;
 }
 
 .hero-topbar {
@@ -213,6 +216,13 @@ body.needs-viewport-fill .viewport-fill-spacer {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  margin-bottom: 8px;
+}
+
+.topbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .topbar-controls {
@@ -255,7 +265,7 @@ body.needs-viewport-fill .viewport-fill-spacer {
 
 .language-menu {
   position: relative;
-  z-index: 30;
+  z-index: 220;
 }
 
 .language-dropdown {
@@ -273,13 +283,36 @@ body.needs-viewport-fill .viewport-fill-spacer {
   opacity: 0;
   transform: translateY(-6px);
   pointer-events: none;
-  transition: opacity 170ms ease, transform 170ms ease;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .language-menu.is-open .language-dropdown {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+.language-toggle {
+  transition:
+    background 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    opacity 220ms ease;
+}
+
+.language-toggle.is-open {
+  background: #ed474c;
+  color: #fff;
+  border-color: rgba(237, 71, 76, 0.5);
+  box-shadow: 0 10px 24px rgba(237, 71, 76, 0.28);
+}
+
+:root[data-theme="dark"] .language-toggle.is-open {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+  border-color: rgba(52, 199, 89, 0.45);
+  box-shadow: 0 10px 24px rgba(52, 199, 89, 0.34);
 }
 
 .language-option {
@@ -1115,20 +1148,33 @@ h2 {
 
 .footer-made-by {
   color: #ed474c;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.02em;
+  margin-top: 24px;
 }
 
 .made-by-signature {
-  width: min(100%, 320px);
+  width: min(100%, 160px);
   margin: 0 auto;
   color: #ed474c;
+  aspect-ratio: 5 / 1;
 }
 
-.made-by-signature svg {
+.made-by-signature::before {
+  content: "";
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 5 / 1;
+  background: currentColor;
+  -webkit-mask-image: url("./assets/leosaquetto.svg");
+  mask-image: url("./assets/leosaquetto.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 body.needs-viewport-fill .footer {
