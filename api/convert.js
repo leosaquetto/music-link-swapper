@@ -158,10 +158,11 @@ export default async function handler(req, res) {
         : primaryResult.data;
 
       const finalizedData = await finalizeResultData(mergedData);
+      const maybeEnhancedYoutubeData = await maybeEnhanceYoutubeSwap(finalizedData, link);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, maybeEnhancedYoutubeData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: finalizedData });
+      return res.status(200).json({ ok: true, data: maybeEnhancedYoutubeData });
     }
 
     const fallbackResult = shouldUseSongLinkFirst
@@ -170,10 +171,11 @@ export default async function handler(req, res) {
 
     if (fallbackResult.ok) {
       const finalizedData = await finalizeResultData(fallbackResult.data);
+      const maybeEnhancedYoutubeData = await maybeEnhanceYoutubeSwap(finalizedData, link);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, maybeEnhancedYoutubeData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: finalizedData });
+      return res.status(200).json({ ok: true, data: maybeEnhancedYoutubeData });
     }
 
     if (platform === "spotify") {
@@ -200,6 +202,28 @@ export default async function handler(req, res) {
   } finally {
     releaseInFlightSlot();
   }
+}
+
+async function maybeEnhanceYoutubeSwap(data, sourceLink) {
+  const platform = detectPlatformFromUrl(sourceLink);
+  if (platform !== "youtube") return data;
+
+  const links = Array.isArray(data?.links) ? data.links : [];
+  const knownPlatforms = new Set(links.map(item => String(item?.type || "").toLowerCase()));
+  const hasOnlyYoutubePlatforms = Array.from(knownPlatforms).every(key => key === "youtube" || key === "youtubemusic");
+  if (!hasOnlyYoutubePlatforms) return data;
+
+  const sourceHints = await fetchYouTubeHints(sourceLink);
+  const parsedFromTitle = splitYoutubeTitle(sourceHints.title);
+  const title = parsedFromTitle.title || data?.title || "";
+  const artist = parsedFromTitle.artist || data?.description || "";
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!query) return data;
+
+  const searchFallback = await buildSearchFallbackFromQuery(query);
+  if (!searchFallback.ok) return data;
+
+  return mergeLinkResults(searchFallback.data, data);
 }
 
 async function buildSpotifySearchFallback(link) {
@@ -1006,7 +1030,19 @@ async function classifyYoutubeLinks(links, metadata) {
         return;
       }
 
-      const hint = await fetchYouTubeHints(item.url);
+      let hint = await fetchYouTubeHints(item.url);
+      if (type === "youtubemusic" && looksLikeOfficialVideoHint(hint)) {
+        const replacement = await findBestYoutubeCandidate({
+          title,
+          artist,
+          sourceDurationSeconds,
+          preferAudio: true
+        });
+        if (replacement?.videoId) {
+          item.url = `https://music.youtube.com/watch?v=${replacement.videoId}`;
+          hint = replacement.hint;
+        }
+      }
       item.isVerified = evaluateYouTubeVerification({
         type,
         hint,
@@ -1018,6 +1054,108 @@ async function classifyYoutubeLinks(links, metadata) {
   );
 
   return items;
+}
+
+function looksLikeOfficialVideoHint(hint) {
+  const title = String(hint?.title || "");
+  const description = String(hint?.description || "");
+  const channel = String(hint?.channel || "");
+  return (
+    /(official music video|official video|official lyric video|lyric video|visualizer)/i.test(title) ||
+    /(official music video|official video|official lyric video|lyric video|visualizer)/i.test(description) ||
+    /vevo$/i.test(channel)
+  );
+}
+
+async function findBestYoutubeCandidate({ title, artist, sourceDurationSeconds = 0, preferAudio = false }) {
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!query) return null;
+
+  const videoIds = await searchYoutubeVideoIds(query);
+  if (!videoIds.length) return null;
+
+  const candidates = [];
+  for (const videoId of videoIds.slice(0, 6)) {
+    const hint = await fetchYouTubeHints(`https://www.youtube.com/watch?v=${videoId}`);
+    const score = scoreYoutubeCandidate({
+      hint,
+      title,
+      artist,
+      sourceDurationSeconds,
+      preferAudio
+    });
+    candidates.push({ videoId, hint, score });
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+  const best = candidates[0];
+  if (!best || best.score < 30) return null;
+  return best;
+}
+
+async function searchYoutubeVideoIds(query) {
+  try {
+    const response = await fetchWithTimeout(
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml"
+        }
+      }
+    );
+    if (!response.ok) return [];
+    const html = await response.text();
+    const matches = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/g) || [];
+    const ids = [];
+    const seen = new Set();
+    for (const entry of matches) {
+      const idMatch = entry.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+      const id = idMatch?.[1];
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      ids.push(id);
+      if (ids.length >= 12) break;
+    }
+    return ids;
+  } catch (_error) {
+    return [];
+  }
+}
+
+function scoreYoutubeCandidate({ hint, title, artist, sourceDurationSeconds = 0, preferAudio = false }) {
+  const normalizedTitle = normalizeSearchText(hint?.title || "");
+  const normalizedChannel = normalizeSearchText(hint?.channel || "");
+  const normalizedDescription = normalizeSearchText(hint?.description || "");
+  const targetTitle = normalizeSearchText(title || "");
+  const targetArtist = normalizeSearchText(artist || "");
+  const hasDurationMatch =
+    sourceDurationSeconds > 0 &&
+    Number(hint?.durationSeconds || 0) > 0 &&
+    Math.abs(Number(hint.durationSeconds) - sourceDurationSeconds) <= 2;
+
+  let score = 0;
+  if (targetTitle && normalizedTitle.includes(targetTitle)) score += 20;
+  if (targetArtist && (normalizedTitle.includes(targetArtist) || normalizedChannel.includes(targetArtist))) score += 20;
+  if (hasDurationMatch) score += 30;
+
+  const isTopic = /(?:\s-\s)(topic|tema)$/.test(String(hint?.channel || "").toLowerCase());
+  const isAuto =
+    normalizedDescription.includes("auto generated by youtube") ||
+    normalizedDescription.includes("provided to youtube by");
+  const isOfficialVideo = looksLikeOfficialVideoHint(hint);
+
+  if (preferAudio) {
+    if (isTopic) score += 35;
+    if (isAuto) score += 35;
+    if (isOfficialVideo) score -= 40;
+  } else {
+    if (isOfficialVideo) score += 30;
+    if (isTopic || isAuto) score -= 10;
+  }
+
+  return score;
 }
 
 async function fetchYouTubeHints(url) {
@@ -1123,6 +1261,23 @@ function canonicalizeYoutubeWatchUrl(value) {
   const videoId = getYoutubeVideoId(value);
   if (!videoId) return "";
   return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+function splitYoutubeTitle(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return { title: "", artist: "" };
+
+  const separators = [" - ", " – ", " — "];
+  for (const separator of separators) {
+    if (raw.includes(separator)) {
+      const [left, ...rest] = raw.split(separator);
+      const artist = left.trim();
+      const title = rest.join(separator).replace(/\((official|lyric|video|visualizer)[^)]+\)/gi, "").trim();
+      if (artist && title) return { title, artist };
+    }
+  }
+
+  return { title: raw, artist: "" };
 }
 
 function ensureYoutubePlatformPairs(links) {
@@ -1692,6 +1847,9 @@ function normalizeUpstreamError(message) {
 function detectPlatformFromUrl(url) {
   const value = String(url || "").toLowerCase();
 
+  if (value.includes("music.youtube.com") || value.includes("youtube.com/") || value.includes("youtu.be/")) {
+    return "youtube";
+  }
   if (value.includes("spotify.")) return "spotify";
   if (value.includes("soundcloud.")) return "soundcloud";
   if (value.includes("pandora.")) return "pandora";
