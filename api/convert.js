@@ -1337,7 +1337,6 @@ async function enrichWithAppleBridgeFallback(data) {
 
   let mergedLinks = links;
   const appleUrl = canonicalizeMediaUrl(appleEntry.url);
-  const expectedAppleTrackId = extractAppleTrackIdFromUrl(appleUrl);
 
   try {
     const [songLinkFromApple, primaryFromApple] = await Promise.all([
@@ -1345,16 +1344,10 @@ async function enrichWithAppleBridgeFallback(data) {
       fetchPrimaryApi(appleUrl)
     ]);
 
-    if (
-      songLinkFromApple.ok &&
-      isBridgePayloadCompatibleWithAppleTrack(songLinkFromApple.data, expectedAppleTrackId)
-    ) {
+    if (songLinkFromApple.ok) {
       mergedLinks = mergeLinkResults({ links: mergedLinks }, songLinkFromApple.data).links;
     }
-    if (
-      primaryFromApple.ok &&
-      isBridgePayloadCompatibleWithAppleTrack(primaryFromApple.data, expectedAppleTrackId)
-    ) {
+    if (primaryFromApple.ok) {
       mergedLinks = mergeLinkResults({ links: mergedLinks }, primaryFromApple.data).links;
     }
   } catch (_error) {
@@ -1390,37 +1383,6 @@ function buildSpotifySearchUrlFromResult(data) {
   const query = [title, description].filter(Boolean).join(" ").trim();
   if (!query) return "";
   return `https://open.spotify.com/search/${encodeURIComponent(query)}`;
-}
-
-function isBridgePayloadCompatibleWithAppleTrack(payload, expectedTrackId) {
-  if (!expectedTrackId) return true;
-  const candidateTrackIds = extractAppleTrackIdsFromPayload(payload);
-  if (!candidateTrackIds.size) return false;
-  return candidateTrackIds.has(expectedTrackId);
-}
-
-function extractAppleTrackIdsFromPayload(payload) {
-  const links = Array.isArray(payload?.links) ? payload.links : [];
-  const ids = new Set();
-
-  for (const item of links) {
-    const type = String(item?.type || "").toLowerCase();
-    if (type !== "applemusic" && type !== "itunes") continue;
-    const trackId = extractAppleTrackIdFromUrl(item?.url || "");
-    if (trackId) ids.add(trackId);
-  }
-
-  return ids;
-}
-
-function extractAppleTrackIdFromUrl(value) {
-  try {
-    const parsed = new URL(String(value || "").trim());
-    if (!parsed.hostname.toLowerCase().includes("music.apple.com")) return "";
-    return String(parsed.searchParams.get("i") || "").trim();
-  } catch (_error) {
-    return "";
-  }
 }
 
 function sanitizeMetadataText(value, maxLen = MAX_METADATA_TEXT_LENGTH, options = {}) {
