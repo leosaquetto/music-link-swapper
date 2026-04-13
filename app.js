@@ -93,7 +93,9 @@ const TRANSLATIONS = {
     topShared: "principais compartilhadas.",
     originalCopied: "link original copiado.",
     copiedSuffix: "copiado.",
-    sharedSuffix: "compartilhado."
+    sharedSuffix: "compartilhado.",
+    privacyPolicy: "política de privacidade",
+    termsOfUse: "termos de uso"
   },
   en: {
     loadingSwap: "swapping...",
@@ -132,7 +134,9 @@ const TRANSLATIONS = {
     topShared: "main links shared.",
     originalCopied: "original link copied.",
     copiedSuffix: "copied.",
-    sharedSuffix: "shared."
+    sharedSuffix: "shared.",
+    privacyPolicy: "privacy policy",
+    termsOfUse: "terms of use"
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
@@ -171,7 +175,9 @@ const TRANSLATIONS = {
     topShared: "principales compartidas.",
     originalCopied: "enlace original copiado.",
     copiedSuffix: "copiado.",
-    sharedSuffix: "compartido."
+    sharedSuffix: "compartido.",
+    privacyPolicy: "política de privacidad",
+    termsOfUse: "términos de uso"
   },
   "it-it": {
     loadingSwap: "conversione...",
@@ -210,7 +216,9 @@ const TRANSLATIONS = {
     topShared: "principali condivise.",
     originalCopied: "link originale copiato.",
     copiedSuffix: "copiato.",
-    sharedSuffix: "condiviso."
+    sharedSuffix: "condiviso.",
+    privacyPolicy: "informativa sulla privacy",
+    termsOfUse: "termini di utilizzo"
   },
   "fr-fr": {
     loadingSwap: "conversion...",
@@ -249,7 +257,42 @@ const TRANSLATIONS = {
     topShared: "principaux partagés.",
     originalCopied: "lien original copié.",
     copiedSuffix: "copié.",
-    sharedSuffix: "partagé."
+    sharedSuffix: "partagé.",
+    privacyPolicy: "politique de confidentialité",
+    termsOfUse: "conditions d’utilisation"
+  }
+};
+
+const LEGAL_CONTENT = {
+  "pt-br": {
+    privacyTitle: "política de privacidade",
+    termsTitle: "termos de uso",
+    privacyHtml: `<p><strong>Última atualização:</strong> abril de 2026.</p><p>Este serviço converte links de música entre plataformas de streaming.</p><p><strong>Dados processados:</strong> links enviados, preferências locais (tema, idioma e histórico recente) e dados técnicos operacionais.</p><p><strong>Armazenamento local:</strong> este site pode usar <code>localStorage</code> para salvar preferências no seu navegador.</p><p><strong>Terceiros:</strong> para converter links, este serviço pode enviar dados técnicos e links para APIs/plataformas de terceiros.</p><p><strong>Uso:</strong> funcionamento do serviço, segurança, estabilidade, prevenção de abuso e melhoria da experiência.</p><p><strong>Retenção:</strong> dados locais ficam no seu navegador até você removê-los; provedores terceiros podem manter logs conforme suas próprias políticas.</p><p><strong>Links externos:</strong> plataformas externas têm políticas próprias.</p><p>Esta política pode ser atualizada a qualquer momento.</p>`,
+    termsHtml: `<p><strong>Última atualização:</strong> abril de 2026.</p><p>Ao usar este serviço, você concorda com estes termos.</p><p><strong>Uso permitido:</strong> apenas fins legítimos e em conformidade com a lei.</p><p><strong>Uso indevido:</strong> é proibido abuso automatizado, tentativa de burlar segurança/limites ou uso ilícito.</p><p><strong>Disponibilidade:</strong> o serviço pode ser alterado, limitado ou interrompido sem aviso prévio.</p><p><strong>Terceiros:</strong> resultados dependem de provedores externos; disponibilidade e precisão podem variar.</p><p><strong>Sem garantias:</strong> serviço fornecido “como está”.</p><p><strong>Responsabilidade:</strong> o operador não responde por perdas decorrentes de indisponibilidade, falhas de terceiros ou uso do serviço, nos limites da lei aplicável.</p><p>Estes termos podem ser atualizados a qualquer momento.</p>`
+  },
+  en: {
+    privacyTitle: "privacy policy",
+    termsTitle: "terms of use",
+    privacyHtml: `<p><strong>Last updated:</strong> April 2026.</p><p>This service converts music links across streaming platforms.</p><p><strong>Processed information:</strong> submitted links, local preferences (theme, language, recent history), and operational technical data.</p><p><strong>Local storage:</strong> this site may use <code>localStorage</code> to save preferences in your browser.</p><p><strong>Third parties:</strong> technical data and submitted links may be sent to third-party APIs/platforms to enable conversion.</p><p><strong>Use of information:</strong> service operation, security, stability, abuse prevention, and experience improvement.</p><p><strong>Retention:</strong> local data remains in your browser until removed; third parties may retain logs under their own policies.</p><p><strong>External links:</strong> external platforms have their own policies.</p><p>This policy may be updated at any time.</p>`,
+    termsHtml: `<p><strong>Last updated:</strong> April 2026.</p><p>By using this service, you agree to these terms.</p><p><strong>Permitted use:</strong> lawful purposes only and in compliance with applicable law.</p><p><strong>Prohibited use:</strong> abusive automation, attempts to bypass security/limits, or unlawful activity are not allowed.</p><p><strong>Availability:</strong> the service may be changed, limited, or discontinued without prior notice.</p><p><strong>Third parties:</strong> results depend on external providers; availability and accuracy may vary.</p><p><strong>No warranties:</strong> provided on an “as is” basis.</p><p><strong>Liability:</strong> to the extent permitted by law, the operator is not liable for losses from unavailability, third-party failures, or inability to use the service.</p><p>These terms may be updated at any time.</p>`
+  },
+  "es-es": {
+    privacyTitle: "política de privacidad",
+    termsTitle: "términos de uso",
+    privacyHtml: `<p><strong>Última actualización:</strong> abril de 2026.</p><p>Este servicio convierte enlaces de música entre plataformas de streaming.</p><p><strong>Información procesada:</strong> enlaces enviados, preferencias locales (tema, idioma e historial reciente) y datos técnicos operativos.</p><p><strong>Almacenamiento local:</strong> este sitio puede usar <code>localStorage</code> para guardar preferencias en el navegador.</p><p><strong>Terceros:</strong> para convertir enlaces, se pueden enviar datos técnicos y enlaces a APIs/plataformas de terceros.</p><p><strong>Uso:</strong> operación del servicio, seguridad, estabilidad, prevención de abuso y mejora de experiencia.</p><p><strong>Conservación:</strong> los datos locales quedan en tu navegador hasta que los elimines; terceros pueden conservar registros según sus políticas.</p><p><strong>Enlaces externos:</strong> las plataformas externas tienen políticas propias.</p><p>Esta política puede actualizarse en cualquier momento.</p>`,
+    termsHtml: `<p><strong>Última actualización:</strong> abril de 2026.</p><p>Al usar este servicio, aceptas estos términos.</p><p><strong>Uso permitido:</strong> solo fines legítimos y en cumplimiento de la ley.</p><p><strong>Uso indebido:</strong> no se permite automatización abusiva, eludir seguridad/límites ni actividades ilícitas.</p><p><strong>Disponibilidad:</strong> el servicio puede cambiar, limitarse o interrumpirse sin aviso previo.</p><p><strong>Terceros:</strong> los resultados dependen de proveedores externos; la disponibilidad y precisión pueden variar.</p><p><strong>Sin garantías:</strong> servicio ofrecido “tal como está”.</p><p><strong>Responsabilidad:</strong> en la medida permitida por ley, el operador no responde por pérdidas derivadas de indisponibilidad, fallos de terceros o imposibilidad de uso.</p><p>Estos términos pueden actualizarse en cualquier momento.</p>`
+  },
+  "it-it": {
+    privacyTitle: "informativa sulla privacy",
+    termsTitle: "termini di utilizzo",
+    privacyHtml: `<p><strong>Ultimo aggiornamento:</strong> aprile 2026.</p><p>Questo servizio converte link musicali tra piattaforme di streaming.</p><p><strong>Dati trattati:</strong> link inviati, preferenze locali (tema, lingua, cronologia recente) e dati tecnici operativi.</p><p><strong>Memoria locale:</strong> questo sito può usare <code>localStorage</code> per salvare preferenze nel browser.</p><p><strong>Terze parti:</strong> per la conversione possono essere inviati dati tecnici e link ad API/piattaforme di terzi.</p><p><strong>Uso dei dati:</strong> funzionamento, sicurezza, stabilità, prevenzione abusi e miglioramento dell’esperienza.</p><p><strong>Conservazione:</strong> i dati locali restano nel browser finché non li rimuovi; i terzi possono conservare log secondo le loro policy.</p><p><strong>Link esterni:</strong> le piattaforme esterne hanno politiche proprie.</p><p>Questa informativa può essere aggiornata in qualsiasi momento.</p>`,
+    termsHtml: `<p><strong>Ultimo aggiornamento:</strong> aprile 2026.</p><p>Usando questo servizio accetti i presenti termini.</p><p><strong>Uso consentito:</strong> solo per finalità lecite e nel rispetto della legge.</p><p><strong>Uso vietato:</strong> automazione abusiva, aggiramento di sicurezza/limiti o attività illecite.</p><p><strong>Disponibilità:</strong> il servizio può essere modificato, limitato o interrotto senza preavviso.</p><p><strong>Terze parti:</strong> i risultati dipendono da fornitori esterni; disponibilità e precisione possono variare.</p><p><strong>Nessuna garanzia:</strong> servizio fornito “così com’è”.</p><p><strong>Responsabilità:</strong> nei limiti di legge, l’operatore non è responsabile per perdite dovute a indisponibilità, guasti di terzi o impossibilità d’uso.</p><p>I termini possono essere aggiornati in qualsiasi momento.</p>`
+  },
+  "fr-fr": {
+    privacyTitle: "politique de confidentialité",
+    termsTitle: "conditions d’utilisation",
+    privacyHtml: `<p><strong>Dernière mise à jour :</strong> avril 2026.</p><p>Ce service convertit des liens musicaux entre plateformes de streaming.</p><p><strong>Informations traitées :</strong> liens envoyés, préférences locales (thème, langue, historique récent) et données techniques opérationnelles.</p><p><strong>Stockage local :</strong> ce site peut utiliser <code>localStorage</code> pour enregistrer des préférences dans le navigateur.</p><p><strong>Services tiers :</strong> des données techniques et les liens soumis peuvent être transmis à des API/plateformes tierces pour la conversion.</p><p><strong>Usage :</strong> fonctionnement du service, sécurité, stabilité, prévention des abus et amélioration de l’expérience.</p><p><strong>Conservation :</strong> les données locales restent dans votre navigateur jusqu’à suppression; les tiers peuvent conserver des journaux selon leurs politiques.</p><p><strong>Liens externes :</strong> les plateformes externes ont leurs propres politiques.</p><p>Cette politique peut être mise à jour à tout moment.</p>`,
+    termsHtml: `<p><strong>Dernière mise à jour :</strong> avril 2026.</p><p>En utilisant ce service, vous acceptez ces conditions.</p><p><strong>Utilisation autorisée :</strong> uniquement à des fins légales et conformément au droit applicable.</p><p><strong>Utilisation interdite :</strong> automatisation abusive, contournement de sécurité/limites ou activités illicites.</p><p><strong>Disponibilité :</strong> le service peut être modifié, limité ou interrompu sans préavis.</p><p><strong>Tiers :</strong> les résultats dépendent de fournisseurs externes; disponibilité et exactitude peuvent varier.</p><p><strong>Absence de garantie :</strong> service fourni “en l’état”.</p><p><strong>Responsabilité :</strong> dans les limites de la loi, l’opérateur n’est pas responsable des pertes liées à l’indisponibilité, aux pannes tierces ou à l’impossibilité d’utilisation.</p><p>Ces conditions peuvent être mises à jour à tout moment.</p>`
   }
 };
 
@@ -341,6 +384,9 @@ const state = {
   iosInstallModalHideTimer: null,
   isRecentSwapsModalOpen: false,
   recentSwapsModalHideTimer: null,
+  isLegalModalOpen: false,
+  legalModalHideTimer: null,
+  activeLegalType: "privacy",
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -391,7 +437,15 @@ const els = {
   recentSwapsClose: document.getElementById("recentSwapsClose"),
   recentSwapsList: document.getElementById("recentSwapsList"),
   clearRecentSwapsButton: document.getElementById("clearRecentSwapsButton"),
-  recentSwapsTitle: document.getElementById("recentSwapsTitle")
+  clearRecentSwapsText: document.getElementById("clearRecentSwapsText"),
+  recentSwapsTitle: document.getElementById("recentSwapsTitle"),
+  privacyPolicyButton: document.getElementById("privacyPolicyButton"),
+  termsOfUseButton: document.getElementById("termsOfUseButton"),
+  legalModal: document.getElementById("legalModal"),
+  legalBackdrop: document.getElementById("legalBackdrop"),
+  legalClose: document.getElementById("legalClose"),
+  legalModalTitle: document.getElementById("legalModalTitle"),
+  legalModalBody: document.getElementById("legalModalBody")
 };
 
 if (document.readyState === "loading") {
@@ -502,6 +556,7 @@ function applyLanguage({ lang = state.currentLanguage, announce = false, withTra
   if (els.iosShortcutAvailability) els.iosShortcutAvailability.textContent = t("availableAs");
   if (els.footerMadeByText) els.footerMadeByText.textContent = t("madeBy");
   updateLocalizedStaticCopy();
+  refreshLocalizedDynamicContent();
   syncSearchModeUI();
   updateConvertButtonLabel();
   syncThemeToggleIcon();
@@ -515,6 +570,25 @@ function updateLocalizedStaticCopy() {
   }
   if (els.resultPoweredBy) {
     els.resultPoweredBy.classList.remove("hidden");
+  }
+  if (els.privacyPolicyButton) els.privacyPolicyButton.textContent = t("privacyPolicy");
+  if (els.termsOfUseButton) els.termsOfUseButton.textContent = t("termsOfUse");
+  if (els.clearRecentSwapsText) els.clearRecentSwapsText.textContent = t("clearSwaps");
+}
+
+function refreshLocalizedDynamicContent() {
+  if (state.currentResult) {
+    renderResult(state.currentResult, { skipSave: true });
+    const directCount = (state.currentResult.links || []).filter(item => !item.isSearchResult).length;
+    if (directCount > 0) {
+      showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
+    }
+  }
+  if (state.isRecentSwapsModalOpen) {
+    renderRecentSwaps();
+  }
+  if (state.isLegalModalOpen) {
+    renderLegalModalContent(state.activeLegalType);
   }
 }
 
@@ -717,6 +791,52 @@ function closeRecentSwapsModal() {
   }, 240);
 }
 
+function getLegalContent() {
+  return LEGAL_CONTENT[state.currentLanguage] || LEGAL_CONTENT["pt-br"];
+}
+
+function renderLegalModalContent(type = "privacy") {
+  const content = getLegalContent();
+  if (!els.legalModalTitle || !els.legalModalBody) return;
+  const isPrivacy = type === "privacy";
+  els.legalModalTitle.textContent = isPrivacy ? content.privacyTitle : content.termsTitle;
+  els.legalModalBody.innerHTML = isPrivacy ? content.privacyHtml : content.termsHtml;
+}
+
+function openLegalModal(type = "privacy") {
+  if (!els.legalModal) return;
+  if (state.isLegalModalOpen) {
+    state.activeLegalType = type;
+    renderLegalModalContent(type);
+    return;
+  }
+  state.activeLegalType = type;
+  if (state.legalModalHideTimer) {
+    clearTimeout(state.legalModalHideTimer);
+    state.legalModalHideTimer = null;
+  }
+  renderLegalModalContent(type);
+  state.isLegalModalOpen = true;
+  els.legalModal.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    els.legalModal?.classList.add("is-open");
+  });
+  els.legalModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("legal-modal-open");
+}
+
+function closeLegalModal() {
+  if (!els.legalModal || !state.isLegalModalOpen) return;
+  state.isLegalModalOpen = false;
+  els.legalModal.classList.remove("is-open");
+  els.legalModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("legal-modal-open");
+  state.legalModalHideTimer = setTimeout(() => {
+    els.legalModal?.classList.add("hidden");
+    state.legalModalHideTimer = null;
+  }, 240);
+}
+
 function bindEvents() {
   els.themeToggle?.addEventListener("click", toggleTheme);
   els.languageToggle?.addEventListener("click", event => {
@@ -754,6 +874,18 @@ function bindEvents() {
   els.recentSwapsBackdrop?.addEventListener("click", () => {
     closeRecentSwapsModal();
   });
+  els.privacyPolicyButton?.addEventListener("click", () => {
+    openLegalModal("privacy");
+  });
+  els.termsOfUseButton?.addEventListener("click", () => {
+    openLegalModal("terms");
+  });
+  els.legalClose?.addEventListener("click", () => {
+    closeLegalModal();
+  });
+  els.legalBackdrop?.addEventListener("click", () => {
+    closeLegalModal();
+  });
 
   els.clearRecentSwapsButton?.addEventListener("click", event => {
     if (!state.recentSwaps.length) return;
@@ -778,6 +910,10 @@ function bindEvents() {
 
     if (event.key === "Escape" && state.isRecentSwapsModalOpen) {
       closeRecentSwapsModal();
+      return;
+    }
+    if (event.key === "Escape" && state.isLegalModalOpen) {
+      closeLegalModal();
     }
   });
 
@@ -1275,7 +1411,7 @@ function renderSupportedChips() {
     .join("");
 }
 
-function renderResult(result) {
+function renderResult(result, { skipSave = false } = {}) {
   clearTimeout(state.hideResultTimer);
   els.resultCard.classList.remove("hidden", "is-exiting");
   els.resultCard.classList.add("result-card-live");
@@ -1314,9 +1450,9 @@ function renderResult(result) {
     els.copyOriginalButton.classList.add("hidden");
   }
 
-  const groups = ["principais", "outras"];
+  const groups = ["primary", "others"];
   for (const groupName of groups) {
-    const items = result.links.filter(item => item.section === groupName);
+    const items = result.links.filter(item => getSectionGroup(item.section) === groupName);
     if (!items.length) continue;
 
     const section = document.createElement("section");
@@ -1324,7 +1460,7 @@ function renderResult(result) {
 
     const list = document.createElement("div");
     list.className = "platform-list";
-    const isOutras = groupName === "outras";
+    const isOutras = groupName === "others";
     const defaultVisible = 0;
     const collapsed = isOutras && items.length > 0;
     const visibleItems = collapsed ? [] : items;
@@ -1372,10 +1508,10 @@ function renderResult(result) {
       section.appendChild(controlsWrap);
     }
 
-    if (!(groupName === "outras" && collapsed)) {
+    if (!(groupName === "others" && collapsed)) {
       const title = document.createElement("p");
       title.className = "group-title";
-      title.textContent = groupName === "principais" ? t("primarySection") : t("othersSection");
+      title.textContent = groupName === "primary" ? t("primarySection") : t("othersSection");
       section.appendChild(title);
     }
 
@@ -1386,7 +1522,14 @@ function renderResult(result) {
   }
 
   renderResultLegend();
-  saveRecentSwap(result);
+  if (!skipSave) saveRecentSwap(result);
+}
+
+function getSectionGroup(sectionName = "") {
+  const normalized = String(sectionName).toLowerCase();
+  return normalized === "principais" || normalized === "main" || normalized === "primary"
+    ? "primary"
+    : "others";
 }
 
 function createPlatformItem(item) {
