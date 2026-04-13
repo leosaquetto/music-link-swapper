@@ -2,6 +2,7 @@ const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
+const DEEZER_OEMBED_API_URL = "https://www.deezer.com/oembed";
 const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
 const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
 const SPOTIFY_NEGATIVE_CACHE_TTL_MS = 2 * 60 * 1000;
@@ -741,18 +742,18 @@ function buildSpotifyQueryFromMetadata(metadata) {
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
-  if (!query) return { url: "", isVerified: false };
+  if (!query) return { url: "", isVerified: false, artist: "", title: "", album: "" };
 
   try {
     const response = await fetchWithTimeout(
       `${ITUNES_SEARCH_API_URL}?term=${encodeURIComponent(query)}&entity=song&limit=5`
     );
 
-    if (!response.ok) return { url: "", isVerified: false };
+    if (!response.ok) return { url: "", isVerified: false, artist: "", title: "", album: "" };
 
     const data = await response.json();
     const results = Array.isArray(data?.results) ? data.results : [];
-    if (!results.length) return { url: "", isVerified: false };
+    if (!results.length) return { url: "", isVerified: false, artist: "", title: "", album: "" };
 
     const target = findBestMatch(results, {
       query,
@@ -767,10 +768,13 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
 
     return {
       url: target?.candidate?.trackViewUrl || "",
-      isVerified: target.score >= 85
+      isVerified: target.score >= 85,
+      artist: target?.candidate?.artistName || "",
+      title: target?.candidate?.trackName || "",
+      album: target?.candidate?.collectionName || ""
     };
   } catch (_error) {
-    return { url: "", isVerified: false };
+    return { url: "", isVerified: false, artist: "", title: "", album: "" };
   }
 }
 
@@ -979,7 +983,8 @@ async function finalizeResultData(data) {
     links: normalizedLinks
   };
 
-  return enrichWithSpotifyFallback(base);
+  const spotifyEnriched = await enrichWithSpotifyFallback(base);
+  return enrichWithSecondaryFallbacks(spotifyEnriched);
 }
 
 function sanitizeMetadataText(value, maxLen = MAX_METADATA_TEXT_LENGTH, options = {}) {
@@ -1067,8 +1072,10 @@ async function enrichWithSpotifyFallback(data) {
     });
 
     const queryForApple = spotifyQuery.query || [spotifyQuery.title, spotifyQuery.artist].filter(Boolean).join(" ");
+    let appleMusicFallbackMetadata = null;
     if (queryForApple && hasWeakAppleMusicLinkIndex !== -1) {
       const appleMusicResult = await fetchAppleMusicLinkFromItunes(queryForApple, spotifyQuery);
+      appleMusicFallbackMetadata = appleMusicResult;
       if (appleMusicResult?.url) {
         links[hasWeakAppleMusicLinkIndex] = {
           ...links[hasWeakAppleMusicLinkIndex],
@@ -1076,6 +1083,23 @@ async function enrichWithSpotifyFallback(data) {
           url: canonicalizeMediaUrl(appleMusicResult.url),
           isVerified: Boolean(appleMusicResult.isVerified)
         };
+      }
+    }
+
+    if (!nextDescription) {
+      const appleMetadata =
+        appleMusicFallbackMetadata ||
+        (await fetchAppleMusicLinkFromItunes(data?.title || spotifyQuery.title || "", {
+          title: data?.title || spotifyQuery.title || "",
+          artist: "",
+          query: data?.title || spotifyQuery.title || ""
+        }));
+
+      if (appleMetadata?.artist) {
+        nextDescription = appleMetadata.artist;
+      }
+      if ((!nextTitle || isLikelyNonTrackTitle(nextTitle)) && appleMetadata?.title) {
+        nextTitle = appleMetadata.title;
       }
     }
 
@@ -1091,6 +1115,73 @@ async function enrichWithSpotifyFallback(data) {
       ...data,
       links
     };
+  }
+}
+
+async function enrichWithSecondaryFallbacks(data) {
+  let next = { ...(data || {}) };
+  const links = Array.isArray(next.links) ? next.links : [];
+  const hasMissingArtist = !String(next.description || "").trim();
+  const hasMissingTitle = !String(next.title || "").trim();
+  const hasMissingImage = !String(next.image || "").trim();
+  const hasNoisyTitle = isLikelyNonTrackTitle(next.title || "");
+
+  if (!hasMissingArtist && !hasMissingTitle && !hasMissingImage && !hasNoisyTitle) {
+    return next;
+  }
+
+  const deezerEntry = links.find(item => String(item?.type || "").toLowerCase() === "deezer" && item?.url);
+  if (deezerEntry) {
+    const deezerMeta = await fetchDeezerMetadata(deezerEntry.url);
+    if (deezerMeta?.artist && !String(next.description || "").trim()) {
+      next.description = deezerMeta.artist;
+    }
+    if (deezerMeta?.title && (hasMissingTitle || hasNoisyTitle)) {
+      next.title = deezerMeta.title;
+    }
+    if (deezerMeta?.image && !String(next.image || "").trim()) {
+      next.image = deezerMeta.image;
+    }
+  }
+
+  if (!String(next.description || "").trim()) {
+    const itunesFallback = await fetchAppleMusicLinkFromItunes(next.title || "", {
+      title: next.title || "",
+      artist: "",
+      query: next.title || ""
+    });
+    if (itunesFallback?.artist) {
+      next.description = itunesFallback.artist;
+    }
+    if (itunesFallback?.title && (hasMissingTitle || hasNoisyTitle)) {
+      next.title = itunesFallback.title;
+    }
+  }
+
+  return {
+    ...next,
+    title: sanitizeMetadataText(next.title, MAX_METADATA_TEXT_LENGTH) || "música encontrada",
+    description: sanitizeMetadataText(next.description, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
+    image: next.image || "",
+    links
+  };
+}
+
+async function fetchDeezerMetadata(url) {
+  try {
+    const response = await fetchWithTimeout(
+      `${DEEZER_OEMBED_API_URL}?url=${encodeURIComponent(url)}&format=json`
+    );
+    if (!response.ok) return { title: "", artist: "", image: "" };
+    const payload = await response.json();
+
+    return {
+      title: String(payload?.title || "").trim(),
+      artist: String(payload?.author_name || "").trim(),
+      image: String(payload?.thumbnail_url || "").trim()
+    };
+  } catch (_error) {
+    return { title: "", artist: "", image: "" };
   }
 }
 
