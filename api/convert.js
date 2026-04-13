@@ -973,6 +973,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 async function finalizeResultData(data) {
   const payload = data || {};
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
+  const youtubeValidatedLinks = await classifyYoutubeLinks(normalizedLinks, payload);
   const imageFromLinks = pickImageFromLinks(normalizedLinks);
   const base = {
     ...payload,
@@ -980,12 +981,93 @@ async function finalizeResultData(data) {
     description: sanitizeMetadataText(payload.description, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
     album: sanitizeMetadataText(payload.album, MAX_METADATA_TEXT_LENGTH),
     image: payload.image || imageFromLinks || "",
-    links: normalizedLinks
+    links: youtubeValidatedLinks
   };
 
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
   return enrichWithAppleBridgeFallback(secondaryEnriched);
+}
+
+async function classifyYoutubeLinks(links, metadata) {
+  const items = Array.isArray(links) ? links.map(item => ({ ...item })) : [];
+  const title = String(metadata?.title || "").trim();
+  const artist = String(metadata?.description || "").split("•")[0].trim();
+
+  await Promise.all(
+    items.map(async item => {
+      const type = String(item?.type || "").toLowerCase();
+      if (type !== "youtube" && type !== "youtubemusic") return;
+
+      if (isSearchLikeUrl(item?.url, type) || !getYoutubeVideoId(item?.url)) {
+        item.isVerified = false;
+        return;
+      }
+
+      const hint = await fetchYouTubeOEmbedHints(item.url);
+      item.isVerified = evaluateYouTubeVerification({
+        type,
+        hint,
+        title,
+        artist
+      });
+    })
+  );
+
+  return items;
+}
+
+async function fetchYouTubeOEmbedHints(url) {
+  const watchUrl = canonicalizeYoutubeWatchUrl(url);
+  if (!watchUrl) return { title: "", channel: "" };
+
+  try {
+    const response = await fetchWithTimeout(
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`
+    );
+    if (!response.ok) return { title: "", channel: "" };
+    const payload = await response.json();
+    return {
+      title: String(payload?.title || "").trim(),
+      channel: String(payload?.author_name || "").trim()
+    };
+  } catch (_error) {
+    return { title: "", channel: "" };
+  }
+}
+
+function evaluateYouTubeVerification({ type, hint, title, artist }) {
+  const normalizedTitle = normalizeSearchText(hint?.title || "");
+  const normalizedChannel = normalizeSearchText(hint?.channel || "");
+  const normalizedSourceTitle = normalizeSearchText(title || "");
+  const normalizedSourceArtist = normalizeSearchText(artist || "");
+
+  const matchesTrackTitle =
+    normalizedTitle &&
+    normalizedSourceTitle &&
+    (normalizedTitle.includes(normalizedSourceTitle) || normalizedSourceTitle.includes(normalizedTitle));
+  const matchesTrackArtist =
+    normalizedChannel &&
+    normalizedSourceArtist &&
+    (normalizedChannel.includes(normalizedSourceArtist) || normalizedSourceArtist.includes(normalizedChannel));
+
+  const isTopicChannel = /(?:\s-\s)(topic|tema)$/.test(String(hint?.channel || "").toLowerCase());
+  const isLikelyOfficialVideo =
+    /(official music video|official video|official lyric video|lyric video|visualizer)/i.test(
+      String(hint?.title || "")
+    ) || /vevo$/i.test(String(hint?.channel || ""));
+
+  if (type === "youtubemusic") {
+    return Boolean(isTopicChannel || matchesTrackTitle || matchesTrackArtist);
+  }
+
+  return Boolean(isLikelyOfficialVideo || matchesTrackTitle || matchesTrackArtist);
+}
+
+function canonicalizeYoutubeWatchUrl(value) {
+  const videoId = getYoutubeVideoId(value);
+  if (!videoId) return "";
+  return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
 async function enrichWithAppleBridgeFallback(data) {
@@ -1277,20 +1359,7 @@ function dedupeAndNormalizeLinks(links) {
     }
   }
 
-  const values = Array.from(byType.values());
-  const youtubeMusicIds = new Set(
-    values
-      .filter(item => String(item.type).toLowerCase() === "youtubemusic")
-      .map(item => getYoutubeVideoId(item.url))
-      .filter(Boolean)
-  );
-
-  return values.filter(item => {
-    const key = String(item.type).toLowerCase();
-    if (key !== "youtube") return true;
-    const videoId = getYoutubeVideoId(item.url);
-    return !(videoId && youtubeMusicIds.has(videoId));
-  });
+  return Array.from(byType.values());
 }
 
 function isLinkBetter(candidate, existing) {
@@ -1495,6 +1564,8 @@ function normalizeSongLinkPayload(data, { markVerified = false } = {}) {
     title: entity?.title || "música encontrada",
     description: [entity?.artistName, entity?.albumName].filter(Boolean).join(" • "),
     album: entity?.albumName || "",
+    isrc: entity?.isrc || "",
+    durationMs: Number(entity?.duration || 0) || 0,
     image: entity?.thumbnailUrl || "",
     universalLink: data?.pageUrl || "",
     links
