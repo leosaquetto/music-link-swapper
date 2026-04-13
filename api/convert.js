@@ -2,6 +2,7 @@ const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
+const DEEZER_OEMBED_API_URL = "https://www.deezer.com/oembed";
 const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
 const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
 const SPOTIFY_NEGATIVE_CACHE_TTL_MS = 2 * 60 * 1000;
@@ -17,6 +18,7 @@ const REQUEST_TIMEOUT_MS = 6_000;
 const MAX_IN_FLIGHT_REQUESTS = 40;
 const MAX_QUERY_LENGTH = 160;
 const MAX_LINK_LENGTH = 500;
+const MAX_METADATA_TEXT_LENGTH = 200;
 const SAMPLE_RESULT_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const spotifyUrlCache = new Map();
@@ -155,10 +157,11 @@ export default async function handler(req, res) {
         ? mergeLinkResults(primaryResult.data, enrichmentResult.data)
         : primaryResult.data;
 
+      const finalizedData = await finalizeResultData(mergedData);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, mergedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: mergedData });
+      return res.status(200).json({ ok: true, data: finalizedData });
     }
 
     const fallbackResult = shouldUseSongLinkFirst
@@ -166,19 +169,21 @@ export default async function handler(req, res) {
       : await fetchSongLinkAsFallback(link);
 
     if (fallbackResult.ok) {
+      const finalizedData = await finalizeResultData(fallbackResult.data);
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, fallbackResult.data, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: fallbackResult.data });
+      return res.status(200).json({ ok: true, data: finalizedData });
     }
 
     if (platform === "spotify") {
       const spotifyFallback = await buildSpotifySearchFallback(link);
       if (spotifyFallback.ok) {
+        const finalizedData = await finalizeResultData(spotifyFallback.data);
         if (sampleCacheKey) {
-          writeSampleResultCache(sampleCacheKey, spotifyFallback.data, SAMPLE_RESULT_CACHE_TTL_MS);
+          writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
-        return res.status(200).json({ ok: true, data: spotifyFallback.data });
+        return res.status(200).json({ ok: true, data: finalizedData });
       }
     }
 
@@ -276,10 +281,10 @@ async function buildSpotifySearchFallback(link) {
     const successResult = {
       ok: true,
       status: 200,
-      data: {
+      data: await finalizeResultData({
         ...metadataPayload,
         links
-      }
+      })
     };
     writeCache(spotifyUrlCache, normalizedLink, successResult, SPOTIFY_URL_CACHE_TTL_MS);
     writeCache(spotifyQueryCache, queryCacheKey, successResult, SPOTIFY_QUERY_CACHE_TTL_MS);
@@ -352,10 +357,10 @@ async function buildSearchFallbackFromQuery(query) {
   return {
     ok: true,
     status: 200,
-    data: {
+    data: await finalizeResultData({
       ...metadataPayload,
       links
-    }
+    })
   };
 }
 
@@ -737,18 +742,18 @@ function buildSpotifyQueryFromMetadata(metadata) {
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
-  if (!query) return { url: "", isVerified: false };
+  if (!query) return { url: "", isVerified: false, artist: "", title: "", album: "" };
 
   try {
     const response = await fetchWithTimeout(
       `${ITUNES_SEARCH_API_URL}?term=${encodeURIComponent(query)}&entity=song&limit=5`
     );
 
-    if (!response.ok) return { url: "", isVerified: false };
+    if (!response.ok) return { url: "", isVerified: false, artist: "", title: "", album: "" };
 
     const data = await response.json();
     const results = Array.isArray(data?.results) ? data.results : [];
-    if (!results.length) return { url: "", isVerified: false };
+    if (!results.length) return { url: "", isVerified: false, artist: "", title: "", album: "" };
 
     const target = findBestMatch(results, {
       query,
@@ -763,10 +768,13 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
 
     return {
       url: target?.candidate?.trackViewUrl || "",
-      isVerified: target.score >= 85
+      isVerified: target.score >= 85,
+      artist: target?.candidate?.artistName || "",
+      title: target?.candidate?.trackName || "",
+      album: target?.candidate?.collectionName || ""
     };
   } catch (_error) {
-    return { url: "", isVerified: false };
+    return { url: "", isVerified: false, artist: "", title: "", album: "" };
   }
 }
 
@@ -960,6 +968,331 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
     image: enriched.image || base.image || fallback.image || "",
     universalLink: enriched.universalLink || base.universalLink || fallback.universalLink || ""
   };
+}
+
+async function finalizeResultData(data) {
+  const payload = data || {};
+  const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
+  const imageFromLinks = pickImageFromLinks(normalizedLinks);
+  const base = {
+    ...payload,
+    title: sanitizeMetadataText(payload.title, MAX_METADATA_TEXT_LENGTH) || "música encontrada",
+    description: sanitizeMetadataText(payload.description, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
+    album: sanitizeMetadataText(payload.album, MAX_METADATA_TEXT_LENGTH),
+    image: payload.image || imageFromLinks || "",
+    links: normalizedLinks
+  };
+
+  const spotifyEnriched = await enrichWithSpotifyFallback(base);
+  return enrichWithSecondaryFallbacks(spotifyEnriched);
+}
+
+function sanitizeMetadataText(value, maxLen = MAX_METADATA_TEXT_LENGTH, options = {}) {
+  const { blankWhenNoisy = false } = options;
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  const normalized = text.toLowerCase();
+  const isNoisy = isNoisyMetadataText(normalized);
+  if (isNoisy && blankWhenNoisy) {
+    return "";
+  }
+  if (isNoisy || text.length > maxLen) {
+    return `${text.slice(0, maxLen).trim()}…`;
+  }
+  return text;
+}
+
+function isNoisyMetadataText(normalizedText) {
+  const normalized = String(normalizedText || "").toLowerCase();
+  return (
+    normalized.includes("provided to youtube by") ||
+    normalized.includes("auto-generated by youtube") ||
+    normalized.includes("official music video") ||
+    normalized.includes("official lyric video") ||
+    normalized.includes("lyric video") ||
+    normalized.includes("visualizer") ||
+    normalized.includes("watch part") ||
+    normalized.includes("http://") ||
+    normalized.includes("https://")
+  );
+}
+
+function isLikelyNonTrackTitle(value) {
+  const normalized = normalizeSearchText(value);
+  if (!normalized) return false;
+
+  return (
+    normalized.includes("official music video") ||
+    normalized.includes("official lyric video") ||
+    normalized.includes("lyric video") ||
+    normalized.includes("visualizer") ||
+    normalized.includes("official video") ||
+    normalized.includes("part 1") ||
+    normalized.includes("part 2") ||
+    normalized.includes("from scream") ||
+    normalized.includes("sony animation")
+  );
+}
+
+async function enrichWithSpotifyFallback(data) {
+  const links = Array.isArray(data?.links) ? data.links.map(item => ({ ...item })) : [];
+  const spotifyEntry = links.find(item => String(item?.type || "").toLowerCase() === "spotify" && item?.url);
+  if (!spotifyEntry) return { ...data, links };
+
+  try {
+    const spotifyMeta = await fetchSpotifyMetadata(spotifyEntry.url);
+    const spotifyQuery = buildSpotifyQueryFromMetadata(spotifyMeta);
+    const shouldUseSpotifyText =
+      !data?.description || isNoisyMetadataText(String(data.description || "").toLowerCase());
+
+    let nextTitle = data?.title || "";
+    let nextDescription = data?.description || "";
+    let nextImage = data?.image || "";
+
+    if ((shouldUseSpotifyText || String(nextDescription).length > 80) && spotifyQuery.artist) {
+      nextDescription = spotifyQuery.artist;
+    }
+    if (
+      (!nextTitle ||
+        isNoisyMetadataText(String(nextTitle).toLowerCase()) ||
+        isLikelyNonTrackTitle(nextTitle)) &&
+      spotifyQuery.title
+    ) {
+      nextTitle = spotifyQuery.title;
+    }
+    if ((!nextImage || nextImage.includes("i.ytimg.com")) && spotifyMeta?.image) {
+      nextImage = spotifyMeta.image;
+    }
+
+    const hasWeakAppleMusicLinkIndex = links.findIndex(item => {
+      const type = String(item?.type || "").toLowerCase();
+      if (type !== "applemusic" && type !== "itunes") return false;
+      const url = String(item?.url || "");
+      return /\/artist\//.test(url) || url.includes("geo.music.apple.com");
+    });
+
+    const queryForApple = spotifyQuery.query || [spotifyQuery.title, spotifyQuery.artist].filter(Boolean).join(" ");
+    let appleMusicFallbackMetadata = null;
+    if (queryForApple && hasWeakAppleMusicLinkIndex !== -1) {
+      const appleMusicResult = await fetchAppleMusicLinkFromItunes(queryForApple, spotifyQuery);
+      appleMusicFallbackMetadata = appleMusicResult;
+      if (appleMusicResult?.url) {
+        links[hasWeakAppleMusicLinkIndex] = {
+          ...links[hasWeakAppleMusicLinkIndex],
+          type: "appleMusic",
+          url: canonicalizeMediaUrl(appleMusicResult.url),
+          isVerified: Boolean(appleMusicResult.isVerified)
+        };
+      }
+    }
+
+    if (!nextDescription) {
+      const appleMetadata =
+        appleMusicFallbackMetadata ||
+        (await fetchAppleMusicLinkFromItunes(data?.title || spotifyQuery.title || "", {
+          title: data?.title || spotifyQuery.title || "",
+          artist: "",
+          query: data?.title || spotifyQuery.title || ""
+        }));
+
+      if (appleMetadata?.artist) {
+        nextDescription = appleMetadata.artist;
+      }
+      if ((!nextTitle || isLikelyNonTrackTitle(nextTitle)) && appleMetadata?.title) {
+        nextTitle = appleMetadata.title;
+      }
+    }
+
+    return {
+      ...data,
+      title: sanitizeMetadataText(nextTitle, MAX_METADATA_TEXT_LENGTH) || data?.title || "música encontrada",
+      description: sanitizeMetadataText(nextDescription, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
+      image: nextImage || data?.image || "",
+      links: dedupeAndNormalizeLinks(links)
+    };
+  } catch (_error) {
+    return {
+      ...data,
+      links
+    };
+  }
+}
+
+async function enrichWithSecondaryFallbacks(data) {
+  let next = { ...(data || {}) };
+  const links = Array.isArray(next.links) ? next.links : [];
+  const hasMissingArtist = !String(next.description || "").trim();
+  const hasMissingTitle = !String(next.title || "").trim();
+  const hasMissingImage = !String(next.image || "").trim();
+  const hasNoisyTitle = isLikelyNonTrackTitle(next.title || "");
+
+  if (!hasMissingArtist && !hasMissingTitle && !hasMissingImage && !hasNoisyTitle) {
+    return next;
+  }
+
+  const deezerEntry = links.find(item => String(item?.type || "").toLowerCase() === "deezer" && item?.url);
+  if (deezerEntry) {
+    const deezerMeta = await fetchDeezerMetadata(deezerEntry.url);
+    if (deezerMeta?.artist && !String(next.description || "").trim()) {
+      next.description = deezerMeta.artist;
+    }
+    if (deezerMeta?.title && (hasMissingTitle || hasNoisyTitle)) {
+      next.title = deezerMeta.title;
+    }
+    if (deezerMeta?.image && !String(next.image || "").trim()) {
+      next.image = deezerMeta.image;
+    }
+  }
+
+  if (!String(next.description || "").trim()) {
+    const itunesFallback = await fetchAppleMusicLinkFromItunes(next.title || "", {
+      title: next.title || "",
+      artist: "",
+      query: next.title || ""
+    });
+    if (itunesFallback?.artist) {
+      next.description = itunesFallback.artist;
+    }
+    if (itunesFallback?.title && (hasMissingTitle || hasNoisyTitle)) {
+      next.title = itunesFallback.title;
+    }
+  }
+
+  return {
+    ...next,
+    title: sanitizeMetadataText(next.title, MAX_METADATA_TEXT_LENGTH) || "música encontrada",
+    description: sanitizeMetadataText(next.description, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
+    image: next.image || "",
+    links
+  };
+}
+
+async function fetchDeezerMetadata(url) {
+  try {
+    const response = await fetchWithTimeout(
+      `${DEEZER_OEMBED_API_URL}?url=${encodeURIComponent(url)}&format=json`
+    );
+    if (!response.ok) return { title: "", artist: "", image: "" };
+    const payload = await response.json();
+
+    return {
+      title: String(payload?.title || "").trim(),
+      artist: String(payload?.author_name || "").trim(),
+      image: String(payload?.thumbnail_url || "").trim()
+    };
+  } catch (_error) {
+    return { title: "", artist: "", image: "" };
+  }
+}
+
+function dedupeAndNormalizeLinks(links) {
+  const byType = new Map();
+  const seenCanonical = new Set();
+
+  for (const link of links) {
+    const type = String(link?.type || "").trim();
+    const url = String(link?.url || "").trim();
+    if (!type || !url) continue;
+
+    const canonical = canonicalizeMediaUrl(url);
+    if (seenCanonical.has(canonical)) continue;
+
+    const key = type.toLowerCase();
+    const current = { ...link, type, url: canonical };
+    const existing = byType.get(key);
+
+    if (!existing || isLinkBetter(current, existing)) {
+      byType.set(key, current);
+      seenCanonical.add(canonical);
+    }
+  }
+
+  const values = Array.from(byType.values());
+  const youtubeMusicIds = new Set(
+    values
+      .filter(item => String(item.type).toLowerCase() === "youtubemusic")
+      .map(item => getYoutubeVideoId(item.url))
+      .filter(Boolean)
+  );
+
+  return values.filter(item => {
+    const key = String(item.type).toLowerCase();
+    if (key !== "youtube") return true;
+    const videoId = getYoutubeVideoId(item.url);
+    return !(videoId && youtubeMusicIds.has(videoId));
+  });
+}
+
+function isLinkBetter(candidate, existing) {
+  const cScore = scoreLinkQuality(candidate);
+  const eScore = scoreLinkQuality(existing);
+  return cScore >= eScore;
+}
+
+function scoreLinkQuality(item) {
+  const url = String(item?.url || "");
+  const key = String(item?.type || "").toLowerCase();
+  let score = item?.isVerified ? 20 : 0;
+  if (!isSearchLikeUrl(url, key)) score += 10;
+
+  if (key === "applemusic" || key === "itunes") {
+    if (/\/album\/.+\?i=\d+/.test(url)) score += 20;
+    if (/\/artist\//.test(url)) score -= 15;
+  }
+  if (key === "youtube" || key === "youtubemusic") {
+    if (getYoutubeVideoId(url)) score += 10;
+    if (url.includes("/search")) score -= 10;
+  }
+
+  return score;
+}
+
+function canonicalizeMediaUrl(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    const host = url.hostname.toLowerCase();
+
+    if (host.includes("youtube.com") || host.includes("youtu.be")) {
+      const videoId = getYoutubeVideoId(url.toString());
+      if (videoId) {
+        const isMusic = host.includes("music.youtube.com");
+        return `${isMusic ? "https://music.youtube.com/watch?v=" : "https://www.youtube.com/watch?v="}${videoId}`;
+      }
+    }
+
+    if (host.includes("music.apple.com")) {
+      url.searchParams.delete("l");
+      url.hash = "";
+      return url.toString();
+    }
+
+    url.hash = "";
+    return url.toString();
+  } catch (_error) {
+    return String(value || "").trim();
+  }
+}
+
+function getYoutubeVideoId(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    const host = url.hostname.toLowerCase();
+    if (host === "youtu.be") return url.pathname.replace("/", "").trim();
+    if (host.includes("youtube.com")) return url.searchParams.get("v") || "";
+    return "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+function pickImageFromLinks(links) {
+  for (const item of links) {
+    const videoId = getYoutubeVideoId(item?.url || "");
+    if (videoId) {
+      return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    }
+  }
+  return "";
 }
 
 async function fetchPrimaryApi(link, adapters) {
