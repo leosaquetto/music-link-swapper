@@ -225,6 +225,12 @@ body.needs-viewport-fill .viewport-fill-spacer {
   gap: 8px;
 }
 
+.topbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .theme-toggle {
   position: relative;
   width: var(--control-size);
