@@ -24,7 +24,7 @@
   --radius-lg: 18px;
   --radius-md: 14px;
   --press-scale: 0.985;
-  --control-size: 50px;
+  --control-size: 46px;
   --control-radius: 16px;
   --byline: #ec8189;
   --input-text: #606a7c;
@@ -170,12 +170,15 @@ button:active {
     max(20px, env(safe-area-inset-bottom));
   overflow-x: clip;
   isolation: isolate;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .main-stack {
   display: grid;
   gap: 12px;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .viewport-fill-spacer {
@@ -203,9 +206,10 @@ body.needs-viewport-fill .viewport-fill-spacer {
 .hero-card {  
   position: relative;
   display: grid;
-  gap: 12px;
+  gap: 20px;
   padding: 0 4px 8px;
   margin-bottom: 8px;
+  z-index: 12;
 }
 
 .hero-topbar {
@@ -213,6 +217,13 @@ body.needs-viewport-fill .viewport-fill-spacer {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  margin-bottom: 8px;
+}
+
+.topbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .theme-toggle {
@@ -234,17 +245,113 @@ body.needs-viewport-fill .viewport-fill-spacer {
 }
 
 .theme-toggle .button-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .theme-toggle .button-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .theme-toggle.is-switching .button-icon {
   animation: themeToggleFade 220ms ease;
+}
+
+.language-menu {
+  position: relative;
+  z-index: 220;
+}
+
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 6px;
+  width: var(--control-size);
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.language-menu.is-open .language-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.language-toggle {
+  transition:
+    background 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    opacity 220ms ease;
+}
+
+.language-toggle.is-open {
+  background: #ed474c;
+  color: #fff;
+  border-color: rgba(237, 71, 76, 0.5);
+  box-shadow: 0 10px 24px rgba(237, 71, 76, 0.28);
+}
+
+:root[data-theme="dark"] .language-toggle.is-open {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+  border-color: rgba(52, 199, 89, 0.45);
+  box-shadow: 0 10px 24px rgba(52, 199, 89, 0.34);
+}
+
+.language-option {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  width: 100%;
+  min-height: 34px;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.language-option:hover {
+  background: rgba(127, 134, 149, 0.16);
+}
+
+.language-option.is-active {
+  background: #ed474c;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .language-option.is-active {
+  background: linear-gradient(180deg, #40da67 0%, var(--accent) 100%);
+  color: #071208;
+}
+
+.app-shell.is-language-switching {
+  opacity: 0.88;
+  transform: translateY(1px);
+}
+
+.language-split {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.95;
+  gap: 1px;
 }
 
 .hero-left {
@@ -1031,6 +1138,37 @@ h2 {
   display: grid;
   gap: 4px;
   margin-top: 18px;
+}
+
+.footer-made-by {
+  color: #ed474c;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-top: 24px;
+}
+
+.made-by-signature {
+  width: min(100%, 160px);
+  margin: 0 auto;
+  color: #ed474c;
+  aspect-ratio: 5 / 1;
+}
+
+.made-by-signature::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 1;
+  background: currentColor;
+  -webkit-mask-image: url("./assets/leosaquetto.svg");
+  mask-image: url("./assets/leosaquetto.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 body.needs-viewport-fill .footer {
@@ -1889,6 +2027,11 @@ body.recent-swaps-modal-open {
 
 :root[data-theme="dark"] .footer {
   color: rgba(255, 255, 255, 0.38);
+}
+
+:root[data-theme="dark"] .footer-made-by,
+:root[data-theme="dark"] .made-by-signature {
+  color: var(--accent);
 }
 
 :root[data-theme="dark"] .icon-chip-youTube,
