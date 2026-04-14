@@ -386,42 +386,38 @@ async function buildSpotifyInputResolution(link) {
 
   const songLinkArtist = String(bridgeResult?.data?.description || "").split("•")[0].trim();
   const songLinkAlbum = String(bridgeResult?.data?.album || "").trim();
-  const canonicalTitleSelection = selectCanonicalSpotifyInputField([
-    { source: "spotify_input_entity", value: spotifyTrackEntity?.title },
-    { source: "spotify_html", value: anchoredTitle }
-  ]);
-  const canonicalArtistSelection = selectCanonicalSpotifyInputField([
-    { source: "spotify_input_entity", value: spotifyTrackEntity?.artists?.[0] }
-  ]);
-  const canonicalAlbumSelection = selectCanonicalSpotifyInputField([
-    { source: "spotify_input_entity", value: spotifyTrackEntity?.album }
-  ]);
+  const canonicalMetadata = buildSpotifyInputCanonicalMetadata({
+    spotifyTrackEntity,
+    spotifyTitle: anchoredTitle,
+    spotifyArtist: anchoredArtist,
+    spotifyAlbum: anchoredAlbum
+  });
 
   const metadataPayload = pickBestMetadata(
     {
-      title: canonicalTitleSelection.value || "música encontrada",
-      description: canonicalArtistSelection.value || songLinkArtist || "",
-      album: canonicalAlbumSelection.value || songLinkAlbum || "",
+      title: canonicalMetadata.title || "música encontrada",
+      description: canonicalMetadata.artist || songLinkArtist || "",
+      album: canonicalMetadata.album || songLinkAlbum || "",
       image: metadata?.image || ""
     },
     bridgeResult.ok ? bridgeResult.data : {},
     {}
   );
 
-  metadataPayload.title = canonicalTitleSelection.value || metadataPayload.title;
-  metadataPayload.description = canonicalArtistSelection.value || metadataPayload.description;
-  metadataPayload.album = canonicalAlbumSelection.value || metadataPayload.album;
+  metadataPayload.title = canonicalMetadata.title || metadataPayload.title;
+  metadataPayload.description = canonicalMetadata.artist || metadataPayload.description;
+  metadataPayload.album = canonicalMetadata.album || metadataPayload.album;
 
   console.log(
     JSON.stringify({
       scope: "api.convert.spotify_input_metadata",
-      canonicalTitle: canonicalTitleSelection.value || "",
-      canonicalArtist: canonicalArtistSelection.value || "",
-      canonicalAlbum: canonicalAlbumSelection.value || "",
+      canonicalTitle: canonicalMetadata.title || "",
+      canonicalArtist: canonicalMetadata.artist || "",
+      canonicalAlbum: canonicalMetadata.album || "",
       finalSource: {
-        title: canonicalTitleSelection.source || (metadataPayload.title ? "fallback" : ""),
-        artist: canonicalArtistSelection.source || (metadataPayload.description ? "fallback" : ""),
-        album: canonicalAlbumSelection.source || (metadataPayload.album ? "fallback" : "")
+        title: canonicalMetadata.source || (metadataPayload.title ? "fallback" : ""),
+        artist: canonicalMetadata.source || (metadataPayload.description ? "fallback" : ""),
+        album: canonicalMetadata.source || (metadataPayload.album ? "fallback" : "")
       },
       trackUrl: spotifyUrl
     })
@@ -433,28 +429,38 @@ async function buildSpotifyInputResolution(link) {
     data: {
       ...metadataPayload,
       _lockArtist: true,
-      _canonicalTitle: canonicalTitleSelection.value || "",
-      _canonicalArtist: canonicalArtistSelection.value || "",
-      _canonicalAlbum: canonicalAlbumSelection.value || "",
+      _canonicalTitle: canonicalMetadata.title || "",
+      _canonicalArtist: canonicalMetadata.artist || "",
+      _canonicalAlbum: canonicalMetadata.album || "",
       _canonicalImage: String(metadata?.image || "").trim(),
-      _canonicalMetadataSource:
-        canonicalTitleSelection.source || canonicalArtistSelection.source || canonicalAlbumSelection.source || "",
+      _canonicalMetadataSource: canonicalMetadata.source || "",
       _lockCanonicalMetadata: true,
       links: mergedLinks
     }
   };
 }
 
-function selectCanonicalSpotifyInputField(candidates = []) {
-  for (const candidate of candidates) {
-    const value = String(candidate?.value || "").trim();
-    if (!value) continue;
+function buildSpotifyInputCanonicalMetadata({ spotifyTrackEntity, spotifyTitle = "", spotifyArtist = "", spotifyAlbum = "" } = {}) {
+  const entityTitle = String(spotifyTrackEntity?.title || "").trim();
+  const entityArtist = String(spotifyTrackEntity?.artists?.[0] || "").trim();
+  const entityAlbum = String(spotifyTrackEntity?.album || "").trim();
+  const entityComplete = Boolean(entityTitle && entityArtist && entityAlbum);
+
+  if (entityComplete) {
     return {
-      value,
-      source: String(candidate?.source || "")
+      title: entityTitle,
+      artist: entityArtist,
+      album: entityAlbum,
+      source: "spotify_input_entity"
     };
   }
-  return { value: "", source: "" };
+
+  return {
+    title: entityTitle || String(spotifyTitle || "").trim(),
+    artist: entityArtist || String(spotifyArtist || "").trim(),
+    album: entityAlbum || String(spotifyAlbum || "").trim(),
+    source: entityTitle || entityArtist || entityAlbum ? "spotify_input_entity+spotify_html" : "spotify_html"
+  };
 }
 
 async function resolveAnchoredSpotifyInputArtist(link, metadata) {
@@ -1861,7 +1867,11 @@ function buildSpotifySearchUrlFromResult(data) {
 function extractExpectedTrackMetadata(data) {
   const title = String(data?.title || "").trim();
   const description = String(data?.description || "").trim();
-  const artist = description.split("•")[0].trim();
+  const artist =
+    extractSpotifyArtistFromMetadata({
+      description,
+      title
+    }) || description.split("•")[0].trim();
   const query = [title, artist].filter(Boolean).join(" ").trim();
   return { title, artist, query };
 }
