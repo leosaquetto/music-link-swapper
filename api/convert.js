@@ -435,6 +435,11 @@ async function buildSpotifyInputResolution(link) {
       _canonicalImage: String(metadata?.image || "").trim(),
       _canonicalMetadataSource: canonicalMetadata.source || "",
       _lockCanonicalMetadata: true,
+      _resolvedTitle: canonicalMetadata.title || metadataPayload.title || "",
+      _resolvedArtist: canonicalMetadata.artist || metadataPayload.description || "",
+      _resolvedAlbum: canonicalMetadata.album || metadataPayload.album || "",
+      _resolvedImage: String(metadata?.image || "").trim() || metadataPayload.image || "",
+      _resolvedMetadataSource: canonicalMetadata.source || "spotify_input",
       links: mergedLinks
     }
   };
@@ -1349,7 +1354,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 }
 
 async function finalizeResultData(data) {
-  const payload = data || {};
+  const payload = withResolvedMetadata(data || {});
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
   const youtubeAdjustedLinks = refineYoutubePlatformsWithCandidates(normalizedLinks, payload);
   const imageFromLinks = pickImageFromLinks(normalizedLinks);
@@ -1362,10 +1367,10 @@ async function finalizeResultData(data) {
     links: youtubeAdjustedLinks
   };
 
-  const spotifyEnriched = await enrichWithSpotifyFallback(base);
-  const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
-  const bridgeEnriched = await enrichWithAppleBridgeFallback(secondaryEnriched);
-  const canonicalApplied = applySpotifyCanonicalMetadata(bridgeEnriched || {});
+  const spotifyEnriched = withResolvedMetadata(await enrichWithSpotifyFallback(base));
+  const secondaryEnriched = withResolvedMetadata(await enrichWithSecondaryFallbacks(spotifyEnriched));
+  const bridgeEnriched = withResolvedMetadata(await enrichWithAppleBridgeFallback(secondaryEnriched));
+  const canonicalApplied = withResolvedMetadata(applySpotifyCanonicalMetadata(bridgeEnriched || {}));
   const normalizedCard = normalizeFinalCardMetadata(canonicalApplied || {});
   const dedupedFinalLinks = enforcePlatformUniqueness(Array.isArray(normalizedCard.links) ? normalizedCard.links : []);
   const finalSpotifyCount = dedupedFinalLinks.filter(item => String(item?.type || "").toLowerCase() === "spotify").length;
@@ -1429,9 +1434,14 @@ async function finalizeResultData(data) {
     _canonicalAlbum,
     _canonicalImage,
     _canonicalMetadataSource,
+    _resolvedTitle,
+    _resolvedArtist,
+    _resolvedAlbum,
+    _resolvedImage,
+    _resolvedMetadataSource,
     ...publicPayload
   } = finalPayload || {};
-  return publicPayload;
+  return applyResolvedMetadataToPublic(publicPayload, finalPayload);
 }
 
 function applySpotifyCanonicalMetadata(payload) {
@@ -1476,6 +1486,46 @@ function normalizeFinalCardMetadata(payload) {
     next.description = String(next._canonicalArtist || "").trim() || next.description || "";
   }
   return next;
+}
+
+function withResolvedMetadata(payload) {
+  const next = { ...(payload || {}) };
+  const canonicalTitle = String(next._canonicalTitle || "").trim();
+  const canonicalArtist = String(next._canonicalArtist || "").trim();
+  const canonicalAlbum = String(next._canonicalAlbum || "").trim();
+  const canonicalImage = String(next._canonicalImage || "").trim();
+
+  if (!String(next._resolvedTitle || "").trim()) {
+    next._resolvedTitle = canonicalTitle || String(next.title || "").trim();
+  }
+  if (!String(next._resolvedArtist || "").trim()) {
+    next._resolvedArtist = canonicalArtist || String(next.description || "").split("•")[0].trim();
+  }
+  if (!String(next._resolvedAlbum || "").trim()) {
+    next._resolvedAlbum = canonicalAlbum || String(next.album || "").trim() || extractAlbumFromDescription(next.description || "");
+  }
+  if (!String(next._resolvedImage || "").trim()) {
+    next._resolvedImage = canonicalImage || String(next.image || "").trim();
+  }
+  if (!String(next._resolvedMetadataSource || "").trim()) {
+    next._resolvedMetadataSource = String(next._canonicalMetadataSource || "").trim() || "pipeline";
+  }
+
+  return next;
+}
+
+function applyResolvedMetadataToPublic(publicPayload, internalPayload) {
+  const resolvedTitle = String(internalPayload?._resolvedTitle || "").trim();
+  const resolvedArtist = String(internalPayload?._resolvedArtist || "").trim();
+  const resolvedAlbum = String(internalPayload?._resolvedAlbum || "").trim();
+  const resolvedImage = String(internalPayload?._resolvedImage || "").trim();
+  return {
+    ...publicPayload,
+    title: resolvedTitle || publicPayload?.title || "",
+    description: resolvedArtist || publicPayload?.description || "",
+    album: resolvedAlbum || publicPayload?.album || "",
+    image: resolvedImage || publicPayload?.image || ""
+  };
 }
 
 function extractAlbumFromDescription(description) {
