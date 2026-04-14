@@ -1479,28 +1479,23 @@ async function finalizeResultData(data) {
     const type = String(item?.type || "").toLowerCase();
     return (type === "applemusic" || type === "itunes") && String(item?.source || "").toLowerCase() === "input";
   });
-
-  if (isSpotifyInputFlow) {
-    console.log(
-      JSON.stringify({
-        scope: "api.convert.spotify_input_final_fields",
-        "spotifyInput.finalArtist": finalPayload.description || "",
-        "spotifyInput.finalAlbum": finalPayload.album || ""
-      })
-    );
-  }
-  if (isAppleInputFlow) {
-    let spotifyResolution = "missing";
-    if (spotifyLink?.url) {
-      spotifyResolution = isSearchLikeUrl(spotifyLink.url, "spotify") ? "search_fallback" : "resolved";
+  const preservedAppleAlbum = pickFirstNonEmpty([
+    finalPayload?._appleResolvedAlbum,
+    finalPayload?._resolvedAlbum,
+    finalPayload?.album,
+    bridgeEnriched?.album,
+    secondaryEnriched?.album,
+    spotifyEnriched?.album,
+    base?.album,
+    extractAlbumFromDescription(String(bridgeEnriched?.description || "")),
+    extractAlbumFromDescription(String(secondaryEnriched?.description || "")),
+    extractAlbumFromDescription(String(base?.description || ""))
+  ]);
+  if (isAppleInputFlow && !String(finalPayload.album || "").trim() && preservedAppleAlbum) {
+    finalPayload.album = preservedAppleAlbum;
+    if (!String(finalPayload._resolvedAlbum || "").trim()) {
+      finalPayload._resolvedAlbum = preservedAppleAlbum;
     }
-    console.log(
-      JSON.stringify({
-        scope: "api.convert.apple_input_final_fields",
-        "appleInput.spotifyResolution": spotifyResolution,
-        "appleInput.finalAlbum": finalPayload.album || ""
-      })
-    );
   }
 
   console.log(
@@ -1529,12 +1524,41 @@ async function finalizeResultData(data) {
     ...publicPayload
   } = finalPayload || {};
   const appliedPayload = applyResolvedMetadataToPublic(publicPayload, finalPayload);
+  const debugSnapshot = buildFinalPayloadDebugSnapshot(appliedPayload, finalPayload, {
+    isAppleInputFlow,
+    spotifyLink
+  });
+  if (isSpotifyInputFlow) {
+    console.log(
+      JSON.stringify({
+        scope: "api.convert.spotify_input_final_fields",
+        "spotifyInput.entityStatus": debugSnapshot.spotifyEntityStatus || "",
+        "spotifyInput.entityFailed": Boolean(debugSnapshot.spotifyEntityFailed),
+        "spotifyInput.entityTrackId": debugSnapshot.spotifyEntityTrackId || "",
+        "spotifyInput.entityTitle": debugSnapshot.spotifyEntityTitle || "",
+        "spotifyInput.entityArtist": debugSnapshot.spotifyEntityArtist || "",
+        "spotifyInput.entityAlbum": debugSnapshot.spotifyEntityAlbum || "",
+        "spotifyInput.fallbackArtist": debugSnapshot.spotifyFallbackArtist || "",
+        "spotifyInput.fallbackAlbum": debugSnapshot.spotifyFallbackAlbum || "",
+        "spotifyInput.finalDescription": debugSnapshot.finalDescription || "",
+        "spotifyInput.finalAlbum": debugSnapshot.finalAlbum || "",
+        "spotifyInput.artistSource": debugSnapshot.artistSource || "",
+        "spotifyInput.albumSource": debugSnapshot.albumSource || ""
+      })
+    );
+  }
+  if (isAppleInputFlow) {
+    console.log(
+      JSON.stringify({
+        scope: "api.convert.apple_input_final_fields",
+        "appleInput.spotifyResolution": debugSnapshot.appleSpotifyResolution || "",
+        "appleInput.finalAlbum": debugSnapshot.finalAlbum || ""
+      })
+    );
+  }
   return {
     ...appliedPayload,
-    _debug: buildFinalPayloadDebugSnapshot(appliedPayload, finalPayload, {
-      isAppleInputFlow,
-      spotifyLink
-    })
+    _debug: debugSnapshot
   };
 }
 
@@ -1601,8 +1625,16 @@ function resolveFinalFieldSource(field, publicPayload, internalPayload) {
 
 function resolveAppleSpotifyResolution(spotifyLink, isAppleInputFlow) {
   if (!isAppleInputFlow) return "";
-  if (!spotifyLink?.url) return "missing";
-  return isSearchLikeUrl(spotifyLink.url, "spotify") ? "search_fallback" : "resolved";
+  if (!spotifyLink?.url) return "not_resolved";
+  return isSearchLikeUrl(spotifyLink.url, "spotify") ? "resolved_search_fallback" : "resolved_final_link";
+}
+
+function pickFirstNonEmpty(values) {
+  for (const item of Array.isArray(values) ? values : []) {
+    const normalized = String(item || "").trim();
+    if (normalized) return normalized;
+  }
+  return "";
 }
 
 function applySpotifyCanonicalMetadata(payload) {
