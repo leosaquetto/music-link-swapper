@@ -1373,6 +1373,11 @@ async function finalizeResultData(data) {
     ...normalizedCard,
     links: dedupedFinalLinks
   };
+  finalPayload.description = String(finalPayload?._canonicalArtist || "").trim() || finalPayload.description || "";
+  finalPayload.album =
+    String(finalPayload?._canonicalAlbum || "").trim() ||
+    finalPayload.album ||
+    extractAlbumFromDescription(String(canonicalApplied?.description || ""));
   const isSpotifyInputFlow = Boolean(
     String(finalPayload?._canonicalMetadataSource || "").includes("spotify_input_entity") ||
       String(finalPayload?._canonicalTitle || "").trim()
@@ -1471,6 +1476,14 @@ function normalizeFinalCardMetadata(payload) {
     next.description = String(next._canonicalArtist || "").trim() || next.description || "";
   }
   return next;
+}
+
+function extractAlbumFromDescription(description) {
+  const parts = String(description || "")
+    .split("•")
+    .map(item => String(item || "").trim())
+    .filter(Boolean);
+  return parts.length >= 2 ? parts[1] : "";
 }
 
 function enforcePlatformUniqueness(links) {
