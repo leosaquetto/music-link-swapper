@@ -1998,16 +1998,16 @@ function buildSpotifySearchUrlFromResult(data) {
 }
 
 function extractExpectedTrackMetadata(data) {
-  const title = String(data?._resolvedTitle || data?.title || "").trim();
-  const description = String(data?._resolvedArtist || data?.description || "").trim();
+  const resolvedTitle = String(data?._resolvedTitle || data?.title || "").trim();
+  const resolvedArtist = String(data?._resolvedArtist || "").trim();
   const resolvedAlbum = String(data?._resolvedAlbum || data?.album || "").trim();
-  const artist =
-    extractSpotifyArtistFromMetadata({
-      description,
-      title
-    }) || description.split("•")[0].trim();
-  const query = [title, artist, resolvedAlbum].filter(Boolean).join(" ").trim();
-  return { title, artist, query };
+  const fallbackArtist = extractSpotifyArtistFromMetadata({
+    description: String(data?.description || "").trim(),
+    title: resolvedTitle
+  });
+  const artist = resolvedArtist || fallbackArtist;
+  const query = [resolvedTitle, artist].filter(Boolean).join(" ").trim();
+  return { title: resolvedTitle, artist, album: resolvedAlbum, query };
 }
 
 async function searchSpotifyTrackDirect(query, expectedMetadata = {}) {
@@ -2020,7 +2020,11 @@ async function searchSpotifyTrackDirect(query, expectedMetadata = {}) {
     const candidates = await fetchSpotifySearchDesktopTracks(accessToken, normalizedQuery);
     if (!candidates.length) return null;
     const best = rankSpotifyTrackCandidates(candidates, expectedMetadata);
-    if (!best || !best.url || best.score < 85) return null;
+    const minimumScore = expectedMetadata?.artist ? 72 : 78;
+    if (!best || !best.url || best.score < minimumScore) return null;
+    if (expectedMetadata?.title && !isStrongTitleMatch(normalizeSearchText(expectedMetadata.title), normalizeSearchText(best.title))) {
+      return null;
+    }
     return best;
   } catch (_error) {
     return null;
@@ -2225,6 +2229,7 @@ function uriToSpotifyUrl(uri) {
 function rankSpotifyTrackCandidates(candidates, expectedMetadata = {}) {
   const expectedTitle = normalizeSearchText(expectedMetadata?.title || "");
   const expectedArtist = normalizeSearchText(expectedMetadata?.artist || "");
+  const expectedAlbum = normalizeSearchText(expectedMetadata?.album || "");
   const expectedQualifiers = getTrackQualifiers(`${expectedMetadata?.title || ""} ${expectedMetadata?.artist || ""}`);
   let best = null;
 
@@ -2232,6 +2237,7 @@ function rankSpotifyTrackCandidates(candidates, expectedMetadata = {}) {
     const candidateTitle = normalizeSearchText(candidate.title);
     const firstArtist = normalizeSearchText(candidate.artists?.[0] || "");
     const allArtistsText = normalizeSearchText((candidate.artists || []).join(" "));
+    const candidateAlbum = normalizeSearchText(candidate.album || "");
     let score = 0;
 
     if (candidateTitle === expectedTitle) score += 80;
@@ -2254,7 +2260,11 @@ function rankSpotifyTrackCandidates(candidates, expectedMetadata = {}) {
     }
 
     if (expectedArtist && !allArtistsText.includes(expectedArtist) && firstArtist !== expectedArtist) {
-      score -= 35;
+      score -= 25;
+    }
+
+    if (expectedAlbum && candidateAlbum && (candidateAlbum === expectedAlbum || candidateAlbum.includes(expectedAlbum))) {
+      score += 8;
     }
 
     const enriched = { ...candidate, score };
@@ -2262,8 +2272,6 @@ function rankSpotifyTrackCandidates(candidates, expectedMetadata = {}) {
   }
 
   if (!best) return null;
-  if (best.score < 85) return null;
-  if (!isStrongTitleMatch(expectedTitle, normalizeSearchText(best.title))) return null;
   return best;
 }
 
