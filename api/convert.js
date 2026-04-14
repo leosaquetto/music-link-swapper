@@ -7,6 +7,8 @@ const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const SPOTIFY_WEB_TOKEN_URL = "https://open.spotify.com/get_access_token?reason=transport&productType=web-player";
 const SPOTIFY_GRAPHQL_SEARCH_URL = "https://api-partner.spotify.com/pathfinder/v1/query";
 const SPOTIFY_SEARCH_DESKTOP_SHA256 = "6f9f0dce89a5b6a8d613f9aef0f31e0f48f0506c7e8f3f95f8ed3d6f1e1c9a44";
+const SPOTIFY_PLAYER_JS_REGEX = /"(https:\/\/[^" ]+\/(?:mobile-)?web-player\.[0-9a-f]+\.js)"/;
+const SPOTIFY_SECRETS_REGEX = /\{\s*secret\s*:\s*["']([^"']+)["']\s*,\s*version\s*:\s*(\d+)\s*\}/g;
 const DEEZER_OEMBED_API_URL = "https://www.deezer.com/oembed";
 const SPOTIFY_URL_CACHE_TTL_MS = 20 * 60 * 1000;
 const SPOTIFY_QUERY_CACHE_TTL_MS = 60 * 60 * 1000;
@@ -2059,18 +2061,20 @@ async function tryFetchSpotifyAnonymousTokenRobust() {
     });
     if (!bundleResponse.ok) return "";
     const bundleJs = await bundleResponse.text();
-    const secret = extractSpotifyTotpSecret(bundleJs);
-    const totpVer = extractSpotifyTotpVersion(bundleJs) || "5";
+    const { secret, version } = extractSpotifyTotpSecrets(bundleJs);
+    const totpVer = String(version || 5);
     if (!secret) return "";
 
     const ts = String(serverTime || Math.floor(Date.now() / 1000));
-    const totp = generateSpotifyTotp(secret, Number(ts));
+    const totp = generateSpotifyTotp(Number(ts), secret);
     if (!totp) return "";
 
-    const tokenUrl = `https://open.spotify.com/api/token?reason=transport&productType=web-player&totp=${encodeURIComponent(totp)}&totpVer=${encodeURIComponent(totpVer)}&ts=${encodeURIComponent(ts)}`;
+    const tokenUrl = `https://open.spotify.com/api/token?reason=init&productType=web-player&totp=${encodeURIComponent(totp)}&totpVer=${encodeURIComponent(totpVer)}&ts=${encodeURIComponent(ts)}`;
     const tokenResponse = await fetchWithTimeout(tokenUrl, {
       headers: {
         Accept: "application/json",
+        Referer: "https://open.spotify.com/",
+        Origin: "https://open.spotify.com",
         "App-Platform": "WebPlayer"
       }
     });
@@ -2097,6 +2101,8 @@ async function fetchSpotifyServerTime() {
 
 function extractSpotifyWebPlayerBundleUrl(html) {
   const text = String(html || "");
+  const webPlayerMatch = text.match(SPOTIFY_PLAYER_JS_REGEX);
+  if (webPlayerMatch?.[1]) return webPlayerMatch[1];
   const absoluteMatch = text.match(/https:\/\/open\.spotifycdn\.com\/cdn\/build\/web-player\/[^"']+\.js/);
   if (absoluteMatch?.[0]) return absoluteMatch[0];
   const relativeMatch = text.match(/\/cdn\/build\/web-player\/[^"']+\.js/);
@@ -2104,39 +2110,31 @@ function extractSpotifyWebPlayerBundleUrl(html) {
   return "";
 }
 
-function extractSpotifyTotpSecret(bundleJs) {
+function extractSpotifyTotpSecrets(bundleJs) {
   const text = String(bundleJs || "");
-  const patterns = [
-    /totpSecret["']?\s*[:=]\s*["']([A-Z2-7]{16,})["']/i,
-    /["']secret["']\s*:\s*["']([A-Z2-7]{16,})["']/i
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match?.[1]) return match[1];
+  let latestVersion = 0;
+  let latestSecret = "";
+  let match;
+  while ((match = SPOTIFY_SECRETS_REGEX.exec(text)) !== null) {
+    const version = Number(match[2] || 0);
+    if (version > latestVersion) {
+      latestVersion = version;
+      latestSecret = String(match[1] || "").trim();
+    }
   }
-  return "";
+  SPOTIFY_SECRETS_REGEX.lastIndex = 0;
+  return { secret: latestSecret, version: latestVersion };
 }
 
-function extractSpotifyTotpVersion(bundleJs) {
-  const text = String(bundleJs || "");
-  const patterns = [
-    /totpVer["']?\s*[:=]\s*["']?(\d{1,2})["']?/i,
-    /totpVersion["']?\s*[:=]\s*["']?(\d{1,2})["']?/i
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match?.[1]) return match[1];
-  }
-  return "";
-}
-
-function generateSpotifyTotp(base32Secret, unixTimeSec) {
-  const secretBytes = decodeBase32(String(base32Secret || "").trim());
+function generateSpotifyTotp(unixTimeSec, secret) {
+  const transformed = Array.from(String(secret || "")).map((char, index) =>
+    char.charCodeAt(0) ^ ((index % 33) + 9)
+  );
+  const secretBytes = Buffer.from(Buffer.from(transformed.join(""), "utf8").toString("hex"), "hex");
   if (!secretBytes.length) return "";
   const counter = Math.floor(Number(unixTimeSec || 0) / 30);
   const buffer = Buffer.alloc(8);
-  buffer.writeUInt32BE(Math.floor(counter / 2 ** 32), 0);
-  buffer.writeUInt32BE(counter >>> 0, 4);
+  buffer.writeBigUInt64BE(BigInt(counter));
   const digest = createHmac("sha1", secretBytes).update(buffer).digest();
   const offset = digest[digest.length - 1] & 0x0f;
   const code =
@@ -2145,22 +2143,6 @@ function generateSpotifyTotp(base32Secret, unixTimeSec) {
     ((digest[offset + 2] & 0xff) << 8) |
     (digest[offset + 3] & 0xff);
   return String(code % 1_000_000).padStart(6, "0");
-}
-
-function decodeBase32(value) {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  const input = String(value || "").toUpperCase().replace(/=+$/g, "");
-  let bits = "";
-  for (const char of input) {
-    const index = alphabet.indexOf(char);
-    if (index < 0) continue;
-    bits += index.toString(2).padStart(5, "0");
-  }
-  const bytes = [];
-  for (let i = 0; i + 8 <= bits.length; i += 8) {
-    bytes.push(parseInt(bits.slice(i, i + 8), 2));
-  }
-  return Buffer.from(bytes);
 }
 
 async function fetchSpotifySearchDesktopTracks(accessToken, query) {
