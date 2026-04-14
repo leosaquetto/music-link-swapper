@@ -1337,15 +1337,17 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   const backendArtist = cleanText(data.description || "");
   const backendAlbum = cleanText(data.album || "");
   const rawTitle = backendTitle || "música encontrada";
-  const preview = parsePreview(rawTitle, backendArtist);
 
   const normalizedTitle = normalizeComparisonText(rawTitle);
   const normalizedArtist = normalizeComparisonText(backendArtist);
   const shouldFallbackArtist = !backendArtist || normalizedArtist === normalizedTitle;
+  const shouldFallbackAlbum = !backendAlbum;
+  const shouldUseLegacyFallback = shouldFallbackArtist || shouldFallbackAlbum;
+  const preview = shouldUseLegacyFallback ? parsePreview(rawTitle, backendArtist) : null;
 
-  const finalTitle = backendTitle || preview.title || "música encontrada";
-  const finalArtist = shouldFallbackArtist ? (preview.artist || backendArtist) : backendArtist;
-  const finalAlbum = backendAlbum || preview.album || "";
+  const finalTitle = backendTitle || preview?.title || "música encontrada";
+  const finalArtist = shouldFallbackArtist ? (preview?.artist || backendArtist) : backendArtist;
+  const finalAlbum = backendAlbum || preview?.album || "";
 
   const searchQuery = [finalTitle, finalArtist].filter(Boolean).join(" ").trim();
   const links = normalizeLinks(data.links, sourceLink, searchQuery);
