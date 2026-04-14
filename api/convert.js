@@ -331,9 +331,16 @@ async function buildSpotifyInputResolution(link) {
   const spotifyUrl = canonicalizeMediaUrl(link);
   const metadata = await fetchSpotifyMetadata(link);
   const spotifyQuery = buildSpotifyQueryFromMetadata(metadata);
-  const anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
+  let anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
   const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
-  const anchoredAlbum = String(metadata?.album || "").trim();
+  let anchoredAlbum = String(metadata?.album || "").trim();
+  const spotifyTrackEntity = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
+  if (!anchoredArtist && spotifyTrackEntity?.artists?.length) {
+    anchoredArtist = spotifyTrackEntity.artists[0];
+  }
+  if (!anchoredAlbum && spotifyTrackEntity?.album) {
+    anchoredAlbum = spotifyTrackEntity.album;
+  }
   const spotifyTrackQuery =
     [anchoredTitle, anchoredArtist || anchoredAlbum].filter(Boolean).join(" ").trim() || spotifyQuery.query;
   const appleMusicResult =
@@ -378,8 +385,8 @@ async function buildSpotifyInputResolution(link) {
   const metadataPayload = pickBestMetadata(
     {
       title: anchoredTitle || "música encontrada",
-      description: anchoredArtist || appleMusicResult?.artist || "",
-      album: anchoredAlbum || appleMusicResult?.album || "",
+      description: anchoredArtist || spotifyTrackEntity?.artists?.[0] || appleMusicResult?.artist || "",
+      album: anchoredAlbum || spotifyTrackEntity?.album || appleMusicResult?.album || "",
       image: metadata?.image || ""
     },
     {},
@@ -415,6 +422,32 @@ function resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery) {
   if (spotifyQuery?.title) return spotifyQuery.title;
   const fallback = buildSpotifyQueryFromMetadata(metadata);
   return fallback.title || "";
+}
+
+async function resolveSpotifyTrackEntityFromInput(link, titleHint = "") {
+  const trackId = extractSpotifyTrackId(link);
+  const query = String(titleHint || "").trim();
+  if (!trackId || !query) return null;
+
+  try {
+    const accessToken = await fetchSpotifyAnonymousToken();
+    if (!accessToken) return null;
+    const candidates = await fetchSpotifySearchDesktopTracks(accessToken, query);
+    if (!candidates.length) return null;
+    return candidates.find(item => String(item?.id || "") === trackId) || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function extractSpotifyTrackId(link) {
+  try {
+    const parsed = new URL(String(link || "").trim());
+    const match = parsed.pathname.match(/\/track\/([A-Za-z0-9]+)/i);
+    return match?.[1] || "";
+  } catch (_error) {
+    return "";
+  }
 }
 
 async function buildSearchFallbackFromQuery(query) {
@@ -1701,10 +1734,12 @@ function normalizeSpotifyGraphqlTrack(item) {
   const artists = (Array.isArray(data?.artists?.items) ? data.artists.items : [])
     .map(artist => String(artist?.profile?.name || artist?.name || "").trim())
     .filter(Boolean);
+  const album = String(data?.albumOfTrack?.name || data?.album?.name || "").trim();
 
   return {
     title,
     artists,
+    album,
     id,
     uri,
     url: id ? `https://open.spotify.com/track/${id}` : uriToSpotifyUrl(uri)
