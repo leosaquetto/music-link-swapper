@@ -333,12 +333,14 @@ async function buildSpotifyInputResolution(link) {
   const spotifyQuery = buildSpotifyQueryFromMetadata(metadata);
   const anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
   const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
-  const spotifyTrackQuery = [anchoredTitle, anchoredArtist].filter(Boolean).join(" ").trim() || spotifyQuery.query;
+  const anchoredAlbum = String(metadata?.album || "").trim();
+  const spotifyTrackQuery =
+    [anchoredTitle, anchoredArtist || anchoredAlbum].filter(Boolean).join(" ").trim() || spotifyQuery.query;
   const appleMusicResult =
-    anchoredArtist && spotifyTrackQuery
+    spotifyTrackQuery
       ? await fetchAppleMusicLinkFromItunes(spotifyTrackQuery, {
           title: anchoredTitle || spotifyQuery.title,
-          artist: anchoredArtist || spotifyQuery.artist,
+          artist: anchoredArtist || spotifyQuery.artist || anchoredAlbum,
           query: spotifyTrackQuery
         })
       : { url: "", isVerified: false, artist: "", title: "", album: "" };
@@ -376,8 +378,8 @@ async function buildSpotifyInputResolution(link) {
   const metadataPayload = pickBestMetadata(
     {
       title: anchoredTitle || "música encontrada",
-      description: anchoredArtist || "",
-      album: appleMusicResult?.album || "",
+      description: anchoredArtist || appleMusicResult?.artist || "",
+      album: anchoredAlbum || appleMusicResult?.album || "",
       image: metadata?.image || ""
     },
     {},
@@ -815,10 +817,12 @@ async function fetchSpotifyMetadataFromOg(link) {
   const image = extractOgValue(html, "og:image");
   const type = extractOgValue(html, "og:type");
   const artist = extractSpotifyArtistFromHtml(html);
+  const album = extractSpotifyAlbumFromHtml(html);
 
   return {
     title,
     description: description || (artist ? `${artist} · Spotify` : ""),
+    album,
     image,
     type,
     artist
@@ -850,9 +854,24 @@ async function fetchSpotifyMetadataFromOEmbed(link) {
 
 function extractSpotifyArtistFromHtml(html) {
   const patterns = [
+    /"firstArtist"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
     /"byArtist"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
+    /"artists"\s*:\s*\{[^}]*"items"\s*:\s*\[\s*\{[^}]*"profile"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
     /"artists"\s*:\s*\[\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
     /"artist_name"\s*:\s*"([^"]+)"/i
+  ];
+  for (const pattern of patterns) {
+    const match = String(html || "").match(pattern);
+    if (match?.[1]) return decodeHtmlEntities(match[1]).trim();
+  }
+  return "";
+}
+
+function extractSpotifyAlbumFromHtml(html) {
+  const patterns = [
+    /"albumOfTrack"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
+    /"album"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
+    /"album_name"\s*:\s*"([^"]+)"/i
   ];
   for (const pattern of patterns) {
     const match = String(html || "").match(pattern);
