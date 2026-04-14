@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
@@ -2024,6 +2026,9 @@ async function searchSpotifyTrackDirect(query, expectedMetadata = {}) {
 }
 
 async function fetchSpotifyAnonymousToken() {
+  const robustToken = await tryFetchSpotifyAnonymousTokenRobust();
+  if (robustToken) return robustToken;
+
   const response = await fetchWithTimeout(SPOTIFY_WEB_TOKEN_URL, {
     headers: {
       Accept: "application/json"
@@ -2032,6 +2037,130 @@ async function fetchSpotifyAnonymousToken() {
   if (!response.ok) return "";
   const payload = await response.json();
   return String(payload?.accessToken || "").trim();
+}
+
+async function tryFetchSpotifyAnonymousTokenRobust() {
+  try {
+    const serverTime = await fetchSpotifyServerTime();
+    const homepage = await fetchWithTimeout("https://open.spotify.com/", {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml"
+      }
+    });
+    if (!homepage.ok) return "";
+    const homepageHtml = await homepage.text();
+    const bundleUrl = extractSpotifyWebPlayerBundleUrl(homepageHtml);
+    if (!bundleUrl) return "";
+
+    const bundleResponse = await fetchWithTimeout(bundleUrl, {
+      headers: { Accept: "*/*" }
+    });
+    if (!bundleResponse.ok) return "";
+    const bundleJs = await bundleResponse.text();
+    const secret = extractSpotifyTotpSecret(bundleJs);
+    const totpVer = extractSpotifyTotpVersion(bundleJs) || "5";
+    if (!secret) return "";
+
+    const ts = String(serverTime || Math.floor(Date.now() / 1000));
+    const totp = generateSpotifyTotp(secret, Number(ts));
+    if (!totp) return "";
+
+    const tokenUrl = `https://open.spotify.com/api/token?reason=transport&productType=web-player&totp=${encodeURIComponent(totp)}&totpVer=${encodeURIComponent(totpVer)}&ts=${encodeURIComponent(ts)}`;
+    const tokenResponse = await fetchWithTimeout(tokenUrl, {
+      headers: {
+        Accept: "application/json",
+        "App-Platform": "WebPlayer"
+      }
+    });
+    if (!tokenResponse.ok) return "";
+    const payload = await tokenResponse.json();
+    return String(payload?.accessToken || payload?.token || "").trim();
+  } catch (_error) {
+    return "";
+  }
+}
+
+async function fetchSpotifyServerTime() {
+  try {
+    const response = await fetchWithTimeout("https://open.spotify.com/api/server-time", {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) return 0;
+    const payload = await response.json();
+    return Number(payload?.serverTime || 0);
+  } catch (_error) {
+    return 0;
+  }
+}
+
+function extractSpotifyWebPlayerBundleUrl(html) {
+  const text = String(html || "");
+  const absoluteMatch = text.match(/https:\/\/open\.spotifycdn\.com\/cdn\/build\/web-player\/[^"']+\.js/);
+  if (absoluteMatch?.[0]) return absoluteMatch[0];
+  const relativeMatch = text.match(/\/cdn\/build\/web-player\/[^"']+\.js/);
+  if (relativeMatch?.[0]) return `https://open.spotify.com${relativeMatch[0]}`;
+  return "";
+}
+
+function extractSpotifyTotpSecret(bundleJs) {
+  const text = String(bundleJs || "");
+  const patterns = [
+    /totpSecret["']?\s*[:=]\s*["']([A-Z2-7]{16,})["']/i,
+    /["']secret["']\s*:\s*["']([A-Z2-7]{16,})["']/i
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return "";
+}
+
+function extractSpotifyTotpVersion(bundleJs) {
+  const text = String(bundleJs || "");
+  const patterns = [
+    /totpVer["']?\s*[:=]\s*["']?(\d{1,2})["']?/i,
+    /totpVersion["']?\s*[:=]\s*["']?(\d{1,2})["']?/i
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return "";
+}
+
+function generateSpotifyTotp(base32Secret, unixTimeSec) {
+  const secretBytes = decodeBase32(String(base32Secret || "").trim());
+  if (!secretBytes.length) return "";
+  const counter = Math.floor(Number(unixTimeSec || 0) / 30);
+  const buffer = Buffer.alloc(8);
+  buffer.writeUInt32BE(Math.floor(counter / 2 ** 32), 0);
+  buffer.writeUInt32BE(counter >>> 0, 4);
+  const digest = createHmac("sha1", secretBytes).update(buffer).digest();
+  const offset = digest[digest.length - 1] & 0x0f;
+  const code =
+    ((digest[offset] & 0x7f) << 24) |
+    ((digest[offset + 1] & 0xff) << 16) |
+    ((digest[offset + 2] & 0xff) << 8) |
+    (digest[offset + 3] & 0xff);
+  return String(code % 1_000_000).padStart(6, "0");
+}
+
+function decodeBase32(value) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const input = String(value || "").toUpperCase().replace(/=+$/g, "");
+  let bits = "";
+  for (const char of input) {
+    const index = alphabet.indexOf(char);
+    if (index < 0) continue;
+    bits += index.toString(2).padStart(5, "0");
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  }
+  return Buffer.from(bytes);
 }
 
 async function fetchSpotifySearchDesktopTracks(accessToken, query) {
@@ -2075,19 +2204,33 @@ function normalizeSpotifyGraphqlTrack(item) {
   const id = String(data?.id || "").trim();
   const uri = String(data?.uri || "").trim();
   const title = String(data?.name || data?.title || "").trim();
-  const artists = (Array.isArray(data?.artists?.items) ? data.artists.items : [])
-    .map(artist => String(artist?.profile?.name || artist?.name || "").trim())
-    .filter(Boolean);
+  const artists = extractSpotifyCandidateArtists(data);
   const album = String(data?.albumOfTrack?.name || data?.album?.name || "").trim();
 
   return {
     title,
+    artist: artists.join(", "),
     artists,
     album,
     id,
     uri,
     url: id ? `https://open.spotify.com/track/${id}` : uriToSpotifyUrl(uri)
   };
+}
+
+function extractSpotifyCandidateArtists(data) {
+  const fromItems = (Array.isArray(data?.artists?.items) ? data.artists.items : [])
+    .map(artist => String(artist?.profile?.name || artist?.name || "").trim())
+    .filter(Boolean);
+  if (fromItems.length) return fromItems;
+
+  const fromList = (Array.isArray(data?.artists) ? data.artists : [])
+    .map(artist => String(artist?.profile?.name || artist?.name || "").trim())
+    .filter(Boolean);
+  if (fromList.length) return fromList;
+
+  const singleArtist = String(data?.artist?.profile?.name || data?.artist?.name || "").trim();
+  return singleArtist ? [singleArtist] : [];
 }
 
 function uriToSpotifyUrl(uri) {
