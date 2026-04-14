@@ -1333,18 +1333,29 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
 }
 
 function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
-  const rawTitle = cleanText(data.title || "música encontrada");
-  const rawDescription = cleanText(data.description || "");
-  const preview = parsePreview(rawTitle, rawDescription);
-  const searchQuery = [preview.title, preview.artist].filter(Boolean).join(" ").trim();
+  const backendTitle = cleanText(data.title || "");
+  const backendArtist = cleanText(data.description || "");
+  const backendAlbum = cleanText(data.album || "");
+  const rawTitle = backendTitle || "música encontrada";
+  const preview = parsePreview(rawTitle, backendArtist);
+
+  const normalizedTitle = normalizeComparisonText(rawTitle);
+  const normalizedArtist = normalizeComparisonText(backendArtist);
+  const shouldFallbackArtist = !backendArtist || normalizedArtist === normalizedTitle;
+
+  const finalTitle = backendTitle || preview.title || "música encontrada";
+  const finalArtist = shouldFallbackArtist ? (preview.artist || backendArtist) : backendArtist;
+  const finalAlbum = backendAlbum || preview.album || "";
+
+  const searchQuery = [finalTitle, finalArtist].filter(Boolean).join(" ").trim();
   const links = normalizeLinks(data.links, sourceLink, searchQuery);
   if (!links.length) return null;
   const image = normalizeArtworkUrl(data.image || null);
 
   return {
-    title: preview.title,
-    artist: preview.artist,
-    album: preview.album || cleanText(data.album || ""),
+    title: finalTitle,
+    artist: finalArtist,
+    album: finalAlbum,
     image,
     universalLink: data.universalLink || null,
     originalUrl: sourceLink || "",
