@@ -340,7 +340,8 @@ async function buildSpotifyInputResolution(link) {
   let anchoredAlbum = String(metadata?.album || "").trim();
   const spotifyInputArtistFallback = resolveSpotifyInputArtistFallback(metadata);
   const spotifyInputAlbumFallback = resolveSpotifyInputAlbumFallback(metadata);
-  const spotifyTrackEntity = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
+  const spotifyTrackEntityResolution = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
+  const spotifyTrackEntity = spotifyTrackEntityResolution.track;
   if (!anchoredArtist && spotifyTrackEntity?.artists?.length) {
     anchoredArtist = spotifyTrackEntity.artists[0];
   }
@@ -446,6 +447,8 @@ async function buildSpotifyInputResolution(link) {
       _resolvedAlbum: canonicalMetadata.album || metadataPayload.album || "",
       _resolvedImage: String(metadata?.image || "").trim() || metadataPayload.image || "",
       _resolvedMetadataSource: canonicalMetadata.source || "spotify_input",
+      _spotifyEntityFailed: Boolean(spotifyTrackEntityResolution.failed),
+      _spotifyEntityStatus: String(spotifyTrackEntityResolution.status || ""),
       links: mergedLinks
     }
   };
@@ -533,24 +536,24 @@ async function resolveSpotifyTrackEntityFromInput(link, titleHint = "") {
       trackId
     })
   );
-  if (!trackId) return null;
+  if (!trackId) return { track: null, failed: true, status: "missing_track_id" };
 
   try {
     const accessToken = await fetchSpotifyAnonymousToken();
-    if (!accessToken) return null;
-    const directTrack = await fetchSpotifyTrackById(accessToken, trackId);
-    if (directTrack) {
+    if (!accessToken) return { track: null, failed: true, status: "missing_access_token" };
+    const directTrackResult = await fetchSpotifyTrackById(accessToken, trackId);
+    if (directTrackResult.track) {
       console.log(
         JSON.stringify({
           scope: "api.convert.spotify_input_entity",
           trackId,
           byIdOk: true,
-          title: directTrack.title || "",
-          artist: directTrack.artists?.[0] || "",
-          album: directTrack.album || ""
+          title: directTrackResult.track.title || "",
+          artist: directTrackResult.track.artists?.[0] || "",
+          album: directTrackResult.track.album || ""
         })
       );
-      return directTrack;
+      return { track: directTrackResult.track, failed: false, status: "ok" };
     }
     console.log(
       JSON.stringify({
@@ -559,12 +562,17 @@ async function resolveSpotifyTrackEntityFromInput(link, titleHint = "") {
         byIdOk: false
       })
     );
-    if (!query) return null;
+    if (!query) return { track: null, failed: true, status: directTrackResult.status || "empty_query" };
     const candidates = await fetchSpotifySearchDesktopTracks(accessToken, query);
-    if (!candidates.length) return null;
-    return candidates.find(item => String(item?.id || "") === trackId) || null;
+    if (!candidates.length) return { track: null, failed: true, status: directTrackResult.status || "no_candidates" };
+    const fallbackTrack = candidates.find(item => String(item?.id || "") === trackId) || null;
+    return {
+      track: fallbackTrack,
+      failed: !fallbackTrack,
+      status: fallbackTrack ? "search_fallback" : directTrackResult.status || "search_fallback_miss"
+    };
   } catch (_error) {
-    return null;
+    return { track: null, failed: true, status: "entity_exception" };
   }
 }
 
@@ -593,18 +601,21 @@ async function fetchSpotifyTrackById(accessToken, trackId) {
         byIdStatus: response.status
       })
     );
-    return null;
+    return { track: null, status: `http_${response.status}` };
   }
   const payload = await response.json();
   const artists = (Array.isArray(payload?.artists) ? payload.artists : [])
     .map(item => String(item?.name || "").trim())
     .filter(Boolean);
   return {
-    id: String(payload?.id || "").trim(),
-    title: String(payload?.name || "").trim(),
-    artists,
-    album: String(payload?.album?.name || "").trim(),
-    url: String(payload?.external_urls?.spotify || "").trim()
+    track: {
+      id: String(payload?.id || "").trim(),
+      title: String(payload?.name || "").trim(),
+      artists,
+      album: String(payload?.album?.name || "").trim(),
+      url: String(payload?.external_urls?.spotify || "").trim()
+    },
+    status: "ok"
   };
 }
 
