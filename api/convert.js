@@ -1442,6 +1442,12 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 
 async function finalizeResultData(data) {
   const payload = withResolvedMetadata(data || {});
+  let safeOriginalAlbum = pickFirstNonEmpty([
+    payload?._appleResolvedAlbum,
+    payload?._resolvedAlbum,
+    payload?._canonicalAlbum,
+    payload?.album
+  ]);
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
   const youtubeAdjustedLinks = refineYoutubePlatformsWithCandidates(normalizedLinks, payload);
   const imageFromLinks = pickImageFromLinks(normalizedLinks);
@@ -1453,11 +1459,16 @@ async function finalizeResultData(data) {
     image: payload.image || imageFromLinks || "",
     links: youtubeAdjustedLinks
   };
+  safeOriginalAlbum = pickFirstNonEmpty([safeOriginalAlbum, base.album, extractAlbumFromDescription(String(base.description || ""))]);
 
   const spotifyEnriched = withResolvedMetadata(await enrichWithSpotifyFallback(base));
+  safeOriginalAlbum = pickFirstNonEmpty([safeOriginalAlbum, spotifyEnriched?.album, extractAlbumFromDescription(String(spotifyEnriched?.description || ""))]);
   const secondaryEnriched = withResolvedMetadata(await enrichWithSecondaryFallbacks(spotifyEnriched));
+  safeOriginalAlbum = pickFirstNonEmpty([safeOriginalAlbum, secondaryEnriched?.album, extractAlbumFromDescription(String(secondaryEnriched?.description || ""))]);
   const bridgeEnriched = withResolvedMetadata(await enrichWithAppleBridgeFallback(secondaryEnriched));
+  safeOriginalAlbum = pickFirstNonEmpty([safeOriginalAlbum, bridgeEnriched?.album, extractAlbumFromDescription(String(bridgeEnriched?.description || ""))]);
   const canonicalApplied = withResolvedMetadata(applySpotifyCanonicalMetadata(bridgeEnriched || {}));
+  safeOriginalAlbum = pickFirstNonEmpty([safeOriginalAlbum, canonicalApplied?.album, canonicalApplied?._canonicalAlbum, canonicalApplied?._resolvedAlbum]);
   const normalizedCard = normalizeFinalCardMetadata(canonicalApplied || {});
   const dedupedFinalLinks = enforcePlatformUniqueness(Array.isArray(normalizedCard.links) ? normalizedCard.links : []);
   const finalSpotifyCount = dedupedFinalLinks.filter(item => String(item?.type || "").toLowerCase() === "spotify").length;
@@ -1472,29 +1483,25 @@ async function finalizeResultData(data) {
     extractAlbumFromDescription(String(canonicalApplied?.description || ""));
   const isSpotifyInputFlow = Boolean(
     String(finalPayload?._canonicalMetadataSource || "").includes("spotify_input_entity") ||
-      String(finalPayload?._canonicalTitle || "").trim()
+      String(finalPayload?._canonicalTitle || "").trim() ||
+      dedupedFinalLinks.some(item => {
+        const type = String(item?.type || "").toLowerCase();
+        const source = String(item?.source || "").toLowerCase();
+        return type === "spotify" && source === "input";
+      })
   );
   const spotifyLink = dedupedFinalLinks.find(item => String(item?.type || "").toLowerCase() === "spotify");
   const isAppleInputFlow = dedupedFinalLinks.some(item => {
     const type = String(item?.type || "").toLowerCase();
     return (type === "applemusic" || type === "itunes") && String(item?.source || "").toLowerCase() === "input";
   });
-  const preservedAppleAlbum = pickFirstNonEmpty([
-    finalPayload?._appleResolvedAlbum,
-    finalPayload?._resolvedAlbum,
-    finalPayload?.album,
-    bridgeEnriched?.album,
-    secondaryEnriched?.album,
-    spotifyEnriched?.album,
-    base?.album,
-    extractAlbumFromDescription(String(bridgeEnriched?.description || "")),
-    extractAlbumFromDescription(String(secondaryEnriched?.description || "")),
-    extractAlbumFromDescription(String(base?.description || ""))
-  ]);
-  if (isAppleInputFlow && !String(finalPayload.album || "").trim() && preservedAppleAlbum) {
-    finalPayload.album = preservedAppleAlbum;
+  if (!String(finalPayload.album || "").trim() && safeOriginalAlbum) {
+    finalPayload.album = safeOriginalAlbum;
     if (!String(finalPayload._resolvedAlbum || "").trim()) {
-      finalPayload._resolvedAlbum = preservedAppleAlbum;
+      finalPayload._resolvedAlbum = safeOriginalAlbum;
+    }
+    if (isAppleInputFlow && !String(finalPayload._appleResolvedAlbum || "").trim()) {
+      finalPayload._appleResolvedAlbum = safeOriginalAlbum;
     }
   }
 
@@ -1551,7 +1558,13 @@ async function finalizeResultData(data) {
     console.log(
       JSON.stringify({
         scope: "api.convert.apple_input_final_fields",
+        "appleInput.lookupAlbum": String(debugSnapshot.appleLookupAlbum || "").trim(),
+        "appleInput.appleResolvedAlbum": String(debugSnapshot.appleResolvedAlbum || "").trim(),
+        "appleInput.resolvedAlbum": String(debugSnapshot.resolvedAlbum || "").trim(),
+        "appleInput.canonicalAlbum": String(debugSnapshot.canonicalAlbum || "").trim(),
         "appleInput.spotifyResolution": debugSnapshot.appleSpotifyResolution || "",
+        "appleInput.spotifyResolvedType": debugSnapshot.appleSpotifyResolvedType || "none",
+        "appleInput.albumSource": debugSnapshot.albumSource || "",
         "appleInput.finalAlbum": debugSnapshot.finalAlbum || ""
       })
     );
@@ -1567,9 +1580,9 @@ function buildFinalPayloadDebugSnapshot(publicPayload, internalPayload, context 
   const appleResolvedArtist = String(internalPayload?._appleResolvedArtist || internalPayload?._resolvedArtist || "").trim();
   const appleResolvedAlbum = String(internalPayload?._appleResolvedAlbum || internalPayload?._resolvedAlbum || "").trim();
   const appleSpotifyQuery = String(internalPayload?._appleSpotifyQuery || "").trim();
-  const appleSpotifyResolution =
-    String(internalPayload?._appleSpotifyResolution || "").trim() ||
-    resolveAppleSpotifyResolution(context?.spotifyLink, context?.isAppleInputFlow);
+  const appleSpotifyState = resolveAppleSpotifyState(context?.spotifyLink, context?.isAppleInputFlow);
+  const appleSpotifyResolution = String(internalPayload?._appleSpotifyResolution || "").trim() || appleSpotifyState.resolution;
+  const appleSpotifyResolvedType = String(internalPayload?._appleSpotifyResolvedType || "").trim() || appleSpotifyState.type;
 
   return {
     finalTitle: String(publicPayload?.title || "").trim(),
@@ -1596,10 +1609,12 @@ function buildFinalPayloadDebugSnapshot(publicPayload, internalPayload, context 
     spotifyEntityAlbum: String(internalPayload?._spotifyEntityAlbum || "").trim(),
     spotifyFallbackArtist: String(internalPayload?._spotifyFallbackArtist || "").trim(),
     spotifyFallbackAlbum: String(internalPayload?._spotifyFallbackAlbum || "").trim(),
+    appleLookupAlbum: String(internalPayload?._appleLookupAlbum || "").trim(),
     appleResolvedTitle,
     appleResolvedArtist,
     appleResolvedAlbum,
     appleSpotifyResolution,
+    appleSpotifyResolvedType,
     appleSpotifyQuery
   };
 }
@@ -1623,10 +1638,14 @@ function resolveFinalFieldSource(field, publicPayload, internalPayload) {
   return resolvedSource || canonicalSource || "pipeline";
 }
 
-function resolveAppleSpotifyResolution(spotifyLink, isAppleInputFlow) {
-  if (!isAppleInputFlow) return "";
-  if (!spotifyLink?.url) return "not_resolved";
-  return isSearchLikeUrl(spotifyLink.url, "spotify") ? "resolved_search_fallback" : "resolved_final_link";
+function resolveAppleSpotifyState(spotifyLink, isAppleInputFlow) {
+  if (!isAppleInputFlow || !spotifyLink?.url) {
+    return { resolution: "not_resolved", type: "none" };
+  }
+  if (isSearchLikeUrl(spotifyLink.url, "spotify")) {
+    return { resolution: "resolved_search_fallback", type: "search_fallback" };
+  }
+  return { resolution: "resolved_final_link", type: "final_link" };
 }
 
 function pickFirstNonEmpty(values) {
@@ -2762,6 +2781,7 @@ async function enforceInputTrackGroundTruth(data, sourceLink) {
     _appleResolvedTitle: appleTrackMetadata?.title || data?._resolvedTitle || data?.title || "",
     _appleResolvedArtist: appleTrackMetadata?.artist || data?._resolvedArtist || "",
     _appleResolvedAlbum: appleTrackMetadata?.album || data?._resolvedAlbum || data?.album || "",
+    _appleLookupAlbum: appleTrackMetadata?.album || "",
     _appleSpotifyQuery: [appleTrackMetadata?.title || data?._resolvedTitle || data?.title || "", appleTrackMetadata?.artist || data?._resolvedArtist || ""]
       .filter(Boolean)
       .join(" ")
