@@ -419,13 +419,23 @@ async function buildSearchFallbackFromQuery(query) {
   const [appleMusicResult] = await Promise.all([
     fetchAppleMusicLinkFromItunes(normalizedQuery.query, normalizedQuery)
   ]);
-  const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, "", appleMusicResult).filter(
+  const relaxedQuery = buildRelaxedMusicSearchQuery(query);
+  const relaxedAppleMusicResult =
+    !appleMusicResult?.url && relaxedQuery && relaxedQuery !== normalizedQuery.query
+      ? await fetchAppleMusicLinkFromItunes(relaxedQuery, {
+          title: relaxedQuery,
+          artist: "",
+          query: relaxedQuery
+        })
+      : null;
+  const bestAppleMusicResult = appleMusicResult?.url ? appleMusicResult : relaxedAppleMusicResult || appleMusicResult;
+  const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, "", bestAppleMusicResult).filter(
     item => String(item.type || "").toLowerCase() !== "spotify"
   );
 
-  const [songLinkFromApple] = appleMusicResult.url
+  const [songLinkFromApple] = bestAppleMusicResult?.url
     ? await Promise.all([
-        fetchSongLink(appleMusicResult.url, { markVerified: true, protectVerified: true })
+        fetchSongLink(bestAppleMusicResult.url, { markVerified: true, protectVerified: true })
       ])
     : [{ ok: false }];
 
@@ -868,14 +878,51 @@ function buildSpotifyQueryFromMetadata(metadata) {
     .replace(/\s+/g, " ")
     .trim();
 
-  const [artistFromDescription = ""] = String(metadata?.description || "").split("·");
-  const artist = artistFromDescription.trim();
+  const artist = extractSpotifyArtistFromMetadata({
+    description: metadata?.description || "",
+    title: metadata?.title || ""
+  });
 
   return {
     title,
     artist,
     query: [title, artist].filter(Boolean).join(" ").trim()
   };
+}
+
+function extractSpotifyArtistFromMetadata({ description = "", title = "" } = {}) {
+  const rawDescription = String(description || "").trim();
+  const rawTitle = String(title || "").trim();
+
+  const byMatch = rawDescription.match(/\bby\s+(.+?)(?:\s*\||$)/i) || rawTitle.match(/\bby\s+(.+?)(?:\s*\||$)/i);
+  if (byMatch?.[1]) return sanitizeSpotifyArtistToken(byMatch[1]);
+
+  const parts = rawDescription
+    .split("·")
+    .map(item => sanitizeSpotifyArtistToken(item))
+    .filter(Boolean)
+    .filter(item => !isGenericSpotifyDescriptor(item));
+
+  if (parts.length >= 2) {
+    return parts[0] === "spotify" ? parts[1] : parts[0];
+  }
+  if (parts.length === 1) return parts[0];
+
+  return "";
+}
+
+function sanitizeSpotifyArtistToken(value) {
+  return String(value || "")
+    .replace(/\|\s*spotify$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isGenericSpotifyDescriptor(value) {
+  const normalized = normalizeSearchText(value);
+  if (!normalized) return true;
+  const blocked = new Set(["song", "single", "album", "ep", "spotify", "artist"]);
+  return blocked.has(normalized);
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
@@ -998,6 +1045,14 @@ function normalizeSearchText(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildRelaxedMusicSearchQuery(value) {
+  return String(value || "")
+    .replace(/[&/+|]+/g, " ")
+    .replace(/[“”"']/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -2203,7 +2258,7 @@ function mapSongLinkPlatform(platform) {
   if (key === "youtubemusic") return "youtubeMusic";
   if (key === "soundcloud") return "soundCloud";
   if (key === "amazonmusic" || key === "amazon") return "amazonMusic";
-  if (key === "itunes" || key === "apple") return "itunes";
+  if (key === "itunes" || key === "apple" || key === "applemusic") return "appleMusic";
 
   return platform;
 }
@@ -2251,6 +2306,7 @@ function buildFriendlyPlatformError(platform, rawError) {
 
 function shouldPrioritizeSongLink(link) {
   const lower = String(link || "").toLowerCase();
+  if (lower.includes("music.apple.com") || lower.includes("itunes.apple.com")) return true;
   return SONGLINK_PRIORITY_HOSTS.some(host => lower.includes(host));
 }
 
