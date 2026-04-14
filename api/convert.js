@@ -334,6 +334,8 @@ async function buildSpotifyInputResolution(link) {
   let anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
   const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
   let anchoredAlbum = String(metadata?.album || "").trim();
+  const spotifyInputArtistFallback = resolveSpotifyInputArtistFallback(metadata);
+  const spotifyInputAlbumFallback = resolveSpotifyInputAlbumFallback(metadata);
   const spotifyTrackEntity = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
   if (!anchoredArtist && spotifyTrackEntity?.artists?.length) {
     anchoredArtist = spotifyTrackEntity.artists[0];
@@ -389,8 +391,8 @@ async function buildSpotifyInputResolution(link) {
   const canonicalMetadata = buildSpotifyInputCanonicalMetadata({
     spotifyTrackEntity,
     spotifyTitle: anchoredTitle,
-    spotifyArtist: anchoredArtist,
-    spotifyAlbum: anchoredAlbum
+    spotifyArtist: anchoredArtist || spotifyInputArtistFallback,
+    spotifyAlbum: anchoredAlbum || spotifyInputAlbumFallback
   });
 
   const metadataPayload = pickBestMetadata(
@@ -468,6 +470,36 @@ function buildSpotifyInputCanonicalMetadata({ spotifyTrackEntity, spotifyTitle =
   };
 }
 
+function resolveSpotifyInputArtistFallback(metadata, html = "") {
+  const directArtist = String(metadata?.artist || "").trim();
+  if (directArtist) return directArtist;
+
+  const description = String(metadata?.description || "").trim();
+  const byDescription = extractSpotifyArtistFromMetadata({
+    description,
+    title: String(metadata?.title || "").trim()
+  });
+  if (byDescription) return byDescription;
+
+  const byHtml = extractSpotifyArtistFromHtml(String(html || ""));
+  return String(byHtml || "").trim();
+}
+
+function resolveSpotifyInputAlbumFallback(metadata, html = "") {
+  const directAlbum = String(metadata?.album || "").trim();
+  if (directAlbum) return directAlbum;
+
+  const description = String(metadata?.description || "").trim();
+  const parts = description
+    .split("•")
+    .map(item => String(item || "").trim())
+    .filter(Boolean);
+  if (parts.length >= 2) return parts[1];
+
+  const byHtml = extractSpotifyAlbumFromHtml(String(html || ""));
+  return String(byHtml || "").trim();
+}
+
 async function resolveAnchoredSpotifyInputArtist(link, metadata) {
   const canonicalSpotifyUrl = normalizeSpotifyUrl(link);
   try {
@@ -491,13 +523,38 @@ function resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery) {
 async function resolveSpotifyTrackEntityFromInput(link, titleHint = "") {
   const trackId = extractSpotifyTrackId(link);
   const query = String(titleHint || "").trim();
+  console.log(
+    JSON.stringify({
+      scope: "api.convert.spotify_input_entity",
+      trackId
+    })
+  );
   if (!trackId) return null;
 
   try {
     const accessToken = await fetchSpotifyAnonymousToken();
     if (!accessToken) return null;
     const directTrack = await fetchSpotifyTrackById(accessToken, trackId);
-    if (directTrack) return directTrack;
+    if (directTrack) {
+      console.log(
+        JSON.stringify({
+          scope: "api.convert.spotify_input_entity",
+          trackId,
+          byIdOk: true,
+          title: directTrack.title || "",
+          artist: directTrack.artists?.[0] || "",
+          album: directTrack.album || ""
+        })
+      );
+      return directTrack;
+    }
+    console.log(
+      JSON.stringify({
+        scope: "api.convert.spotify_input_entity",
+        trackId,
+        byIdOk: false
+      })
+    );
     if (!query) return null;
     const candidates = await fetchSpotifySearchDesktopTracks(accessToken, query);
     if (!candidates.length) return null;
@@ -524,7 +581,16 @@ async function fetchSpotifyTrackById(accessToken, trackId) {
       Authorization: `Bearer ${accessToken}`
     }
   });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.log(
+      JSON.stringify({
+        scope: "api.convert.spotify_input_entity",
+        trackId,
+        byIdStatus: response.status
+      })
+    );
+    return null;
+  }
   const payload = await response.json();
   const artists = (Array.isArray(payload?.artists) ? payload.artists : [])
     .map(item => String(item?.name || "").trim())
@@ -1928,14 +1994,15 @@ function buildSpotifySearchUrlFromResult(data) {
 }
 
 function extractExpectedTrackMetadata(data) {
-  const title = String(data?.title || "").trim();
-  const description = String(data?.description || "").trim();
+  const title = String(data?._resolvedTitle || data?.title || "").trim();
+  const description = String(data?._resolvedArtist || data?.description || "").trim();
+  const resolvedAlbum = String(data?._resolvedAlbum || data?.album || "").trim();
   const artist =
     extractSpotifyArtistFromMetadata({
       description,
       title
     }) || description.split("•")[0].trim();
-  const query = [title, artist].filter(Boolean).join(" ").trim();
+  const query = [title, artist, resolvedAlbum].filter(Boolean).join(" ").trim();
   return { title, artist, query };
 }
 
@@ -2431,6 +2498,11 @@ async function enforceInputTrackGroundTruth(data, sourceLink) {
     description: mergedDescription || data?.description || "",
     album: appleTrackMetadata?.album || data?.album || "",
     image: appleTrackMetadata?.image || data?.image || "",
+    _resolvedTitle: appleTrackMetadata?.title || data?._resolvedTitle || data?.title || "",
+    _resolvedArtist: appleTrackMetadata?.artist || data?._resolvedArtist || "",
+    _resolvedAlbum: appleTrackMetadata?.album || data?._resolvedAlbum || data?.album || "",
+    _resolvedImage: appleTrackMetadata?.image || data?._resolvedImage || data?.image || "",
+    _resolvedMetadataSource: appleTrackMetadata ? "apple_input_lookup" : data?._resolvedMetadataSource || "",
     links: dedupeAndNormalizeLinks([
       {
         type: "appleMusic",
