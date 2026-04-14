@@ -341,10 +341,13 @@ async function buildSpotifyInputResolution(link) {
   if (!anchoredAlbum && spotifyTrackEntity?.album) {
     anchoredAlbum = spotifyTrackEntity.album;
   }
+  const hasReliableSpotifyIdentity = Boolean(
+    anchoredArtist || (Array.isArray(spotifyTrackEntity?.artists) && spotifyTrackEntity.artists.length)
+  );
   const spotifyTrackQuery =
     [anchoredTitle, anchoredArtist || anchoredAlbum].filter(Boolean).join(" ").trim() || spotifyQuery.query;
   const appleMusicResult =
-    spotifyTrackQuery
+    hasReliableSpotifyIdentity && spotifyTrackQuery
       ? await fetchAppleMusicLinkFromItunes(spotifyTrackQuery, {
           title: anchoredTitle || spotifyQuery.title,
           artist: anchoredArtist || spotifyQuery.artist || anchoredAlbum,
@@ -385,8 +388,8 @@ async function buildSpotifyInputResolution(link) {
   const metadataPayload = pickBestMetadata(
     {
       title: anchoredTitle || "música encontrada",
-      description: anchoredArtist || spotifyTrackEntity?.artists?.[0] || appleMusicResult?.artist || "",
-      album: anchoredAlbum || spotifyTrackEntity?.album || appleMusicResult?.album || "",
+      description: anchoredArtist || spotifyTrackEntity?.artists?.[0] || spotifyQuery.artist || "",
+      album: anchoredAlbum || spotifyTrackEntity?.album || String(metadata?.album || "").trim(),
       image: metadata?.image || ""
     },
     {},
