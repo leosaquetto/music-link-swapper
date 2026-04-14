@@ -331,26 +331,17 @@ async function buildSpotifyInputResolution(link) {
   const spotifyUrl = canonicalizeMediaUrl(link);
   const metadata = await fetchSpotifyMetadata(link);
   const spotifyQuery = buildSpotifyQueryFromMetadata(metadata);
-  let anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
+  const anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
   const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
   const spotifyTrackQuery = [anchoredTitle, anchoredArtist].filter(Boolean).join(" ").trim() || spotifyQuery.query;
-
-  if (!anchoredArtist && anchoredTitle) {
-    const fallbackFromItunes = await fetchAppleMusicLinkFromItunes(anchoredTitle, {
-      title: anchoredTitle,
-      artist: "",
-      query: anchoredTitle
-    });
-    if (fallbackFromItunes?.artist) {
-      anchoredArtist = fallbackFromItunes.artist;
-    }
-  }
-
-  const appleMusicResult = await fetchAppleMusicLinkFromItunes(spotifyTrackQuery, {
-    title: anchoredTitle || spotifyQuery.title,
-    artist: anchoredArtist || spotifyQuery.artist,
-    query: spotifyTrackQuery
-  });
+  const appleMusicResult =
+    anchoredArtist && spotifyTrackQuery
+      ? await fetchAppleMusicLinkFromItunes(spotifyTrackQuery, {
+          title: anchoredTitle || spotifyQuery.title,
+          artist: anchoredArtist || spotifyQuery.artist,
+          query: spotifyTrackQuery
+        })
+      : { url: "", isVerified: false, artist: "", title: "", album: "" };
   const links = [
     {
       type: "spotify",
@@ -386,6 +377,7 @@ async function buildSpotifyInputResolution(link) {
     {
       title: anchoredTitle || "música encontrada",
       description: anchoredArtist || "",
+      album: appleMusicResult?.album || "",
       image: metadata?.image || ""
     },
     {},
@@ -822,8 +814,15 @@ async function fetchSpotifyMetadataFromOg(link) {
   const description = extractOgValue(html, "og:description");
   const image = extractOgValue(html, "og:image");
   const type = extractOgValue(html, "og:type");
+  const artist = extractSpotifyArtistFromHtml(html);
 
-  return { title, description, image, type };
+  return {
+    title,
+    description: description || (artist ? `${artist} · Spotify` : ""),
+    image,
+    type,
+    artist
+  };
 }
 
 async function fetchSpotifyMetadataFromOEmbed(link) {
@@ -844,8 +843,22 @@ async function fetchSpotifyMetadataFromOEmbed(link) {
     title,
     description: artist ? `${artist} · Spotify` : "",
     image: payload?.thumbnail_url || "",
-    type: payload?.type || ""
+    type: payload?.type || "",
+    artist
   };
+}
+
+function extractSpotifyArtistFromHtml(html) {
+  const patterns = [
+    /"byArtist"\s*:\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
+    /"artists"\s*:\s*\[\s*\{[^}]*"name"\s*:\s*"([^"]+)"/i,
+    /"artist_name"\s*:\s*"([^"]+)"/i
+  ];
+  for (const pattern of patterns) {
+    const match = String(html || "").match(pattern);
+    if (match?.[1]) return decodeHtmlEntities(match[1]).trim();
+  }
+  return "";
 }
 
 function parseSpotifyOEmbedTitle(value) {
@@ -906,10 +919,12 @@ function buildSpotifyQueryFromMetadata(metadata) {
     .replace(/\s+/g, " ")
     .trim();
 
-  const artist = extractSpotifyArtistFromMetadata({
-    description: metadata?.description || "",
-    title: metadata?.title || ""
-  });
+  const artist =
+    sanitizeSpotifyArtistToken(metadata?.artist || "") ||
+    extractSpotifyArtistFromMetadata({
+      description: metadata?.description || "",
+      title: metadata?.title || ""
+    });
 
   return {
     title,
