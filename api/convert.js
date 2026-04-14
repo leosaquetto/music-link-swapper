@@ -427,11 +427,14 @@ function resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery) {
 async function resolveSpotifyTrackEntityFromInput(link, titleHint = "") {
   const trackId = extractSpotifyTrackId(link);
   const query = String(titleHint || "").trim();
-  if (!trackId || !query) return null;
+  if (!trackId) return null;
 
   try {
     const accessToken = await fetchSpotifyAnonymousToken();
     if (!accessToken) return null;
+    const directTrack = await fetchSpotifyTrackById(accessToken, trackId);
+    if (directTrack) return directTrack;
+    if (!query) return null;
     const candidates = await fetchSpotifySearchDesktopTracks(accessToken, query);
     if (!candidates.length) return null;
     return candidates.find(item => String(item?.id || "") === trackId) || null;
@@ -448,6 +451,27 @@ function extractSpotifyTrackId(link) {
   } catch (_error) {
     return "";
   }
+}
+
+async function fetchSpotifyTrackById(accessToken, trackId) {
+  const response = await fetchWithTimeout(`https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+  if (!response.ok) return null;
+  const payload = await response.json();
+  const artists = (Array.isArray(payload?.artists) ? payload.artists : [])
+    .map(item => String(item?.name || "").trim())
+    .filter(Boolean);
+  return {
+    id: String(payload?.id || "").trim(),
+    title: String(payload?.name || "").trim(),
+    artists,
+    album: String(payload?.album?.name || "").trim(),
+    url: String(payload?.external_urls?.spotify || "").trim()
+  };
 }
 
 async function buildSearchFallbackFromQuery(query) {
