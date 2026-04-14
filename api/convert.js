@@ -327,6 +327,8 @@ async function buildSpotifyInputResolution(link) {
   const spotifyUrl = canonicalizeMediaUrl(link);
   const metadata = await fetchSpotifyMetadata(link);
   const spotifyQuery = buildSpotifyQueryFromMetadata(metadata);
+  const anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
+  const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
 
   const appleMusicResult = await fetchAppleMusicLinkFromItunes(spotifyQuery.query, spotifyQuery);
   const links = [
@@ -362,8 +364,8 @@ async function buildSpotifyInputResolution(link) {
 
   const metadataPayload = pickBestMetadata(
     {
-      title: spotifyQuery.title || metadata?.title || "música encontrada",
-      description: spotifyQuery.artist || "",
+      title: anchoredTitle || "música encontrada",
+      description: anchoredArtist || "",
       image: metadata?.image || ""
     },
     {},
@@ -375,9 +377,29 @@ async function buildSpotifyInputResolution(link) {
     status: 200,
     data: {
       ...metadataPayload,
+      _lockArtist: true,
       links: mergedLinks
     }
   };
+}
+
+async function resolveAnchoredSpotifyInputArtist(link, metadata) {
+  try {
+    const oembed = await fetchSpotifyMetadataFromOEmbed(link);
+    const oembedQuery = buildSpotifyQueryFromMetadata(oembed);
+    if (oembedQuery.artist) return oembedQuery.artist;
+  } catch (_error) {
+    // no-op
+  }
+
+  const query = buildSpotifyQueryFromMetadata(metadata);
+  return query.artist || "";
+}
+
+function resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery) {
+  if (spotifyQuery?.title) return spotifyQuery.title;
+  const fallback = buildSpotifyQueryFromMetadata(metadata);
+  return fallback.title || "";
 }
 
 async function buildSearchFallbackFromQuery(query) {
@@ -1103,7 +1125,9 @@ async function finalizeResultData(data) {
 
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
-  return enrichWithAppleBridgeFallback(secondaryEnriched);
+  const bridgeEnriched = await enrichWithAppleBridgeFallback(secondaryEnriched);
+  const { _lockArtist, ...publicPayload } = bridgeEnriched || {};
+  return publicPayload;
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
@@ -1689,6 +1713,7 @@ async function enrichWithSpotifyFallback(data) {
   const links = Array.isArray(data?.links) ? data.links.map(item => ({ ...item })) : [];
   const spotifyEntry = links.find(item => String(item?.type || "").toLowerCase() === "spotify" && item?.url);
   if (!spotifyEntry) return { ...data, links };
+  const lockArtist = Boolean(data?._lockArtist);
 
   try {
     const spotifyMeta = await fetchSpotifyMetadata(spotifyEntry.url);
@@ -1700,7 +1725,7 @@ async function enrichWithSpotifyFallback(data) {
     let nextDescription = data?.description || "";
     let nextImage = data?.image || "";
 
-    if ((shouldUseSpotifyText || String(nextDescription).length > 80) && spotifyQuery.artist) {
+    if (!lockArtist && (shouldUseSpotifyText || String(nextDescription).length > 80) && spotifyQuery.artist) {
       nextDescription = spotifyQuery.artist;
     }
     if (
@@ -1739,7 +1764,7 @@ async function enrichWithSpotifyFallback(data) {
       }
     }
 
-    if (!nextDescription) {
+    if (!nextDescription && !lockArtist) {
       const appleMetadata =
         appleMusicFallbackMetadata ||
         (await fetchAppleMusicLinkFromItunes(data?.title || spotifyQuery.title || "", {
@@ -1774,19 +1799,20 @@ async function enrichWithSpotifyFallback(data) {
 async function enrichWithSecondaryFallbacks(data) {
   let next = { ...(data || {}) };
   const links = Array.isArray(next.links) ? next.links : [];
+  const lockArtist = Boolean(next?._lockArtist);
   const hasMissingArtist = !String(next.description || "").trim();
   const hasMissingTitle = !String(next.title || "").trim();
   const hasMissingImage = !String(next.image || "").trim();
   const hasNoisyTitle = isLikelyNonTrackTitle(next.title || "");
 
-  if (!hasMissingArtist && !hasMissingTitle && !hasMissingImage && !hasNoisyTitle) {
+  if ((!lockArtist || !hasMissingArtist) && !hasMissingTitle && !hasMissingImage && !hasNoisyTitle) {
     return next;
   }
 
   const deezerEntry = links.find(item => String(item?.type || "").toLowerCase() === "deezer" && item?.url);
   if (deezerEntry) {
     const deezerMeta = await fetchDeezerMetadata(deezerEntry.url);
-    if (deezerMeta?.artist && !String(next.description || "").trim()) {
+    if (!lockArtist && deezerMeta?.artist && !String(next.description || "").trim()) {
       next.description = deezerMeta.artist;
     }
     if (deezerMeta?.title && (hasMissingTitle || hasNoisyTitle)) {
@@ -1797,7 +1823,7 @@ async function enrichWithSecondaryFallbacks(data) {
     }
   }
 
-  if (!String(next.description || "").trim()) {
+  if (!lockArtist && !String(next.description || "").trim()) {
     const itunesFallback = await fetchAppleMusicLinkFromItunes(next.title || "", {
       title: next.title || "",
       artist: "",
