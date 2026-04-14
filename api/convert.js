@@ -438,6 +438,7 @@ async function buildSpotifyInputResolution(link) {
       _canonicalTitle: canonicalTitleSelection.value || "",
       _canonicalArtist: canonicalArtistSelection.value || "",
       _canonicalAlbum: canonicalAlbumSelection.value || "",
+      _canonicalImage: String(metadata?.image || "").trim(),
       _canonicalMetadataSource:
         canonicalTitleSelection.source || canonicalArtistSelection.source || canonicalAlbumSelection.source || "",
       _lockCanonicalMetadata: true,
@@ -1361,15 +1362,33 @@ async function finalizeResultData(data) {
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
   const bridgeEnriched = await enrichWithAppleBridgeFallback(secondaryEnriched);
   const canonicalApplied = applySpotifyCanonicalMetadata(bridgeEnriched || {});
+  const normalizedCard = normalizeFinalCardMetadata(canonicalApplied || {});
+  const dedupedFinalLinks = enforcePlatformUniqueness(Array.isArray(normalizedCard.links) ? normalizedCard.links : []);
+  const finalSpotifyCount = dedupedFinalLinks.filter(item => String(item?.type || "").toLowerCase() === "spotify").length;
+  const finalPayload = {
+    ...normalizedCard,
+    links: dedupedFinalLinks
+  };
+  console.log(
+    JSON.stringify({
+      scope: "api.convert.final_card_fields",
+      finalTitle: finalPayload.title || "",
+      finalArtist: finalPayload.description || "",
+      finalAlbum: finalPayload.album || "",
+      finalImageSource: resolveFinalImageSource(finalPayload),
+      finalSpotifyCount
+    })
+  );
   const {
     _lockArtist,
     _lockCanonicalMetadata,
     _canonicalTitle,
     _canonicalArtist,
     _canonicalAlbum,
+    _canonicalImage,
     _canonicalMetadataSource,
     ...publicPayload
-  } = canonicalApplied || {};
+  } = finalPayload || {};
   return publicPayload;
 }
 
@@ -1377,13 +1396,15 @@ function applySpotifyCanonicalMetadata(payload) {
   const canonicalTitle = String(payload?._canonicalTitle || "").trim();
   const canonicalArtist = String(payload?._canonicalArtist || "").trim();
   const canonicalAlbum = String(payload?._canonicalAlbum || "").trim();
+  const canonicalImage = String(payload?._canonicalImage || "").trim();
   if (!canonicalTitle && !canonicalArtist && !canonicalAlbum) return payload;
 
   const applied = {
     ...payload,
     title: canonicalTitle || payload.title || "",
     description: canonicalArtist || payload.description || "",
-    album: canonicalAlbum || payload.album || ""
+    album: canonicalAlbum || payload.album || "",
+    image: canonicalImage || payload.image || ""
   };
   console.log(
     JSON.stringify({
@@ -1395,6 +1416,47 @@ function applySpotifyCanonicalMetadata(payload) {
     })
   );
   return applied;
+}
+
+function normalizeFinalCardMetadata(payload) {
+  const next = { ...(payload || {}) };
+  const description = String(next.description || "").trim();
+  const album = String(next.album || "").trim();
+  if (description.includes("•")) {
+    const [artistPart = "", albumPart = ""] = description.split("•").map(item => String(item || "").trim());
+    if (artistPart) next.description = artistPart;
+    if (!album && albumPart) next.album = albumPart;
+  }
+  if (next._canonicalAlbum) {
+    next.album = String(next._canonicalAlbum || "").trim() || next.album || "";
+  }
+  if (next._canonicalArtist) {
+    next.description = String(next._canonicalArtist || "").trim() || next.description || "";
+  }
+  return next;
+}
+
+function enforcePlatformUniqueness(links) {
+  const byType = new Map();
+  for (const raw of Array.isArray(links) ? links : []) {
+    const type = String(raw?.type || "").trim();
+    const url = String(raw?.url || "").trim();
+    if (!type || !url) continue;
+    const key = type.toLowerCase();
+    const current = { ...raw, type, url: canonicalizeMediaUrl(url) };
+    const existing = byType.get(key);
+    if (!existing || isLinkBetter(current, existing)) {
+      byType.set(key, current);
+    }
+  }
+  return Array.from(byType.values());
+}
+
+function resolveFinalImageSource(payload) {
+  if (String(payload?._canonicalImage || "").trim()) return "spotify_input_entity";
+  if (String(payload?.image || "").includes("i.ytimg.com")) return "youtube";
+  if (String(payload?.image || "").trim()) return "fallback";
+  return "";
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
