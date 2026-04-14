@@ -449,6 +449,12 @@ async function buildSpotifyInputResolution(link) {
       _resolvedMetadataSource: canonicalMetadata.source || "spotify_input",
       _spotifyEntityFailed: Boolean(spotifyTrackEntityResolution.failed),
       _spotifyEntityStatus: String(spotifyTrackEntityResolution.status || ""),
+      _spotifyEntityTrackId: String(spotifyTrackEntity?.id || extractSpotifyTrackId(link) || "").trim(),
+      _spotifyEntityTitle: String(spotifyTrackEntity?.title || "").trim(),
+      _spotifyEntityArtist: String(spotifyTrackEntity?.artists?.[0] || "").trim(),
+      _spotifyEntityAlbum: String(spotifyTrackEntity?.album || "").trim(),
+      _spotifyFallbackArtist: String(spotifyInputArtistFallback || "").trim(),
+      _spotifyFallbackAlbum: String(spotifyInputAlbumFallback || "").trim(),
       links: mergedLinks
     }
   };
@@ -1522,7 +1528,81 @@ async function finalizeResultData(data) {
     _resolvedMetadataSource,
     ...publicPayload
   } = finalPayload || {};
-  return applyResolvedMetadataToPublic(publicPayload, finalPayload);
+  const appliedPayload = applyResolvedMetadataToPublic(publicPayload, finalPayload);
+  return {
+    ...appliedPayload,
+    _debug: buildFinalPayloadDebugSnapshot(appliedPayload, finalPayload, {
+      isAppleInputFlow,
+      spotifyLink
+    })
+  };
+}
+
+function buildFinalPayloadDebugSnapshot(publicPayload, internalPayload, context = {}) {
+  const appleResolvedTitle = String(internalPayload?._appleResolvedTitle || internalPayload?._resolvedTitle || "").trim();
+  const appleResolvedArtist = String(internalPayload?._appleResolvedArtist || internalPayload?._resolvedArtist || "").trim();
+  const appleResolvedAlbum = String(internalPayload?._appleResolvedAlbum || internalPayload?._resolvedAlbum || "").trim();
+  const appleSpotifyQuery = String(internalPayload?._appleSpotifyQuery || "").trim();
+  const appleSpotifyResolution =
+    String(internalPayload?._appleSpotifyResolution || "").trim() ||
+    resolveAppleSpotifyResolution(context?.spotifyLink, context?.isAppleInputFlow);
+
+  return {
+    finalTitle: String(publicPayload?.title || "").trim(),
+    finalDescription: String(publicPayload?.description || "").trim(),
+    finalAlbum: String(publicPayload?.album || "").trim(),
+    finalImage: String(publicPayload?.image || "").trim(),
+    artistSource: resolveFinalFieldSource("artist", publicPayload, internalPayload),
+    albumSource: resolveFinalFieldSource("album", publicPayload, internalPayload),
+    canonicalTitle: String(internalPayload?._canonicalTitle || "").trim(),
+    canonicalArtist: String(internalPayload?._canonicalArtist || "").trim(),
+    canonicalAlbum: String(internalPayload?._canonicalAlbum || "").trim(),
+    canonicalImage: String(internalPayload?._canonicalImage || "").trim(),
+    canonicalMetadataSource: String(internalPayload?._canonicalMetadataSource || "").trim(),
+    resolvedTitle: String(internalPayload?._resolvedTitle || "").trim(),
+    resolvedArtist: String(internalPayload?._resolvedArtist || "").trim(),
+    resolvedAlbum: String(internalPayload?._resolvedAlbum || "").trim(),
+    resolvedImage: String(internalPayload?._resolvedImage || "").trim(),
+    resolvedMetadataSource: String(internalPayload?._resolvedMetadataSource || "").trim(),
+    spotifyEntityFailed: Boolean(internalPayload?._spotifyEntityFailed),
+    spotifyEntityStatus: String(internalPayload?._spotifyEntityStatus || "").trim(),
+    spotifyEntityTrackId: String(internalPayload?._spotifyEntityTrackId || "").trim(),
+    spotifyEntityTitle: String(internalPayload?._spotifyEntityTitle || "").trim(),
+    spotifyEntityArtist: String(internalPayload?._spotifyEntityArtist || "").trim(),
+    spotifyEntityAlbum: String(internalPayload?._spotifyEntityAlbum || "").trim(),
+    spotifyFallbackArtist: String(internalPayload?._spotifyFallbackArtist || "").trim(),
+    spotifyFallbackAlbum: String(internalPayload?._spotifyFallbackAlbum || "").trim(),
+    appleResolvedTitle,
+    appleResolvedArtist,
+    appleResolvedAlbum,
+    appleSpotifyResolution,
+    appleSpotifyQuery
+  };
+}
+
+function resolveFinalFieldSource(field, publicPayload, internalPayload) {
+  const finalValue =
+    field === "artist" ? String(publicPayload?.description || "").trim() : String(publicPayload?.album || "").trim();
+  if (!finalValue) return "fallback_empty";
+
+  const canonicalValue =
+    field === "artist" ? String(internalPayload?._canonicalArtist || "").trim() : String(internalPayload?._canonicalAlbum || "").trim();
+  const resolvedValue =
+    field === "artist" ? String(internalPayload?._resolvedArtist || "").trim() : String(internalPayload?._resolvedAlbum || "").trim();
+  const canonicalSource = String(internalPayload?._canonicalMetadataSource || "").trim();
+  const resolvedSource = String(internalPayload?._resolvedMetadataSource || "").trim();
+
+  if (canonicalValue && canonicalValue === finalValue) return canonicalSource || "spotify_input_entity";
+  if (resolvedValue && resolvedValue === finalValue) return resolvedSource || "pipeline";
+  if (field === "artist" && String(internalPayload?._spotifyFallbackArtist || "").trim() === finalValue) return "spotify_html";
+  if (field === "album" && String(internalPayload?._spotifyFallbackAlbum || "").trim() === finalValue) return "spotify_html";
+  return resolvedSource || canonicalSource || "pipeline";
+}
+
+function resolveAppleSpotifyResolution(spotifyLink, isAppleInputFlow) {
+  if (!isAppleInputFlow) return "";
+  if (!spotifyLink?.url) return "missing";
+  return isSearchLikeUrl(spotifyLink.url, "spotify") ? "search_fallback" : "resolved";
 }
 
 function applySpotifyCanonicalMetadata(payload) {
@@ -2647,6 +2727,13 @@ async function enforceInputTrackGroundTruth(data, sourceLink) {
     _resolvedAlbum: appleTrackMetadata?.album || data?._resolvedAlbum || data?.album || "",
     _resolvedImage: appleTrackMetadata?.image || data?._resolvedImage || data?.image || "",
     _resolvedMetadataSource: appleTrackMetadata ? "apple_input_lookup" : data?._resolvedMetadataSource || "",
+    _appleResolvedTitle: appleTrackMetadata?.title || data?._resolvedTitle || data?.title || "",
+    _appleResolvedArtist: appleTrackMetadata?.artist || data?._resolvedArtist || "",
+    _appleResolvedAlbum: appleTrackMetadata?.album || data?._resolvedAlbum || data?.album || "",
+    _appleSpotifyQuery: [appleTrackMetadata?.title || data?._resolvedTitle || data?.title || "", appleTrackMetadata?.artist || data?._resolvedArtist || ""]
+      .filter(Boolean)
+      .join(" ")
+      .trim(),
     links: dedupeAndNormalizeLinks([
       {
         type: "appleMusic",
