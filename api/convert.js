@@ -152,10 +152,11 @@ export default async function handler(req, res) {
     }
 
     const platform = detectPlatformFromUrl(link);
+    const inputPlatform = detectInputPlatformFromLink(link);
     if (platform === "spotify") {
       const spotifyInputResult = await buildSpotifyInputResolution(link);
       if (spotifyInputResult.ok) {
-        const finalizedData = await finalizeResultData(spotifyInputResult.data);
+        const finalizedData = await finalizeResultData(withInputPlatform(spotifyInputResult.data, inputPlatform));
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
@@ -182,7 +183,7 @@ export default async function handler(req, res) {
         ? mergeLinkResults(primaryResult.data, safeEnrichmentData)
         : primaryResult.data;
 
-      const groundedData = await enforceInputTrackGroundTruth(mergedData, link);
+      const groundedData = withInputPlatform(await enforceInputTrackGroundTruth(mergedData, link), inputPlatform);
       const finalizedData = await finalizeResultData(groundedData);
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
@@ -195,7 +196,7 @@ export default async function handler(req, res) {
       : await fetchSongLinkAsFallback(link);
 
     if (fallbackResult.ok) {
-      const groundedData = await enforceInputTrackGroundTruth(fallbackResult.data, link);
+      const groundedData = withInputPlatform(await enforceInputTrackGroundTruth(fallbackResult.data, link), inputPlatform);
       const finalizedData = await finalizeResultData(groundedData);
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
@@ -206,7 +207,7 @@ export default async function handler(req, res) {
     if (platform === "spotify") {
       const spotifyFallback = await buildSpotifySearchFallback(link);
       if (spotifyFallback.ok) {
-        const groundedData = await enforceInputTrackGroundTruth(spotifyFallback.data, link);
+        const groundedData = withInputPlatform(await enforceInputTrackGroundTruth(spotifyFallback.data, link), inputPlatform);
         const finalizedData = await finalizeResultData(groundedData);
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
@@ -1442,6 +1443,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 
 async function finalizeResultData(data) {
   const payload = withResolvedMetadata(data || {});
+  const inputPlatform = String(payload?._inputPlatform || "").trim().toLowerCase();
   let safeOriginalAlbum = pickFirstNonEmpty([
     payload?._appleResolvedAlbum,
     payload?._resolvedAlbum,
@@ -1482,6 +1484,7 @@ async function finalizeResultData(data) {
     finalPayload.album ||
     extractAlbumFromDescription(String(canonicalApplied?.description || ""));
   const isSpotifyInputFlow = Boolean(
+    inputPlatform === "spotify" ||
     String(finalPayload?._canonicalMetadataSource || "").includes("spotify_input_entity") ||
       String(finalPayload?._canonicalTitle || "").trim() ||
       dedupedFinalLinks.some(item => {
@@ -1491,10 +1494,11 @@ async function finalizeResultData(data) {
       })
   );
   const spotifyLink = dedupedFinalLinks.find(item => String(item?.type || "").toLowerCase() === "spotify");
-  const isAppleInputFlow = dedupedFinalLinks.some(item => {
+  const hasAppleInputLink = dedupedFinalLinks.some(item => {
     const type = String(item?.type || "").toLowerCase();
     return (type === "applemusic" || type === "itunes") && String(item?.source || "").toLowerCase() === "input";
   });
+  const isAppleInputFlow = inputPlatform === "applemusic" || hasAppleInputLink;
   if (!String(finalPayload.album || "").trim() && safeOriginalAlbum) {
     finalPayload.album = safeOriginalAlbum;
     if (!String(finalPayload._resolvedAlbum || "").trim()) {
@@ -3039,6 +3043,25 @@ function detectPlatformFromUrl(url) {
   if (value.includes("music.amazon.") || value.includes("amazon.com/music")) return "amazon music";
 
   return "serviço";
+}
+
+function detectInputPlatformFromLink(link) {
+  try {
+    const parsed = new URL(String(link || "").trim());
+    const host = parsed.hostname.toLowerCase();
+    if (host.includes("spotify.")) return "spotify";
+    if (host.includes("music.apple.com") || host.includes("itunes.apple.com")) return "appleMusic";
+    return detectPlatformFromUrl(link);
+  } catch (_error) {
+    return detectPlatformFromUrl(link);
+  }
+}
+
+function withInputPlatform(data, inputPlatform) {
+  return {
+    ...(data || {}),
+    _inputPlatform: String(data?._inputPlatform || inputPlatform || "").trim()
+  };
 }
 
 function buildFriendlyPlatformError(platform, rawError) {
