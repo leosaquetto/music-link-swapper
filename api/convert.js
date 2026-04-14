@@ -391,12 +391,10 @@ async function buildSpotifyInputResolution(link) {
     { source: "spotify_html", value: anchoredTitle }
   ]);
   const canonicalArtistSelection = selectCanonicalSpotifyInputField([
-    { source: "spotify_input_entity", value: spotifyTrackEntity?.artists?.[0] },
-    { source: "spotify_html", value: anchoredArtist }
+    { source: "spotify_input_entity", value: spotifyTrackEntity?.artists?.[0] }
   ]);
   const canonicalAlbumSelection = selectCanonicalSpotifyInputField([
-    { source: "spotify_input_entity", value: spotifyTrackEntity?.album },
-    { source: "spotify_html", value: anchoredAlbum }
+    { source: "spotify_input_entity", value: spotifyTrackEntity?.album }
   ]);
 
   const metadataPayload = pickBestMetadata(
@@ -1369,6 +1367,39 @@ async function finalizeResultData(data) {
     ...normalizedCard,
     links: dedupedFinalLinks
   };
+  const isSpotifyInputFlow = Boolean(
+    String(finalPayload?._canonicalMetadataSource || "").includes("spotify_input_entity") ||
+      String(finalPayload?._canonicalTitle || "").trim()
+  );
+  const spotifyLink = dedupedFinalLinks.find(item => String(item?.type || "").toLowerCase() === "spotify");
+  const isAppleInputFlow = dedupedFinalLinks.some(item => {
+    const type = String(item?.type || "").toLowerCase();
+    return (type === "applemusic" || type === "itunes") && String(item?.source || "").toLowerCase() === "input";
+  });
+
+  if (isSpotifyInputFlow) {
+    console.log(
+      JSON.stringify({
+        scope: "api.convert.spotify_input_final_fields",
+        "spotifyInput.finalArtist": finalPayload.description || "",
+        "spotifyInput.finalAlbum": finalPayload.album || ""
+      })
+    );
+  }
+  if (isAppleInputFlow) {
+    let spotifyResolution = "missing";
+    if (spotifyLink?.url) {
+      spotifyResolution = isSearchLikeUrl(spotifyLink.url, "spotify") ? "search_fallback" : "resolved";
+    }
+    console.log(
+      JSON.stringify({
+        scope: "api.convert.apple_input_final_fields",
+        "appleInput.spotifyResolution": spotifyResolution,
+        "appleInput.finalAlbum": finalPayload.album || ""
+      })
+    );
+  }
+
   console.log(
     JSON.stringify({
       scope: "api.convert.final_card_fields",
