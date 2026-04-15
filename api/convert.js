@@ -343,6 +343,13 @@ async function buildSpotifyInputResolution(link) {
   const fallbackAlbumForQuery = resolveSpotifyInputAlbumFallback(metadata);
   const spotifyTrackEntityResolution = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
   const spotifyTrackEntity = spotifyTrackEntityResolution.track;
+  const hasStrongSpotifyIdentity = Boolean(
+    spotifyTrackEntity &&
+      String(spotifyTrackEntity.title || "").trim() &&
+      String(spotifyTrackEntity.artists?.[0] || "").trim() &&
+      String(spotifyTrackEntity.album || "").trim()
+  );
+  const crossResolutionAllowed = hasStrongSpotifyIdentity;
   if (!anchoredArtist && spotifyTrackEntity?.artists?.length) {
     anchoredArtist = spotifyTrackEntity.artists[0];
   }
@@ -354,7 +361,7 @@ async function buildSpotifyInputResolution(link) {
   const spotifyTrackQuery =
     [anchoredTitle, anchoredArtist || anchoredAlbum].filter(Boolean).join(" ").trim() || spotifyQuery.query;
   const appleMusicResult =
-    spotifyTrackQuery
+    crossResolutionAllowed && spotifyTrackQuery
       ? await fetchAppleMusicLinkFromItunes(spotifyTrackQuery, {
           title: anchoredTitle || spotifyQuery.title,
           artist: anchoredArtist || spotifyQuery.artist || anchoredAlbum,
@@ -382,7 +389,7 @@ async function buildSpotifyInputResolution(link) {
   }
 
   let mergedLinks = dedupeAndNormalizeLinks(links);
-  const bridgeSourceUrl = appleMusicResult?.url || spotifyUrl;
+  const bridgeSourceUrl = crossResolutionAllowed ? appleMusicResult?.url || spotifyUrl : "";
   let bridgeResult = { ok: false };
   if (bridgeSourceUrl) {
     bridgeResult = await fetchSongLink(bridgeSourceUrl, {
@@ -459,6 +466,7 @@ async function buildSpotifyInputResolution(link) {
       _spotifyFallbackAlbum: String(fallbackAlbumForQuery || "").trim(),
       _spotifyFallbackArtistForQuery: String(fallbackArtistForQuery || "").trim(),
       _spotifyFallbackAlbumForQuery: String(fallbackAlbumForQuery || "").trim(),
+      _spotifyCrossResolutionAllowed: Boolean(crossResolutionAllowed),
       links: mergedLinks
     }
   };
@@ -1563,10 +1571,13 @@ async function finalizeResultData(data, context = {}) {
         "spotifyInput.entityAlbum": debugSnapshot.spotifyEntityAlbum || "",
         "spotifyInput.fallbackArtist": debugSnapshot.spotifyFallbackArtist || "",
         "spotifyInput.fallbackAlbum": debugSnapshot.spotifyFallbackAlbum || "",
+        "spotifyInput.fallbackArtistForQuery": debugSnapshot.spotifyFallbackArtistForQuery || "",
+        "spotifyInput.fallbackAlbumForQuery": debugSnapshot.spotifyFallbackAlbumForQuery || "",
         "spotifyInput.finalDescription": debugSnapshot.finalDescription || "",
         "spotifyInput.finalAlbum": debugSnapshot.finalAlbum || "",
         "spotifyInput.artistSource": debugSnapshot.artistSource || "",
-        "spotifyInput.albumSource": debugSnapshot.albumSource || ""
+        "spotifyInput.albumSource": debugSnapshot.albumSource || "",
+        "spotifyInput.crossResolutionAllowed": Boolean(debugSnapshot.crossResolutionAllowed)
       })
     );
   }
@@ -1625,6 +1636,9 @@ function buildFinalPayloadDebugSnapshot(publicPayload, internalPayload, context 
     spotifyEntityAlbum: String(internalPayload?._spotifyEntityAlbum || "").trim(),
     spotifyFallbackArtist: String(internalPayload?._spotifyFallbackArtist || "").trim(),
     spotifyFallbackAlbum: String(internalPayload?._spotifyFallbackAlbum || "").trim(),
+    spotifyFallbackArtistForQuery: String(internalPayload?._spotifyFallbackArtistForQuery || "").trim(),
+    spotifyFallbackAlbumForQuery: String(internalPayload?._spotifyFallbackAlbumForQuery || "").trim(),
+    crossResolutionAllowed: Boolean(internalPayload?._spotifyCrossResolutionAllowed),
     appleLookupAlbum: String(internalPayload?._appleLookupAlbum || "").trim(),
     appleResolvedTitle,
     appleResolvedArtist,
