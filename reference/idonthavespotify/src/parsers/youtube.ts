@@ -1,0 +1,174 @@
+import { MetadataType, Parser } from '~/config/enum';
+import { ENV } from '~/config/env';
+import { cacheSearchMetadata, getCachedSearchMetadata } from '~/services/cache';
+import type { SearchMetadata } from '~/services/search';
+import HttpClient from '~/utils/http-client';
+import { logger } from '~/utils/logger';
+import { getServiceGuard } from '~/utils/service-guard';
+
+interface YoutubeDataResponse {
+  kind: string;
+  etag: string;
+  items: Array<{
+    kind: string;
+    etag: string;
+    id: string;
+    snippet: {
+      title: string;
+      description: string;
+      thumbnails: {
+        url: string;
+        width: string;
+        height: string;
+      };
+    };
+  }>;
+}
+
+const METADATA_TO_YOUTUBE_ENDPOINT = {
+  [MetadataType.Song]: 'videos',
+  [MetadataType.Album]: 'playlists',
+  [MetadataType.Playlist]: 'playlists',
+  [MetadataType.Artist]: 'channels',
+  [MetadataType.Podcast]: 'videos',
+  [MetadataType.Show]: 'playlists',
+};
+
+export const getYouTubeMetadata = async (id: string, source: string) => {
+  const sourceUrl = new URL(source);
+  if (!sourceUrl.searchParams.has('v')) {
+    sourceUrl.searchParams.set('v', id);
+  }
+  let link = sourceUrl.toString();
+
+  if (link.includes('youtu.be/')) {
+    link = await resolveShortYouTubeLink(link);
+  }
+
+  const cached = await getCachedSearchMetadata(id, Parser.YouTube);
+  if (cached) {
+    logger.info(`[YouTube] (${id}) metadata cache hit`);
+    return cached;
+  }
+
+  const guard = getServiceGuard('youTube');
+  if (!guard.acquire()) {
+    throw new Error('[YouTube] service temporarily unavailable');
+  }
+
+  try {
+    const parsed = parseYouTubeLink(link);
+    if (!parsed) throw new Error('No resource ID found in the provided YouTube link');
+
+    const { searchType, resourceId } = parsed;
+
+    const params = new URLSearchParams({
+      id: resourceId,
+      part: 'snippet',
+      safeSearch: 'none',
+      key: ENV.adapters.youTube.apiKey,
+    });
+
+    const url = new URL(
+      `${ENV.adapters.youTube.apiUrl}/${METADATA_TO_YOUTUBE_ENDPOINT[searchType]}`
+    );
+    url.search = params.toString();
+
+    const response = await HttpClient.get<YoutubeDataResponse>(url.toString());
+    guard.recordSuccess();
+    const item = response?.items?.[0];
+    if (!item) {
+      throw new Error(
+        `No items returned from YouTube API for ${searchType} ${resourceId}`
+      );
+    }
+
+    const { snippet } = item;
+    if (!snippet) {
+      throw new Error(`No snippet found on item for ${searchType} ${resourceId}`);
+    }
+
+    const { title, description, thumbnails } = snippet;
+    const image = thumbnails?.url;
+
+    const processedTitle = title
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    logger.info(
+      `[YouTube] Original title: "${title}". Processed title: "${processedTitle}"`
+    );
+
+    const metadata: SearchMetadata = {
+      title: processedTitle,
+      description,
+      type: searchType,
+      image,
+    };
+
+    await cacheSearchMetadata(id, Parser.YouTube, metadata);
+
+    return metadata;
+  } catch (err) {
+    guard.recordFailure();
+    throw new Error(`[${getYouTubeMetadata.name}] (${link}) ${err}`);
+  }
+};
+
+export const getYouTubeQueryFromMetadata = (metadata: SearchMetadata) => {
+  let query = metadata.title
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (metadata.type === MetadataType.Song) {
+    const matches = metadata.description?.match(/(?:·|&)\s*([^·&℗]+)/g);
+    const artists = [
+      ...new Set(matches?.map(match => match.trim().replace(/^[·&]\s*/, '')) || []),
+    ];
+    query = matches ? `${query} ${artists[0]}` : query;
+  }
+
+  if (metadata.type === MetadataType.Album) {
+    query = `${query} album`;
+  }
+
+  if (metadata.type === MetadataType.Playlist) {
+    query = `${query} playlist`;
+  }
+
+  logger.info(`[YouTube] Final search query: "${query}"`);
+  return query;
+};
+
+function parseYouTubeLink(link: string) {
+  const url = new URL(link);
+
+  if (url.pathname.includes('list')) {
+    return {
+      searchType: MetadataType.Album,
+      resourceId: (url.searchParams.get('list') || url.searchParams.get('v'))!,
+    };
+  }
+
+  if (url.searchParams.has('v')) {
+    return {
+      searchType: MetadataType.Song,
+      resourceId: url.searchParams.get('v')!,
+    };
+  }
+
+  if (url.pathname.includes('/channel/')) {
+    const parts = url.pathname.split('/channel/');
+    return {
+      searchType: MetadataType.Artist,
+      resourceId: parts[1]?.split('/')[0],
+    };
+  }
+}
+
+async function resolveShortYouTubeLink(shortLink: string): Promise<string> {
+  const finalUrl = await HttpClient.resolveRedirect(shortLink, 1);
+  return finalUrl || shortLink;
+}
