@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { createSpotifyResolver } from "./providers/spotify-resolver.js";
 
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
@@ -42,6 +43,29 @@ const metrics = {
   spotifyCacheHit: 0,
   spotifyCacheMiss: 0
 };
+
+const spotifyResolver = createSpotifyResolver({
+  canonicalizeMediaUrl,
+  fetchSpotifyMetadata,
+  buildSpotifyQueryFromMetadata,
+  resolveAnchoredSpotifyInputArtist,
+  resolveAnchoredSpotifyInputTitle,
+  resolveSpotifyInputArtistFallback,
+  resolveSpotifyInputAlbumFallback,
+  resolveSpotifyTrackEntityFromInput,
+  fetchAppleMusicLinkFromItunes,
+  dedupeAndNormalizeLinks,
+  fetchSongLink,
+  mergeLinkResults,
+  buildSpotifyInputCanonicalMetadata,
+  pickBestMetadata,
+  extractSpotifyTrackId,
+  fetchSpotifyAnonymousToken,
+  fetchSpotifySearchDesktopTracks,
+  rankSpotifyTrackCandidates,
+  isStrongTitleMatch,
+  normalizeSearchText
+});
 
 const SONGLINK_PRIORITY_HOSTS = [
   "pandora.com",
@@ -333,143 +357,22 @@ async function buildSpotifySearchFallback(link) {
 }
 
 async function buildSpotifyInputResolution(link) {
-  const spotifyUrl = canonicalizeMediaUrl(link);
-  const metadata = await fetchSpotifyMetadata(link);
-  const spotifyQuery = buildSpotifyQueryFromMetadata(metadata);
-  let anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
-  const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
-  let anchoredAlbum = String(metadata?.album || "").trim();
-  const fallbackArtistForQuery = resolveSpotifyInputArtistFallback(metadata);
-  const fallbackAlbumForQuery = resolveSpotifyInputAlbumFallback(metadata);
-  const spotifyTrackEntityResolution = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
-  const spotifyTrackEntity = spotifyTrackEntityResolution.track;
-  const hasStrongSpotifyIdentity = Boolean(
-    spotifyTrackEntity &&
-      String(spotifyTrackEntity.title || "").trim() &&
-      String(spotifyTrackEntity.artists?.[0] || "").trim() &&
-      String(spotifyTrackEntity.album || "").trim()
-  );
-  const crossResolutionAllowed = hasStrongSpotifyIdentity;
-  if (!anchoredArtist && spotifyTrackEntity?.artists?.length) {
-    anchoredArtist = spotifyTrackEntity.artists[0];
-  }
-  if (!anchoredAlbum && spotifyTrackEntity?.album) {
-    anchoredAlbum = spotifyTrackEntity.album;
-  }
-  if (!anchoredArtist) anchoredArtist = fallbackArtistForQuery;
-  if (!anchoredAlbum) anchoredAlbum = fallbackAlbumForQuery;
-  const spotifyTrackQuery =
-    [anchoredTitle, anchoredArtist || anchoredAlbum].filter(Boolean).join(" ").trim() || spotifyQuery.query;
-  const appleMusicResult =
-    crossResolutionAllowed && spotifyTrackQuery
-      ? await fetchAppleMusicLinkFromItunes(spotifyTrackQuery, {
-          title: anchoredTitle || spotifyQuery.title,
-          artist: anchoredArtist || spotifyQuery.artist || anchoredAlbum,
-          query: spotifyTrackQuery
-        })
-      : { url: "", isVerified: false, artist: "", title: "", album: "" };
-  const links = [
-    {
-      type: "spotify",
-      url: spotifyUrl,
-      isVerified: true,
-      isProtected: true,
-      source: "input"
-    }
-  ];
-
-  if (appleMusicResult?.url) {
-    links.push({
-      type: "appleMusic",
-      url: canonicalizeMediaUrl(appleMusicResult.url),
-      isVerified: Boolean(appleMusicResult.isVerified),
-      isProtected: Boolean(appleMusicResult.isVerified),
-      source: "itunes_lookup"
-    });
-  }
-
-  let mergedLinks = dedupeAndNormalizeLinks(links);
-  const bridgeSourceUrl = crossResolutionAllowed ? appleMusicResult?.url || spotifyUrl : "";
-  let bridgeResult = { ok: false };
-  if (bridgeSourceUrl) {
-    bridgeResult = await fetchSongLink(bridgeSourceUrl, {
-      markVerified: true,
-      protectVerified: true
-    });
-    if (bridgeResult.ok) {
-      mergedLinks = mergeLinkResults({ links: mergedLinks }, bridgeResult.data).links;
-    }
-  }
-
-  const songLinkArtist = String(bridgeResult?.data?.description || "").split("•")[0].trim();
-  const songLinkAlbum = String(bridgeResult?.data?.album || "").trim();
-  const canonicalMetadata = buildSpotifyInputCanonicalMetadata({
-    spotifyTrackEntity,
-    spotifyTitle: anchoredTitle,
-    entityFailed: Boolean(spotifyTrackEntityResolution.failed)
-  });
-
-  const metadataPayload = pickBestMetadata(
-    {
-      title: canonicalMetadata.title || "música encontrada",
-      description: canonicalMetadata.artist || songLinkArtist || "",
-      album: canonicalMetadata.album || songLinkAlbum || "",
-      image: metadata?.image || ""
-    },
-    bridgeResult.ok ? bridgeResult.data : {},
-    {}
-  );
-
-  metadataPayload.title = canonicalMetadata.title || metadataPayload.title;
-  metadataPayload.description = canonicalMetadata.artist || "";
-  metadataPayload.album = canonicalMetadata.album || "";
-
+  const result = await spotifyResolver.resolveSpotifyFromSpotifyInput(link);
   console.log(
     JSON.stringify({
       scope: "api.convert.spotify_input_metadata",
-      canonicalTitle: canonicalMetadata.title || "",
-      canonicalArtist: canonicalMetadata.artist || "",
-      canonicalAlbum: canonicalMetadata.album || "",
+      canonicalTitle: String(result?.data?._canonicalTitle || "").trim(),
+      canonicalArtist: String(result?.data?._canonicalArtist || "").trim(),
+      canonicalAlbum: String(result?.data?._canonicalAlbum || "").trim(),
       finalSource: {
-        title: canonicalMetadata.source || (metadataPayload.title ? "fallback" : ""),
-        artist: canonicalMetadata.source || (metadataPayload.description ? "fallback" : ""),
-        album: canonicalMetadata.source || (metadataPayload.album ? "fallback" : "")
+        title: String(result?.data?._canonicalMetadataSource || "").trim(),
+        artist: String(result?.data?._canonicalMetadataSource || "").trim(),
+        album: String(result?.data?._canonicalMetadataSource || "").trim()
       },
-      trackUrl: spotifyUrl
+      trackUrl: canonicalizeMediaUrl(link)
     })
   );
-
-  return {
-    ok: true,
-    status: 200,
-    data: {
-      ...metadataPayload,
-      _lockArtist: true,
-      _canonicalTitle: canonicalMetadata.title || "",
-      _canonicalArtist: canonicalMetadata.artist || "",
-      _canonicalAlbum: canonicalMetadata.album || "",
-      _canonicalImage: String(metadata?.image || "").trim(),
-      _canonicalMetadataSource: canonicalMetadata.source || "",
-      _lockCanonicalMetadata: true,
-      _resolvedTitle: canonicalMetadata.title || metadataPayload.title || "",
-      _resolvedArtist: canonicalMetadata.artist || metadataPayload.description || "",
-      _resolvedAlbum: canonicalMetadata.album || metadataPayload.album || "",
-      _resolvedImage: String(metadata?.image || "").trim() || metadataPayload.image || "",
-      _resolvedMetadataSource: canonicalMetadata.source || "spotify_input",
-      _spotifyEntityFailed: Boolean(spotifyTrackEntityResolution.failed),
-      _spotifyEntityStatus: String(spotifyTrackEntityResolution.status || ""),
-      _spotifyEntityTrackId: String(spotifyTrackEntity?.id || extractSpotifyTrackId(link) || "").trim(),
-      _spotifyEntityTitle: String(spotifyTrackEntity?.title || "").trim(),
-      _spotifyEntityArtist: String(spotifyTrackEntity?.artists?.[0] || "").trim(),
-      _spotifyEntityAlbum: String(spotifyTrackEntity?.album || "").trim(),
-      _spotifyFallbackArtist: String(fallbackArtistForQuery || "").trim(),
-      _spotifyFallbackAlbum: String(fallbackAlbumForQuery || "").trim(),
-      _spotifyFallbackArtistForQuery: String(fallbackArtistForQuery || "").trim(),
-      _spotifyFallbackAlbumForQuery: String(fallbackAlbumForQuery || "").trim(),
-      _spotifyCrossResolutionAllowed: Boolean(crossResolutionAllowed),
-      links: mergedLinks
-    }
-  };
+  return result;
 }
 
 function buildSpotifyInputCanonicalMetadata({ spotifyTrackEntity, spotifyTitle = "", entityFailed = false } = {}) {
@@ -2135,23 +2038,16 @@ async function maybeInjectSpotifySearchFallback(data, links) {
   const hasSpotify = nextLinks.some(item => String(item?.type || "").toLowerCase() === "spotify");
   if (!hasSpotify) {
     const expectedMetadata = extractExpectedTrackMetadata(data);
-    const spotifyTrack = await searchSpotifyTrackDirect(expectedMetadata.query, expectedMetadata);
-    if (spotifyTrack?.url) {
+    const spotifyResolution = await spotifyResolver.resolveSpotifyFromTrustedMetadata({
+      title: expectedMetadata.title,
+      artist: expectedMetadata.artist,
+      album: expectedMetadata.album,
+      image: String(data?.image || "").trim()
+    });
+    if (spotifyResolution?.spotifyLink?.url) {
       nextLinks.push({
-        type: "spotify",
-        url: spotifyTrack.url,
-        isVerified: true,
-        source: "spotify_direct_search"
+        ...spotifyResolution.spotifyLink
       });
-    } else {
-      const spotifySearchUrl = buildSpotifySearchUrlFromResult(data);
-      if (spotifySearchUrl) {
-        nextLinks.push({
-          type: "spotify",
-          url: spotifySearchUrl,
-          isVerified: false
-        });
-      }
     }
   }
 
