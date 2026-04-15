@@ -339,8 +339,8 @@ async function buildSpotifyInputResolution(link) {
   let anchoredArtist = await resolveAnchoredSpotifyInputArtist(link, metadata);
   const anchoredTitle = resolveAnchoredSpotifyInputTitle(metadata, spotifyQuery);
   let anchoredAlbum = String(metadata?.album || "").trim();
-  const spotifyInputArtistFallback = resolveSpotifyInputArtistFallback(metadata);
-  const spotifyInputAlbumFallback = resolveSpotifyInputAlbumFallback(metadata);
+  const fallbackArtistForQuery = resolveSpotifyInputArtistFallback(metadata);
+  const fallbackAlbumForQuery = resolveSpotifyInputAlbumFallback(metadata);
   const spotifyTrackEntityResolution = await resolveSpotifyTrackEntityFromInput(link, anchoredTitle);
   const spotifyTrackEntity = spotifyTrackEntityResolution.track;
   if (!anchoredArtist && spotifyTrackEntity?.artists?.length) {
@@ -349,6 +349,8 @@ async function buildSpotifyInputResolution(link) {
   if (!anchoredAlbum && spotifyTrackEntity?.album) {
     anchoredAlbum = spotifyTrackEntity.album;
   }
+  if (!anchoredArtist) anchoredArtist = fallbackArtistForQuery;
+  if (!anchoredAlbum) anchoredAlbum = fallbackAlbumForQuery;
   const spotifyTrackQuery =
     [anchoredTitle, anchoredArtist || anchoredAlbum].filter(Boolean).join(" ").trim() || spotifyQuery.query;
   const appleMusicResult =
@@ -397,8 +399,7 @@ async function buildSpotifyInputResolution(link) {
   const canonicalMetadata = buildSpotifyInputCanonicalMetadata({
     spotifyTrackEntity,
     spotifyTitle: anchoredTitle,
-    spotifyArtist: anchoredArtist || spotifyInputArtistFallback,
-    spotifyAlbum: anchoredAlbum || spotifyInputAlbumFallback
+    entityFailed: Boolean(spotifyTrackEntityResolution.failed)
   });
 
   const metadataPayload = pickBestMetadata(
@@ -413,8 +414,8 @@ async function buildSpotifyInputResolution(link) {
   );
 
   metadataPayload.title = canonicalMetadata.title || metadataPayload.title;
-  metadataPayload.description = canonicalMetadata.artist || metadataPayload.description;
-  metadataPayload.album = canonicalMetadata.album || metadataPayload.album;
+  metadataPayload.description = canonicalMetadata.artist || "";
+  metadataPayload.album = canonicalMetadata.album || "";
 
   console.log(
     JSON.stringify({
@@ -454,14 +455,16 @@ async function buildSpotifyInputResolution(link) {
       _spotifyEntityTitle: String(spotifyTrackEntity?.title || "").trim(),
       _spotifyEntityArtist: String(spotifyTrackEntity?.artists?.[0] || "").trim(),
       _spotifyEntityAlbum: String(spotifyTrackEntity?.album || "").trim(),
-      _spotifyFallbackArtist: String(spotifyInputArtistFallback || "").trim(),
-      _spotifyFallbackAlbum: String(spotifyInputAlbumFallback || "").trim(),
+      _spotifyFallbackArtist: String(fallbackArtistForQuery || "").trim(),
+      _spotifyFallbackAlbum: String(fallbackAlbumForQuery || "").trim(),
+      _spotifyFallbackArtistForQuery: String(fallbackArtistForQuery || "").trim(),
+      _spotifyFallbackAlbumForQuery: String(fallbackAlbumForQuery || "").trim(),
       links: mergedLinks
     }
   };
 }
 
-function buildSpotifyInputCanonicalMetadata({ spotifyTrackEntity, spotifyTitle = "", spotifyArtist = "", spotifyAlbum = "" } = {}) {
+function buildSpotifyInputCanonicalMetadata({ spotifyTrackEntity, spotifyTitle = "", entityFailed = false } = {}) {
   const entityTitle = String(spotifyTrackEntity?.title || "").trim();
   const entityArtist = String(spotifyTrackEntity?.artists?.[0] || "").trim();
   const entityAlbum = String(spotifyTrackEntity?.album || "").trim();
@@ -476,11 +479,20 @@ function buildSpotifyInputCanonicalMetadata({ spotifyTrackEntity, spotifyTitle =
     };
   }
 
+  if (entityFailed) {
+    return {
+      title: entityTitle || String(spotifyTitle || "").trim(),
+      artist: "",
+      album: "",
+      source: "spotify_input_title_only"
+    };
+  }
+
   return {
     title: entityTitle || String(spotifyTitle || "").trim(),
-    artist: entityArtist || String(spotifyArtist || "").trim(),
-    album: entityAlbum || String(spotifyAlbum || "").trim(),
-    source: entityTitle || entityArtist || entityAlbum ? "spotify_input_entity+spotify_html" : "spotify_html"
+    artist: entityArtist,
+    album: entityAlbum,
+    source: entityTitle || entityArtist || entityAlbum ? "spotify_input_entity_partial" : "spotify_input_title_only"
   };
 }
 
