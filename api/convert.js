@@ -156,7 +156,7 @@ export default async function handler(req, res) {
     if (platform === "spotify") {
       const spotifyInputResult = await buildSpotifyInputResolution(link);
       if (spotifyInputResult.ok) {
-        const finalizedData = await finalizeResultData(withInputPlatform(spotifyInputResult.data, inputPlatform));
+        const finalizedData = await finalizeResultData(withInputPlatform(spotifyInputResult.data, inputPlatform), { inputPlatform });
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
@@ -184,7 +184,7 @@ export default async function handler(req, res) {
         : primaryResult.data;
 
       const groundedData = withInputPlatform(await enforceInputTrackGroundTruth(mergedData, link), inputPlatform);
-      const finalizedData = await finalizeResultData(groundedData);
+      const finalizedData = await finalizeResultData(groundedData, { inputPlatform });
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
@@ -197,7 +197,7 @@ export default async function handler(req, res) {
 
     if (fallbackResult.ok) {
       const groundedData = withInputPlatform(await enforceInputTrackGroundTruth(fallbackResult.data, link), inputPlatform);
-      const finalizedData = await finalizeResultData(groundedData);
+      const finalizedData = await finalizeResultData(groundedData, { inputPlatform });
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
       }
@@ -208,7 +208,7 @@ export default async function handler(req, res) {
       const spotifyFallback = await buildSpotifySearchFallback(link);
       if (spotifyFallback.ok) {
         const groundedData = withInputPlatform(await enforceInputTrackGroundTruth(spotifyFallback.data, link), inputPlatform);
-        const finalizedData = await finalizeResultData(groundedData);
+        const finalizedData = await finalizeResultData(groundedData, { inputPlatform });
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
         }
@@ -1441,8 +1441,8 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
   };
 }
 
-async function finalizeResultData(data) {
-  const payload = withResolvedMetadata(data || {});
+async function finalizeResultData(data, context = {}) {
+  const payload = withResolvedMetadata(withInputPlatform(data || {}, context?.inputPlatform || ""));
   const inputPlatform = String(payload?._inputPlatform || "").trim().toLowerCase();
   let safeOriginalAlbum = pickFirstNonEmpty([
     payload?._appleResolvedAlbum,
