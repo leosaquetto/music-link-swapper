@@ -1738,17 +1738,25 @@ async function fetchAppleTrackMetadataById(trackId) {
   if (!normalizedTrackId) return null;
 
   try {
-    const response = await fetchWithTimeout(`${ITUNES_SEARCH_API_URL.replace(/\/search$/, "/lookup")}?id=${encodeURIComponent(normalizedTrackId)}&entity=song&limit=1`);
+    const response = await fetchWithTimeout(`${ITUNES_SEARCH_API_URL.replace(/\/search$/, "/lookup")}?id=${encodeURIComponent(normalizedTrackId)}&entity=song&limit=25`);
     if (!response.ok) return null;
     const payload = await response.json();
-    const firstSong = (Array.isArray(payload?.results) ? payload.results : []).find(item => String(item?.kind || "").toLowerCase() === "song");
-    if (!firstSong) return null;
+    const songs = (Array.isArray(payload?.results) ? payload.results : []).filter(
+      item => String(item?.kind || "").toLowerCase() === "song"
+    );
+    if (!songs.length) return null;
+
+    const matchedSong =
+      songs.find(item => String(item?.trackId || "").trim() === normalizedTrackId) ||
+      songs.find(item => String(item?.id || "").trim() === normalizedTrackId) ||
+      songs[0];
+    if (!matchedSong) return null;
 
     return {
-      title: String(firstSong?.trackName || "").trim(),
-      artist: String(firstSong?.artistName || "").trim(),
-      album: String(firstSong?.collectionName || "").trim(),
-      image: String(firstSong?.artworkUrl100 || firstSong?.artworkUrl60 || "").trim()
+      title: String(matchedSong?.trackName || "").trim(),
+      artist: String(matchedSong?.artistName || "").trim(),
+      album: String(matchedSong?.collectionName || "").trim(),
+      image: String(matchedSong?.artworkUrl100 || matchedSong?.artworkUrl60 || "").trim()
     };
   } catch (_error) {
     return null;
