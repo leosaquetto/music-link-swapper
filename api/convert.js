@@ -1685,32 +1685,55 @@ function canonicalizeMediaUrl(value) {
 
 async function enforceInputTrackGroundTruth(data, sourceLink) {
   const sourceAppleTrack = extractAppleTrackInputContext(sourceLink);
-  if (!sourceAppleTrack.url) return data;
+  if (sourceAppleTrack.url) {
+    const links = Array.isArray(data?.links) ? data.links : [];
+    const filtered = links.filter(item => {
+      const type = String(item?.type || "").toLowerCase();
+      return type !== "applemusic" && type !== "itunes";
+    });
+
+    const appleTrackMetadata = sourceAppleTrack.trackId
+      ? await fetchAppleTrackMetadataById(sourceAppleTrack.trackId)
+      : null;
+
+    const mergedDescription = [appleTrackMetadata?.artist || "", appleTrackMetadata?.album || ""]
+      .filter(Boolean)
+      .join(" • ");
+
+    return {
+      ...(data || {}),
+      title: appleTrackMetadata?.title || data?.title || "",
+      description: mergedDescription || data?.description || "",
+      album: appleTrackMetadata?.album || data?.album || "",
+      image: appleTrackMetadata?.image || data?.image || "",
+      links: dedupeAndNormalizeLinks([
+        {
+          type: "appleMusic",
+          url: sourceAppleTrack.url,
+          isVerified: true
+        },
+        ...filtered
+      ])
+    };
+  }
+
+  const sourceSpotifyTrack = extractSpotifyTrackInputContext(sourceLink);
+  if (!sourceSpotifyTrack.url) return data;
 
   const links = Array.isArray(data?.links) ? data.links : [];
-  const filtered = links.filter(item => {
-    const type = String(item?.type || "").toLowerCase();
-    return type !== "applemusic" && type !== "itunes";
-  });
-
-  const appleTrackMetadata = sourceAppleTrack.trackId
-    ? await fetchAppleTrackMetadataById(sourceAppleTrack.trackId)
-    : null;
-
-  const mergedDescription = [appleTrackMetadata?.artist || "", appleTrackMetadata?.album || ""]
-    .filter(Boolean)
-    .join(" • ");
+  const filtered = links.filter(item => String(item?.type || "").toLowerCase() !== "spotify");
+  const spotifyTrackMetadata = await fetchSpotifyTrackMetadataById(sourceSpotifyTrack.url);
+  const spotifyTrackQuery = buildSpotifyQueryFromMetadata(spotifyTrackMetadata);
 
   return {
     ...(data || {}),
-    title: appleTrackMetadata?.title || data?.title || "",
-    description: mergedDescription || data?.description || "",
-    album: appleTrackMetadata?.album || data?.album || "",
-    image: appleTrackMetadata?.image || data?.image || "",
+    title: spotifyTrackQuery.title || data?.title || "",
+    description: spotifyTrackQuery.artist || data?.description || "",
+    image: spotifyTrackMetadata?.image || data?.image || "",
     links: dedupeAndNormalizeLinks([
       {
-        type: "appleMusic",
-        url: sourceAppleTrack.url,
+        type: "spotify",
+        url: sourceSpotifyTrack.url,
         isVerified: true
       },
       ...filtered
@@ -1730,6 +1753,32 @@ function extractAppleTrackInputContext(value) {
     };
   } catch (_error) {
     return { url: "", trackId: "" };
+  }
+}
+
+function extractSpotifyTrackInputContext(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    if (!parsed.hostname.toLowerCase().includes("spotify.com")) return { url: "", trackId: "" };
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    const trackIndex = segments.findIndex(part => part.toLowerCase() === "track");
+    const trackId = trackIndex === -1 ? "" : String(segments[trackIndex + 1] || "").trim();
+    if (!trackId) return { url: "", trackId: "" };
+
+    return {
+      url: `https://open.spotify.com/track/${trackId}`,
+      trackId
+    };
+  } catch (_error) {
+    return { url: "", trackId: "" };
+  }
+}
+
+async function fetchSpotifyTrackMetadataById(url) {
+  try {
+    return await fetchSpotifyMetadataFromOEmbed(url);
+  } catch (_error) {
+    return fetchSpotifyMetadata(url);
   }
 }
 
