@@ -789,18 +789,18 @@ function buildSpotifyQueryFromMetadata(metadata) {
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
-  if (!query) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+  if (!query) return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
 
   try {
     const response = await fetchWithTimeout(
       `${ITUNES_SEARCH_API_URL}?term=${encodeURIComponent(query)}&entity=song&limit=5`
     );
 
-    if (!response.ok) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    if (!response.ok) return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
 
     const data = await response.json();
     const results = Array.isArray(data?.results) ? data.results : [];
-    if (!results.length) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    if (!results.length) return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
 
     const target = findBestMatch(results, {
       query,
@@ -813,15 +813,24 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
       getCandidateTitle: item => item?.trackName || ""
     });
 
+    const score = Number(target?.score || 0);
+    const isVerified = score >= 85;
+    const isAccepted = score >= 65;
+
+    if (!isAccepted) {
+      return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
+    }
+
     return {
       url: target?.candidate?.trackViewUrl || "",
-      isVerified: target.score >= 85,
+      isVerified,
+      notAvailable: false,
       artist: target?.candidate?.artistName || "",
       title: target?.candidate?.trackName || "",
       album: target?.candidate?.collectionName || ""
     };
   } catch (_error) {
-    return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
   }
 }
 
