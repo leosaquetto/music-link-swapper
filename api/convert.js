@@ -766,8 +766,20 @@ function buildSpotifyQueryFromMetadata(metadata) {
     .replace(/\s+/g, " ")
     .trim();
 
-  const [artistFromDescription = ""] = String(metadata?.description || "").split("·");
-  const artist = artistFromDescription.trim();
+  const descriptionParts = String(metadata?.description || "")
+    .split("·")
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  let artist = descriptionParts[0] || "";
+  if (
+    artist &&
+    title &&
+    normalizeSearchText(artist) === normalizeSearchText(title) &&
+    descriptionParts[1]
+  ) {
+    artist = descriptionParts[1];
+  }
 
   return {
     title,
@@ -777,18 +789,18 @@ function buildSpotifyQueryFromMetadata(metadata) {
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
-  if (!query) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+  if (!query) return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
 
   try {
     const response = await fetchWithTimeout(
       `${ITUNES_SEARCH_API_URL}?term=${encodeURIComponent(query)}&entity=song&limit=5`
     );
 
-    if (!response.ok) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    if (!response.ok) return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
 
     const data = await response.json();
     const results = Array.isArray(data?.results) ? data.results : [];
-    if (!results.length) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    if (!results.length) return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
 
     const target = findBestMatch(results, {
       query,
@@ -801,15 +813,24 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
       getCandidateTitle: item => item?.trackName || ""
     });
 
+    const score = Number(target?.score || 0);
+    const isVerified = score >= 85;
+    const isAccepted = score >= 65;
+
+    if (!isAccepted) {
+      return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
+    }
+
     return {
       url: target?.candidate?.trackViewUrl || "",
-      isVerified: target.score >= 85,
+      isVerified,
+      notAvailable: false,
       artist: target?.candidate?.artistName || "",
       title: target?.candidate?.trackName || "",
       album: target?.candidate?.collectionName || ""
     };
   } catch (_error) {
-    return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    return { url: "", isVerified: false, notAvailable: true, artist: "", title: "", album: "" };
   }
 }
 
@@ -1673,32 +1694,55 @@ function canonicalizeMediaUrl(value) {
 
 async function enforceInputTrackGroundTruth(data, sourceLink) {
   const sourceAppleTrack = extractAppleTrackInputContext(sourceLink);
-  if (!sourceAppleTrack.url) return data;
+  if (sourceAppleTrack.url) {
+    const links = Array.isArray(data?.links) ? data.links : [];
+    const filtered = links.filter(item => {
+      const type = String(item?.type || "").toLowerCase();
+      return type !== "applemusic" && type !== "itunes";
+    });
+
+    const appleTrackMetadata = sourceAppleTrack.trackId
+      ? await fetchAppleTrackMetadataById(sourceAppleTrack.trackId)
+      : null;
+
+    const mergedDescription = [appleTrackMetadata?.artist || "", appleTrackMetadata?.album || ""]
+      .filter(Boolean)
+      .join(" • ");
+
+    return {
+      ...(data || {}),
+      title: appleTrackMetadata?.title || data?.title || "",
+      description: mergedDescription || data?.description || "",
+      album: appleTrackMetadata?.album || data?.album || "",
+      image: appleTrackMetadata?.image || data?.image || "",
+      links: dedupeAndNormalizeLinks([
+        {
+          type: "appleMusic",
+          url: sourceAppleTrack.url,
+          isVerified: true
+        },
+        ...filtered
+      ])
+    };
+  }
+
+  const sourceSpotifyTrack = extractSpotifyTrackInputContext(sourceLink);
+  if (!sourceSpotifyTrack.url) return data;
 
   const links = Array.isArray(data?.links) ? data.links : [];
-  const filtered = links.filter(item => {
-    const type = String(item?.type || "").toLowerCase();
-    return type !== "applemusic" && type !== "itunes";
-  });
-
-  const appleTrackMetadata = sourceAppleTrack.trackId
-    ? await fetchAppleTrackMetadataById(sourceAppleTrack.trackId)
-    : null;
-
-  const mergedDescription = [appleTrackMetadata?.artist || "", appleTrackMetadata?.album || ""]
-    .filter(Boolean)
-    .join(" • ");
+  const filtered = links.filter(item => String(item?.type || "").toLowerCase() !== "spotify");
+  const spotifyTrackMetadata = await fetchSpotifyTrackMetadataById(sourceSpotifyTrack.url);
+  const spotifyTrackQuery = buildSpotifyQueryFromMetadata(spotifyTrackMetadata);
 
   return {
     ...(data || {}),
-    title: appleTrackMetadata?.title || data?.title || "",
-    description: mergedDescription || data?.description || "",
-    album: appleTrackMetadata?.album || data?.album || "",
-    image: appleTrackMetadata?.image || data?.image || "",
+    title: spotifyTrackQuery.title || data?.title || "",
+    description: spotifyTrackQuery.artist || data?.description || "",
+    image: spotifyTrackMetadata?.image || data?.image || "",
     links: dedupeAndNormalizeLinks([
       {
-        type: "appleMusic",
-        url: sourceAppleTrack.url,
+        type: "spotify",
+        url: sourceSpotifyTrack.url,
         isVerified: true
       },
       ...filtered
@@ -1721,22 +1765,56 @@ function extractAppleTrackInputContext(value) {
   }
 }
 
+function extractSpotifyTrackInputContext(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    if (!parsed.hostname.toLowerCase().includes("spotify.com")) return { url: "", trackId: "" };
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    const trackIndex = segments.findIndex(part => part.toLowerCase() === "track");
+    const trackId = trackIndex === -1 ? "" : String(segments[trackIndex + 1] || "").trim();
+    if (!trackId) return { url: "", trackId: "" };
+
+    return {
+      url: `https://open.spotify.com/track/${trackId}`,
+      trackId
+    };
+  } catch (_error) {
+    return { url: "", trackId: "" };
+  }
+}
+
+async function fetchSpotifyTrackMetadataById(url) {
+  try {
+    return await fetchSpotifyMetadataFromOEmbed(url);
+  } catch (_error) {
+    return fetchSpotifyMetadata(url);
+  }
+}
+
 async function fetchAppleTrackMetadataById(trackId) {
   const normalizedTrackId = String(trackId || "").trim();
   if (!normalizedTrackId) return null;
 
   try {
-    const response = await fetchWithTimeout(`${ITUNES_SEARCH_API_URL.replace(/\/search$/, "/lookup")}?id=${encodeURIComponent(normalizedTrackId)}&entity=song&limit=1`);
+    const response = await fetchWithTimeout(`${ITUNES_SEARCH_API_URL.replace(/\/search$/, "/lookup")}?id=${encodeURIComponent(normalizedTrackId)}&entity=song&limit=25`);
     if (!response.ok) return null;
     const payload = await response.json();
-    const firstSong = (Array.isArray(payload?.results) ? payload.results : []).find(item => String(item?.kind || "").toLowerCase() === "song");
-    if (!firstSong) return null;
+    const songs = (Array.isArray(payload?.results) ? payload.results : []).filter(
+      item => String(item?.kind || "").toLowerCase() === "song"
+    );
+    if (!songs.length) return null;
+
+    const matchedSong =
+      songs.find(item => String(item?.trackId || "").trim() === normalizedTrackId) ||
+      songs.find(item => String(item?.id || "").trim() === normalizedTrackId) ||
+      songs[0];
+    if (!matchedSong) return null;
 
     return {
-      title: String(firstSong?.trackName || "").trim(),
-      artist: String(firstSong?.artistName || "").trim(),
-      album: String(firstSong?.collectionName || "").trim(),
-      image: String(firstSong?.artworkUrl100 || firstSong?.artworkUrl60 || "").trim()
+      title: String(matchedSong?.trackName || "").trim(),
+      artist: String(matchedSong?.artistName || "").trim(),
+      album: String(matchedSong?.collectionName || "").trim(),
+      image: String(matchedSong?.artworkUrl100 || matchedSong?.artworkUrl60 || "").trim()
     };
   } catch (_error) {
     return null;
@@ -2007,8 +2085,53 @@ function mergeLinkResults(primaryData, enrichmentData) {
     });
   }
 
+  const isWeakPromotedText = (value, field) => {
+    const text = String(value || "").trim();
+    if (!text) return true;
+
+    const normalized = normalizeSearchText(text);
+    if (!normalized) return true;
+
+    const weakValues = new Set([
+      "musica encontrada",
+      "música encontrada",
+      "resultado por busca",
+      "spotify"
+    ]);
+    if (weakValues.has(normalized)) return true;
+
+    if (field === "description") {
+      const normalizedPrimaryTitle = normalizeSearchText(primaryData?.title || "");
+      if (normalizedPrimaryTitle && normalized === normalizedPrimaryTitle) {
+        return true;
+      }
+    }
+
+    if (field === "album" && normalized === "single") {
+      return true;
+    }
+
+    return false;
+  };
+
+  const pickMetadata = (field, primaryValue, enrichmentValue) => {
+    const primaryText = String(primaryValue || "").trim();
+    if (primaryText) return primaryText;
+
+    const enrichmentText = String(enrichmentValue || "").trim();
+    if (!enrichmentText) return "";
+    if (field === "image" || field === "universalLink") return enrichmentText;
+    if (isWeakPromotedText(enrichmentText, field)) return "";
+    return enrichmentText;
+  };
+
   return {
     ...primaryData,
+    title: pickMetadata("title", primaryData?.title, enrichmentData?.title),
+    description: pickMetadata("description", primaryData?.description, enrichmentData?.description),
+    album: pickMetadata("album", primaryData?.album, enrichmentData?.album),
+    image: pickMetadata("image", primaryData?.image, enrichmentData?.image),
+    universalLink: pickMetadata("universalLink", primaryData?.universalLink, enrichmentData?.universalLink),
     links: Array.from(byType.values())
   };
 }
