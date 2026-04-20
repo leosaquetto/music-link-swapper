@@ -766,8 +766,20 @@ function buildSpotifyQueryFromMetadata(metadata) {
     .replace(/\s+/g, " ")
     .trim();
 
-  const [artistFromDescription = ""] = String(metadata?.description || "").split("·");
-  const artist = artistFromDescription.trim();
+  const descriptionParts = String(metadata?.description || "")
+    .split("·")
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  let artist = descriptionParts[0] || "";
+  if (
+    artist &&
+    title &&
+    normalizeSearchText(artist) === normalizeSearchText(title) &&
+    descriptionParts[1]
+  ) {
+    artist = descriptionParts[1];
+  }
 
   return {
     title,
@@ -2007,8 +2019,53 @@ function mergeLinkResults(primaryData, enrichmentData) {
     });
   }
 
+  const isWeakPromotedText = (value, field) => {
+    const text = String(value || "").trim();
+    if (!text) return true;
+
+    const normalized = normalizeSearchText(text);
+    if (!normalized) return true;
+
+    const weakValues = new Set([
+      "musica encontrada",
+      "música encontrada",
+      "resultado por busca",
+      "spotify"
+    ]);
+    if (weakValues.has(normalized)) return true;
+
+    if (field === "description") {
+      const normalizedPrimaryTitle = normalizeSearchText(primaryData?.title || "");
+      if (normalizedPrimaryTitle && normalized === normalizedPrimaryTitle) {
+        return true;
+      }
+    }
+
+    if (field === "album" && normalized === "single") {
+      return true;
+    }
+
+    return false;
+  };
+
+  const pickMetadata = (field, primaryValue, enrichmentValue) => {
+    const primaryText = String(primaryValue || "").trim();
+    if (primaryText) return primaryText;
+
+    const enrichmentText = String(enrichmentValue || "").trim();
+    if (!enrichmentText) return "";
+    if (field === "image" || field === "universalLink") return enrichmentText;
+    if (isWeakPromotedText(enrichmentText, field)) return "";
+    return enrichmentText;
+  };
+
   return {
     ...primaryData,
+    title: pickMetadata("title", primaryData?.title, enrichmentData?.title),
+    description: pickMetadata("description", primaryData?.description, enrichmentData?.description),
+    album: pickMetadata("album", primaryData?.album, enrichmentData?.album),
+    image: pickMetadata("image", primaryData?.image, enrichmentData?.image),
+    universalLink: pickMetadata("universalLink", primaryData?.universalLink, enrichmentData?.universalLink),
     links: Array.from(byType.values())
   };
 }
