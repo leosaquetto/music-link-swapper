@@ -11,6 +11,7 @@
     "probe:providers": "node scripts/provider-probe.mjs"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.3",
     "@neondatabase/serverless": "^1.0.2"
   },
   "devDependencies": {

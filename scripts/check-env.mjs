@@ -58,8 +58,12 @@ function validateDatabaseUrl(value, { issues, warnings }) {
     return;
   }
 
+  if (parsed.protocol === "pglite:") {
+    return;
+  }
+
   if (!["postgres:", "postgresql:"].includes(parsed.protocol)) {
-    issues.push("DATABASE_URL must use postgres:// or postgresql://.");
+    issues.push("DATABASE_URL must use postgres://, postgresql://, or pglite://.");
   }
   if (!parsed.hostname || !parsed.pathname || parsed.pathname === "/") {
     issues.push("DATABASE_URL must include a host and database name.");

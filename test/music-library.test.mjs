@@ -7,6 +7,7 @@ import {
   __resetMusicLibraryForTests,
   __setMusicLibrarySqlClientForTests,
   attachAliasesToTrack,
+  isMusicLibraryEnabled,
   readCachedResultByAlias,
   readCachedResultByTrackId,
   upsertCachedResult,
@@ -99,7 +100,45 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
     const cachedById = await readCachedResultByTrackId(first.trackId);
     assert.deepEqual(cachedById.missingPlatforms, ["youtubeMusic"]);
   } finally {
-    __resetMusicLibraryForTests();
+    await __resetMusicLibraryForTests();
+  }
+});
+
+test("music library supports zero-cost pglite DATABASE_URL", async () => {
+  const previousDatabaseUrl = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = "pglite://memory";
+  await __resetMusicLibraryForTests();
+
+  try {
+    assert.equal(isMusicLibraryEnabled(), true);
+
+    const persisted = await upsertCachedResult(
+      {
+        title: "Saturn",
+        description: "SZA",
+        links: [
+          {
+            type: "spotify",
+            url: "https://open.spotify.com/track/1bjeWoagtHmUKputLVyDxQ",
+            isVerified: true,
+            source: "spotify_web"
+          }
+        ]
+      },
+      {
+        aliases: ["https://open.spotify.com/track/1bjeWoagtHmUKputLVyDxQ?si=abc"],
+        defaultSource: "pglite_test"
+      }
+    );
+
+    assert.match(persisted.trackId, /^trk_[a-f0-9]{20}$/);
+    const cached = await readCachedResultByAlias("https://open.spotify.com/track/1bjeWoagtHmUKputLVyDxQ");
+    assert.equal(cached.title, "Saturn");
+    assert.deepEqual(cached.links.map(link => link.type), ["spotify"]);
+  } finally {
+    if (previousDatabaseUrl === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = previousDatabaseUrl;
+    await __resetMusicLibraryForTests();
   }
 });
 

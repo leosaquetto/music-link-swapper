@@ -1,8 +1,18 @@
 # Environment setup
 
-This app works without paid services. Persistent shared cache needs a Postgres-compatible URL.
+This app works without paid services. Persistent cache needs a Postgres-compatible URL.
 
-## Required for shared cache
+## Local zero-cost cache
+
+For local development, use PGlite:
+
+```bash
+DATABASE_URL="pglite://.data/music-link-swapper"
+```
+
+This creates an embedded Postgres-compatible database under `.data/`. It is durable on your machine and costs nothing.
+
+## Production shared cache
 
 Set `DATABASE_URL` to a Postgres/Neon connection string:
 
@@ -27,6 +37,8 @@ Manual setup is also fine: create a free Neon Postgres database, copy the pooled
 
 When `DATABASE_URL` is absent, the API still converts links, but `tracks`, `track_links`, `track_aliases`, and `provider_attempts` are not persisted.
 
+When `DATABASE_URL` starts with `pglite://`, the cache is local to that filesystem. Use Neon/Postgres for a shared production library.
+
 ## Optional variables
 
 ```bash
@@ -41,4 +53,4 @@ YOUTUBE_API_KEY=""
 
 ## Tests
 
-`npm run check` includes syntax checks and unit/integration tests. The database integration test uses an in-memory Postgres-compatible adapter, so it has no cost and does not require a live Neon database.
+`npm run check` includes syntax checks and unit/integration tests. The database integration tests use free local Postgres-compatible adapters, so they have no cost and do not require a live Neon database.

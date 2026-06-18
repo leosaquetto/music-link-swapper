@@ -1,4 +1,7 @@
 import { neon } from "@neondatabase/serverless";
+import { PGlite } from "@electric-sql/pglite";
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 import {
   buildCanonicalTrackKey,
@@ -14,8 +17,13 @@ let schemaReady = null;
 
 function getSql() {
   if (injectedSqlClient) return injectedSqlClient;
-  if (!process.env.DATABASE_URL) return null;
-  if (!sqlClient) sqlClient = neon(process.env.DATABASE_URL);
+  const databaseUrl = String(process.env.DATABASE_URL || "").trim();
+  if (!databaseUrl) return null;
+  if (!sqlClient) {
+    sqlClient = databaseUrl.startsWith("pglite://")
+      ? createPgliteSqlClient(databaseUrl)
+      : neon(databaseUrl);
+  }
   return sqlClient;
 }
 
@@ -28,7 +36,10 @@ export function __setMusicLibrarySqlClientForTests(sql) {
   schemaReady = null;
 }
 
-export function __resetMusicLibraryForTests() {
+export async function __resetMusicLibraryForTests() {
+  if (typeof sqlClient?.close === "function") {
+    await sqlClient.close();
+  }
   injectedSqlClient = null;
   sqlClient = null;
   schemaReady = null;
@@ -337,4 +348,33 @@ function logLibraryWarning(action, error) {
       message: String(error?.message || error || "unknown_error")
     })
   );
+}
+
+function createPgliteSqlClient(databaseUrl) {
+  const db = new PGlite(resolvePgliteDataDir(databaseUrl));
+  const sql = async (strings, ...values) => {
+    const query = strings.reduce((acc, part, index) => {
+      const value = index < values.length ? toSqlLiteral(values[index]) : "";
+      return `${acc}${part}${value}`;
+    }, "");
+    const result = await db.query(query);
+    return result.rows;
+  };
+  sql.close = () => db.close();
+  return sql;
+}
+
+function resolvePgliteDataDir(databaseUrl) {
+  const value = String(databaseUrl || "").replace(/^pglite:\/\//, "").trim();
+  if (!value || value === "memory") return "memory://music-link-swapper";
+  const dataDir = resolve(value);
+  mkdirSync(dirname(dataDir), { recursive: true });
+  return dataDir;
+}
+
+function toSqlLiteral(value) {
+  if (value === null || value === undefined) return "null";
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return `'${String(value).replace(/'/g, "''")}'`;
 }
