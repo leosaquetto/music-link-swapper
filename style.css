@@ -896,6 +896,97 @@ h2 {
   font-size: 10px;
 }
 
+.correction-card {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.correction-form {
+  display: grid;
+  gap: 10px;
+}
+
+.correction-title {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.correction-hint {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.correction-fields {
+  display: grid;
+  grid-template-columns: minmax(108px, 0.72fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.correction-label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  min-width: 0;
+}
+
+.correction-select,
+.correction-input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-strong);
+  color: var(--input-text);
+  outline: none;
+  font-size: 12px;
+}
+
+.correction-select {
+  padding: 0 10px;
+}
+
+.correction-input {
+  padding: 0 12px;
+}
+
+.correction-select:focus,
+.correction-input:focus {
+  border-color: rgba(52, 199, 89, 0.6);
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.11);
+}
+
+.correction-submit {
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: rgba(52, 199, 89, 0.16);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    opacity 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.correction-submit:disabled {
+  opacity: 0.58;
+  cursor: default;
+}
+
 .result-dismiss-button {
   position: absolute;
   right: 12px;
@@ -1906,6 +1997,14 @@ body.legal-modal-open {
 
   .platform-name {
     font-size: 12px;
+  }
+
+  .correction-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .correction-submit {
+    width: 100%;
   }
 
   .app-logo {

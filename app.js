@@ -20,13 +20,7 @@ const HERO_LOGO_GIF_URL = "https://i.imgur.com/T1uEx9T.gif?v=20260411";
 const REQUESTED_ADAPTERS = [
   "appleMusic",
   "spotify",
-  "youTube",
-  "deezer",
-  "soundCloud",
-  "pandora",
-  "qobuz",
-  "bandcamp",
-  "tidal"
+  "youTube"
 ];
 
 const STREAMING_HOST_HINTS = [
@@ -95,7 +89,15 @@ const TRANSLATIONS = {
     copiedSuffix: "copiado.",
     sharedSuffix: "compartilhado.",
     privacyPolicy: "política de privacidade",
-    termsOfUse: "termos de uso"
+    termsOfUse: "termos de uso",
+    completeLink: "completar link",
+    completeLinkHint: "tem um link direto que faltou? envie para completar este card.",
+    completeLinkPlatform: "plataforma",
+    completeLinkUrl: "link direto",
+    completeLinkSave: "salvar",
+    completeLinkSaved: "link adicionado.",
+    completeLinkPending: "link recebido para revisão.",
+    completeLinkError: "não consegui salvar esse link agora."
   },
   en: {
     loadingSwap: "swapping...",
@@ -136,7 +138,15 @@ const TRANSLATIONS = {
     copiedSuffix: "copied.",
     sharedSuffix: "shared.",
     privacyPolicy: "privacy policy",
-    termsOfUse: "terms of use"
+    termsOfUse: "terms of use",
+    completeLink: "complete link",
+    completeLinkHint: "have a missing direct link? send it to complete this card.",
+    completeLinkPlatform: "platform",
+    completeLinkUrl: "direct link",
+    completeLinkSave: "save",
+    completeLinkSaved: "link added.",
+    completeLinkPending: "link received for review.",
+    completeLinkError: "could not save this link now."
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
@@ -177,7 +187,15 @@ const TRANSLATIONS = {
     copiedSuffix: "copiado.",
     sharedSuffix: "compartido.",
     privacyPolicy: "política de privacidad",
-    termsOfUse: "términos de uso"
+    termsOfUse: "términos de uso",
+    completeLink: "completar enlace",
+    completeLinkHint: "¿falta un enlace directo? envíalo para completar este card.",
+    completeLinkPlatform: "plataforma",
+    completeLinkUrl: "enlace directo",
+    completeLinkSave: "guardar",
+    completeLinkSaved: "enlace agregado.",
+    completeLinkPending: "enlace recibido para revisión.",
+    completeLinkError: "no pude guardar este enlace ahora."
   },
   "it-it": {
     loadingSwap: "conversione...",
@@ -218,7 +236,15 @@ const TRANSLATIONS = {
     copiedSuffix: "copiato.",
     sharedSuffix: "condiviso.",
     privacyPolicy: "informativa sulla privacy",
-    termsOfUse: "termini di utilizzo"
+    termsOfUse: "termini di utilizzo",
+    completeLink: "completa link",
+    completeLinkHint: "manca un link diretto? invialo per completare questa card.",
+    completeLinkPlatform: "piattaforma",
+    completeLinkUrl: "link diretto",
+    completeLinkSave: "salva",
+    completeLinkSaved: "link aggiunto.",
+    completeLinkPending: "link ricevuto per revisione.",
+    completeLinkError: "non ho potuto salvare questo link ora."
   },
   "fr-fr": {
     loadingSwap: "conversion...",
@@ -259,7 +285,15 @@ const TRANSLATIONS = {
     copiedSuffix: "copié.",
     sharedSuffix: "partagé.",
     privacyPolicy: "politique de confidentialité",
-    termsOfUse: "conditions d’utilisation"
+    termsOfUse: "conditions d’utilisation",
+    completeLink: "compléter le lien",
+    completeLinkHint: "un lien direct manque ? envoyez-le pour compléter cette carte.",
+    completeLinkPlatform: "plateforme",
+    completeLinkUrl: "lien direct",
+    completeLinkSave: "enregistrer",
+    completeLinkSaved: "lien ajouté.",
+    completeLinkPending: "lien reçu pour vérification.",
+    completeLinkError: "impossible d’enregistrer ce lien maintenant."
   }
 };
 
@@ -338,7 +372,7 @@ const PLATFORM_META = {
   appleMusic: { name: "apple music", icon: SVG_ICONS.appleMusic, section: "principais", order: 1, isPrimaryCopy: true, appScheme: "music://" },
   spotify: { name: "spotify", icon: SVG_ICONS.spotify, section: "principais", order: 2, isPrimaryCopy: true, appScheme: "spotify://" },
   youTube: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 3, isPrimaryCopy: true, appScheme: "youtubemusic://" },
-  youtube: { name: "youtube", icon: SVG_ICONS.youtube, section: "outras", order: 12, isPrimaryCopy: false, appScheme: "youtube://" },
+  youtube: { name: "youtube", icon: SVG_ICONS.youtube, section: "principais", order: 4, isPrimaryCopy: true, appScheme: "youtube://" },
   youtubeMusic: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 3, isPrimaryCopy: true, appScheme: "youtubemusic://" },
   deezer: { name: "deezer", icon: SVG_ICONS.deezer, section: "principais", order: 4, isPrimaryCopy: true, appScheme: "deezer://" },
   tidal: { name: "tidal", icon: SVG_ICONS.tidal, section: "principais", order: 5, isPrimaryCopy: true, appScheme: "tidal://" },
@@ -352,15 +386,12 @@ const PLATFORM_META = {
 };
 
 const SUPPORTED_PLATFORM_CHIPS = [
-  "appleMusic",
   "spotify",
-  "youTube",
-  "deezer",
-  "tidal",
-  "soundCloud",
-  "pandora",
-  "qobuz"
+  "appleMusic",
+  "youtubeMusic",
+  "youtube"
 ];
+const AUTOMATIC_DISPLAY_PLATFORMS = new Set(["spotify", "appleMusic", "youtube", "youtubeMusic"]);
 const MADE_BY_SIGNATURE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" role="img" aria-label="Leo Saquetto signature"><g fill="currentColor"><path d="M147.7,27.1c-1.1,6.5-2.4,14.1-3.7,21.7-1.2,6.7-2.4,13.3-3.7,19.9-1.9,10.3-7.3,17-15.7,20.2-5.5,2.1-11.2,3.5-17.1,2.4-5-.9-8.2-5.2-8.4-11.1-.2-7.2,1.6-14.1,2.8-21.1,1.4-8.7,3-17.3,4.6-25.9,2.4-13.3,8.2-19.6,19.7-21.6,4.6-.8,9.1-.9,13.6.6,6.1,2.1,8.6,6.5,8,15.1ZM116.1,70.9c0,2.1-.4,3.9,1.2,4.7,1.6.8,3.2.4,4.6-1.1,1.4-1.5,1.9-3.6,2.3-5.7,1.8-10.1,3.6-20.2,5.4-30.3.6-3.2,1.2-6.4,1.6-9.6.3-2.7-.9-3.9-3.2-3.6-2.3.3-3.9,2.1-4.6,5.5-1,5.1-1.9,10.2-2.8,15.3-1.5,8.5-3.1,16.9-4.5,24.9Z"/><path d="M257.5,70.2c2.1,1.4,3.9.6,5.7,0,1.4-.5,1.7-.4,1.5,1.5-1.2,8-4.7,11.5-11.4,11.1-2.7-.2-5-1.4-6-4.5-.5-1.5-1.2-1.6-2.4-1.4-2.8.4-5.5.5-8.3-.2-6.6-1.6-9.8-6.9-8.5-14.7,1.8-11,4.2-21.9,6.2-32.9.7-3.8,1.4-7.6,3.1-11,1.9-3.9,4.5-6.6,8-8.3,6.7-3.1,13.7-3.6,20.6-1.6,6.1,1.8,8.5,6.9,7.2,14.2-2.3,11.9-4.5,23.8-6.9,35.7-1.4,6.7-3.4,9.4-8.7,12.3Z"/><path d="M472.5,74.9c-6.1.2-12.1.5-18.2.7-13.6.3-27.1.5-40.7,1-15.4.5-30.9,1-46.3,1.8-14.3.7-28.6,1.4-43,2.4-15.7,1-31.3,2.1-47,3.3-17.5,1.4-35.1,2.9-52.6,4.5-18.5,1.7-37,3.6-55.4,5.9-8.2,1-16.5,1.4-24.6,3.1-21.3,4.5-42.4,9.7-63.5,15.1-.8.2-1.8,0-2.9,1.4,38.8-6.3,77.3-12.4,115.9-16-17.4,3.9-34.9,7.8-52.6,11.8.8.9,1.3.7,1.8.6,16.1-2.4,32.3-3.8,48.4-5.7,2.4-.3,4.5-.4,6.3.5h0s4.3-.5,4.3-.5c-.1-.2-.3-.5-.4-.7,1.3-.8,2.1-.6,2.7.4l6.4-.8c-.1-.3-.3-.6-.5-1,4-.5,7.7-1,11.3-1.5l117.1-12.9c.3,0,.6-.1,1-.1.9,0,1.9,0,2.8-.2l2.8-.3c.7,0,1.4-.2,2.1-.2.6,0,1.3-.4,1.8-.2l15.7-1.4c13.9-1.3,27.8-2.9,41.8-4.1,22.5-1.9,44.9-4.4,67.4-5.7.4,0,.9.1,1-.7-.9-.6-1.9-.3-2.8-.3Z"/></g></svg>`;
 
 const state = {
@@ -412,6 +443,7 @@ const els = {
   resultTitle: document.getElementById("resultTitle"),
   resultMeta: document.getElementById("resultMeta"),
   platformGroups: document.getElementById("platformGroups"),
+  correctionCard: document.getElementById("correctionCard"),
   resultLegend: document.getElementById("resultLegend"),
   resultPoweredBy: document.getElementById("resultPoweredBy"),
   resultDismissButton: document.getElementById("resultDismissButton"),
@@ -581,7 +613,7 @@ function updateLocalizedStaticCopy() {
 function refreshLocalizedDynamicContent() {
   if (state.currentResult) {
     renderResult(state.currentResult, { skipSave: true });
-    const directCount = (state.currentResult.links || []).filter(item => !item.isSearchResult).length;
+    const directCount = (state.currentResult.links || []).length;
     if (directCount > 0) {
       showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
     }
@@ -1301,7 +1333,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     state.currentOriginalUrl = modeAtSubmit ? null : link;
     state.currentResult = result;
     renderResult(result);
-    const directCount = result.links.filter(item => !item.isSearchResult).length;
+    const directCount = result.links.length;
     showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
     els.input.value = "";
 
@@ -1342,6 +1374,8 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   const image = normalizeArtworkUrl(data.image || null);
 
   return {
+    trackId: cleanText(data.trackId || ""),
+    cacheStatus: cleanText(data.cacheStatus || ""),
     title: preview.title,
     artist: preview.artist,
     album: preview.album || cleanText(data.album || ""),
@@ -1349,8 +1383,26 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
     universalLink: data.universalLink || null,
     originalUrl: sourceLink || "",
     fromSearchMode: !!fromSearchMode,
+    missingPlatforms: normalizeMissingPlatforms(data.missingPlatforms, links),
     links
   };
+}
+
+function normalizeMissingPlatforms(missingPlatforms, links = []) {
+  const existing = new Set((links || []).map(item => item.key).filter(Boolean));
+  const raw = Array.isArray(missingPlatforms) ? missingPlatforms : [];
+  const normalized = [];
+  const seen = new Set();
+
+  for (const platform of raw) {
+    const key = normalizePlatformKey(platform);
+    if (!AUTOMATIC_DISPLAY_PLATFORMS.has(key)) continue;
+    if (existing.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    normalized.push(key);
+  }
+
+  return normalized;
 }
 
 function normalizeArtworkUrl(url) {
@@ -1577,6 +1629,7 @@ function renderResult(result, { skipSave = false } = {}) {
     els.platformGroups.appendChild(section);
   }
 
+  renderCorrectionPrompt(result);
   renderResultLegend();
   if (!skipSave) saveRecentSwap(result);
 }
@@ -1589,11 +1642,10 @@ function getSectionGroup(sectionName = "") {
 }
 
 function createPlatformItem(item) {
-  const badgeClass = item.isSearchResult ? "is-not-found" : item.isVerified ? "is-verified" : "is-found";
-  const badgeLabel = item.isSearchResult ? t("notLocated") : item.isVerified ? t("verified") : t("identified");
-  const badgeIcon = item.isSearchResult ? SVG_ICONS.notLocated : item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
-  const openIcon = item.isSearchResult ? SVG_ICONS.search : SVG_ICONS.open;
-  const openLabel = item.isSearchResult ? "buscar" : "abrir";
+  const badgeClass = item.isVerified ? "is-verified" : "is-found";
+  const badgeLabel = item.isVerified ? t("verified") : t("identified");
+  const badgeIcon = item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
+  const openLabel = "abrir";
 
   const row = document.createElement("article");
   row.className = "platform-item";
@@ -1616,7 +1668,7 @@ function createPlatformItem(item) {
         <span class="button-icon">${SVG_ICONS.share}</span>
       </button>
       <button class="mini-action open" type="button" data-action="open" aria-label="${openLabel}" title="${openLabel}">
-        <span class="button-icon">${openIcon}</span>
+        <span class="button-icon">${SVG_ICONS.open}</span>
       </button>
     </div>
   `;
@@ -1648,6 +1700,128 @@ function createPlatformItem(item) {
   });
 
   return row;
+}
+
+function renderCorrectionPrompt(result) {
+  if (!els.correctionCard) return;
+
+  const missing = Array.isArray(result?.missingPlatforms)
+    ? result.missingPlatforms.filter(key => AUTOMATIC_DISPLAY_PLATFORMS.has(key) && !result.links.some(item => item.key === key))
+    : [];
+
+  if (!result?.trackId || !missing.length) {
+    hideCorrectionPrompt();
+    return;
+  }
+
+  const options = missing
+    .map(key => {
+      const meta = PLATFORM_META[key];
+      if (!meta) return "";
+      return `<option value="${escapeHtml(key)}">${escapeHtml(meta.name)}</option>`;
+    })
+    .filter(Boolean)
+    .join("");
+
+  if (!options) {
+    hideCorrectionPrompt();
+    return;
+  }
+
+  els.correctionCard.classList.remove("hidden", "is-saving");
+  els.correctionCard.innerHTML = `
+    <form class="correction-form" novalidate>
+      <div class="correction-copy">
+        <p class="correction-title">${escapeHtml(t("completeLink"))}</p>
+        <p class="correction-hint">${escapeHtml(t("completeLinkHint"))}</p>
+      </div>
+      <div class="correction-fields">
+        <label class="correction-label">
+          <span>${escapeHtml(t("completeLinkPlatform"))}</span>
+          <select class="correction-select" name="platform" aria-label="${escapeHtml(t("completeLinkPlatform"))}">
+            ${options}
+          </select>
+        </label>
+        <label class="correction-label correction-url-label">
+          <span>${escapeHtml(t("completeLinkUrl"))}</span>
+          <input class="correction-input" name="url" type="url" inputmode="url" autocomplete="off" required />
+        </label>
+        <button class="correction-submit" type="submit">${escapeHtml(t("completeLinkSave"))}</button>
+      </div>
+    </form>
+  `;
+
+  els.correctionCard.querySelector("form")?.addEventListener("submit", event => {
+    event.preventDefault();
+    submitManualLink(event.currentTarget, result);
+  });
+}
+
+function hideCorrectionPrompt() {
+  if (!els.correctionCard) return;
+  els.correctionCard.classList.add("hidden");
+  els.correctionCard.classList.remove("is-saving");
+  els.correctionCard.innerHTML = "";
+}
+
+async function submitManualLink(form, result) {
+  if (!form || !result?.trackId || els.correctionCard?.classList.contains("is-saving")) return;
+
+  const formData = new FormData(form);
+  const platform = normalizePlatformKey(formData.get("platform"));
+  const url = cleanText(formData.get("url"));
+
+  if (!platform || !url) {
+    showFloatingToast(t("completeLinkError"));
+    return;
+  }
+
+  const submitButton = form.querySelector(".correction-submit");
+  els.correctionCard?.classList.add("is-saving");
+  if (submitButton) submitButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/manual-link", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        trackId: result.trackId,
+        platform,
+        url
+      })
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok || !payload?.ok) {
+      throw new Error(payload?.error || "manual link failed");
+    }
+
+    if (payload.data?.published && payload.data?.result) {
+      const nextResult = normalizeApiPayload(
+        payload.data.result,
+        state.currentOriginalUrl || result.originalUrl || "",
+        result.fromSearchMode
+      );
+
+      if (nextResult) {
+        state.currentResult = nextResult;
+        renderResult(nextResult, { skipSave: true });
+      }
+
+      showFloatingToast(t("completeLinkSaved"));
+      return;
+    }
+
+    form.reset();
+    showFloatingToast(t("completeLinkPending"));
+  } catch (_error) {
+    showFloatingToast(t("completeLinkError"));
+  } finally {
+    els.correctionCard?.classList.remove("is-saving");
+    if (submitButton) submitButton.disabled = false;
+  }
 }
 
 function pulseActionButton(button, variant = "copy") {
@@ -1951,6 +2125,7 @@ function hideResult() {
       els.copyPrimaryButton.classList.add("hidden");
       els.sharePrimaryButton.classList.add("hidden");
       els.copyOriginalButton.classList.add("hidden");
+      hideCorrectionPrompt();
       els.resultLegend?.classList.add("hidden");
       if (els.resultLegend) els.resultLegend.innerHTML = "";
       hideCoverImage();
@@ -1964,6 +2139,7 @@ function hideResult() {
   els.copyPrimaryButton.classList.add("hidden");
   els.sharePrimaryButton.classList.add("hidden");
   els.copyOriginalButton.classList.add("hidden");
+  hideCorrectionPrompt();
   els.resultLegend?.classList.add("hidden");
   if (els.resultLegend) els.resultLegend.innerHTML = "";
   hideCoverImage();
@@ -2073,16 +2249,12 @@ function syncSearchModeUI() {
 
 function renderResultLegend() {
   if (!els.resultLegend) return;
-  els.resultLegend.classList.remove("hidden");
+  els.resultLegend.classList.add("hidden");
   els.resultPoweredBy?.classList.remove("hidden");
-  els.resultLegend.innerHTML = `
-    <span class="legend-item"><span class="legend-icon is-verified">${SVG_ICONS.verified}</span> ${t("verified")}</span>
-    <span class="legend-item"><span class="legend-icon is-found">${SVG_ICONS.found}</span> ${t("identified")}</span>
-    <span class="legend-item"><span class="legend-icon is-not-found">${SVG_ICONS.notLocated}</span> ${t("notLocated")}</span>
-  `;
+  els.resultLegend.innerHTML = "";
 }
 
-function normalizeLinks(links, sourceLink = "", searchQuery = "") {
+function normalizeLinks(links, sourceLink = "", _searchQuery = "") {
   const seen = new Set();
   const normalized = [];
   const cameFromYouTubeMusic = isYouTubeMusicUrl(sourceLink);
@@ -2096,6 +2268,9 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
     if (type === "youtube" && (cameFromYouTubeMusic || linkIsYouTubeMusic)) {
       type = "youtubeMusic";
     }
+    if (!AUTOMATIC_DISPLAY_PLATFORMS.has(type)) continue;
+    if (isSearchUrlForPlatform(type, item.url)) continue;
+
     const meta = PLATFORM_META[type] || {
       name: prettifyPlatform(type),
       icon: "•",
@@ -2109,8 +2284,6 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
     if (seen.has(dedupe)) continue;
     seen.add(dedupe);
 
-    const isSearchResult = isSearchUrlForPlatform(type, item.url);
-
     normalized.push({
       key: type,
       name: meta.name,
@@ -2118,81 +2291,21 @@ function normalizeLinks(links, sourceLink = "", searchQuery = "") {
       section: meta.section,
       order: meta.order,
       url: item.url,
-      isVerified: !!item.isVerified && !isSearchResult,
-      isSearchResult,
+      isVerified: !!item.isVerified,
+      isSearchResult: false,
       isPrimaryCopy: !!meta.isPrimaryCopy,
       appScheme: meta.appScheme || null
     });
   }
 
-  addSearchFallbackLinks(normalized, seen, searchQuery);
-
   normalized.sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
-    if (a.isSearchResult && !b.isSearchResult) return 1;
-    if (!a.isSearchResult && b.isSearchResult) return -1;
     if (a.isVerified && !b.isVerified) return -1;
     if (!a.isVerified && b.isVerified) return 1;
     return a.name.localeCompare(b.name);
   });
 
   return normalized;
-}
-
-function addSearchFallbackLinks(normalized, seen, searchQuery) {
-  if (!searchQuery) return;
-
-  const fallbackTypes = ["spotify", "appleMusic", "youtubeMusic", "youtube", "deezer", "soundCloud", "tidal", "qobuz", "amazonMusic"];
-
-  for (const type of fallbackTypes) {
-    const hasRealLink = normalized.some(item => item.key === type && !item.isSearchResult);
-    if (hasRealLink) continue;
-
-    const searchUrl = buildSearchUrlForPlatform(type, searchQuery);
-    if (!searchUrl) continue;
-
-    const dedupe = `${type}|${searchUrl}`;
-    if (seen.has(dedupe)) continue;
-    seen.add(dedupe);
-
-    const meta = PLATFORM_META[type] || {
-      name: prettifyPlatform(type),
-      icon: "•",
-      section: "outras",
-      order: 999,
-      isPrimaryCopy: false,
-      appScheme: null
-    };
-
-    normalized.push({
-      key: type,
-      name: meta.name,
-      icon: meta.icon,
-      section: meta.section,
-      order: meta.order,
-      url: searchUrl,
-      isVerified: false,
-      isSearchResult: true,
-      isPrimaryCopy: !!meta.isPrimaryCopy,
-      appScheme: meta.appScheme || null
-    });
-  }
-}
-
-function buildSearchUrlForPlatform(type, query) {
-  const encoded = encodeURIComponent(query);
-
-  if (type === "youtubeMusic") return `https://music.youtube.com/search?q=${encoded}`;
-  if (type === "spotify") return `https://open.spotify.com/search/${encoded}`;
-  if (type === "appleMusic") return `https://music.apple.com/br/search?term=${encoded}`;
-  if (type === "youtube") return `https://www.youtube.com/results?search_query=${encoded}`;
-  if (type === "deezer") return `https://www.deezer.com/search/${encoded}`;
-  if (type === "soundCloud") return `https://soundcloud.com/search?q=${encoded}`;
-  if (type === "tidal") return `https://listen.tidal.com/search?q=${encoded}`;
-  if (type === "qobuz") return `https://www.qobuz.com/us-en/search?query=${encoded}`;
-  if (type === "amazonMusic") return `https://music.amazon.com/search/${encoded}`;
-
-  return "";
 }
 
 function isSearchUrlForPlatform(type, url) {
@@ -2227,7 +2340,7 @@ function normalizePlatformKey(key) {
   if (normalized === "soundcloud") return "soundCloud";
   if (normalized === "amazonstore") return "amazonStore";
   if (normalized === "amazon" || normalized === "amazonmusic") return "amazonMusic";
-  if (normalized === "apple" || normalized === "itunes") return "itunes";
+  if (normalized === "apple" || normalized === "itunes" || normalized === "applemusic") return "appleMusic";
   return raw;
 }
 

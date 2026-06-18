@@ -1,3 +1,19 @@
+import {
+  attachAliasesToTrack,
+  readCachedResultByAlias,
+  readCachedResultByTrackKey,
+  recordProviderAttempt,
+  upsertCachedResult
+} from "./lib/music-library.js";
+import {
+  buildCanonicalTrackKey,
+  canonicalizeMediaUrl as canonicalizeContractMediaUrl,
+  decorateResultForResponse,
+  filterDisplayLinks,
+  normalizePlatformKey as normalizeContractPlatformKey
+} from "./lib/music-contract.js";
+import { searchSpotifyWebTrack } from "./lib/spotify-web.js";
+
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
@@ -111,9 +127,20 @@ export default async function handler(req, res) {
         });
       }
 
+      const queryCacheKey = buildCanonicalTrackKey({ title: query.trim(), description: "" });
+      const cachedByQuery = await readCachedResultByTrackKey(queryCacheKey);
+      if (cachedByQuery) {
+        return res.status(200).json({ ok: true, data: cachedByQuery });
+      }
+
       const fallbackByQuery = await buildSearchFallbackFromQuery(query.trim());
       if (fallbackByQuery.ok) {
-        return res.status(200).json({ ok: true, data: fallbackByQuery.data });
+        const data = await finalizeAndPersistResult(fallbackByQuery.data, {
+          cacheStatus: "miss",
+          aliases: [],
+          defaultSource: "query"
+        });
+        return res.status(200).json({ ok: true, data });
       }
 
       return res.status(fallbackByQuery.status || 502).json({
@@ -137,14 +164,30 @@ export default async function handler(req, res) {
     }
 
     const sampleCacheKey = buildSampleCacheKey(link);
-    if (sampleCacheKey) {
-      const cachedResult = readSampleResultCache(sampleCacheKey);
-      if (cachedResult) {
-        return res.status(200).json({ ok: true, data: cachedResult });
-      }
+    const inputAlias = canonicalizeContractMediaUrl(link);
+    const cachedByAlias = await readCachedResultByAlias(inputAlias);
+    if (cachedByAlias) {
+      return res.status(200).json({ ok: true, data: cachedByAlias });
     }
 
     const platform = detectPlatformFromUrl(link);
+    const inputContext = await buildInputCacheContext(link, platform);
+    if (inputContext.canonicalKey) {
+      const cachedByTrack = await readCachedResultByTrackKey(inputContext.canonicalKey);
+      if (cachedByTrack) {
+        await attachAliasesToTrack(cachedByTrack.trackId, [inputAlias]);
+        return res.status(200).json({ ok: true, data: cachedByTrack });
+      }
+    }
+
+    if (sampleCacheKey) {
+      const cachedResult = readSampleResultCache(sampleCacheKey);
+      if (cachedResult) {
+        const data = decorateResultForResponse(cachedResult, { cacheStatus: "hit" });
+        return res.status(200).json({ ok: true, data });
+      }
+    }
+
     const shouldUseSongLinkFirst = shouldPrioritizeSongLink(link);
 
     const primaryResult = shouldUseSongLinkFirst
@@ -162,10 +205,16 @@ export default async function handler(req, res) {
 
       const groundedData = await enforceInputTrackGroundTruth(mergedData, link);
       const finalizedData = await finalizeResultData(groundedData);
+      const data = await finalizeAndPersistResult(finalizedData, {
+        cacheStatus: "miss",
+        aliases: [inputAlias],
+        defaultSource: "provider",
+        inputContext
+      });
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: finalizedData });
+      return res.status(200).json({ ok: true, data });
     }
 
     const fallbackResult = shouldUseSongLinkFirst
@@ -175,10 +224,16 @@ export default async function handler(req, res) {
     if (fallbackResult.ok) {
       const groundedData = await enforceInputTrackGroundTruth(fallbackResult.data, link);
       const finalizedData = await finalizeResultData(groundedData);
+      const data = await finalizeAndPersistResult(finalizedData, {
+        cacheStatus: "miss",
+        aliases: [inputAlias],
+        defaultSource: "provider",
+        inputContext
+      });
       if (sampleCacheKey) {
-        writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
+        writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data: finalizedData });
+      return res.status(200).json({ ok: true, data });
     }
 
     if (platform === "spotify") {
@@ -186,11 +241,32 @@ export default async function handler(req, res) {
       if (spotifyFallback.ok) {
         const groundedData = await enforceInputTrackGroundTruth(spotifyFallback.data, link);
         const finalizedData = await finalizeResultData(groundedData);
+        const data = await finalizeAndPersistResult(finalizedData, {
+          cacheStatus: "miss",
+          aliases: [inputAlias],
+          defaultSource: "spotify_web",
+          inputContext
+        });
         if (sampleCacheKey) {
-          writeSampleResultCache(sampleCacheKey, finalizedData, SAMPLE_RESULT_CACHE_TTL_MS);
+          writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
         }
-        return res.status(200).json({ ok: true, data: finalizedData });
+        return res.status(200).json({ ok: true, data });
       }
+    }
+
+    const directInputFallback = buildDirectInputFallback(link, inputContext);
+    if (directInputFallback.ok) {
+      const finalizedData = await finalizeResultData(directInputFallback.data);
+      const data = await finalizeAndPersistResult(finalizedData, {
+        cacheStatus: "miss",
+        aliases: [inputAlias],
+        defaultSource: "input",
+        inputContext
+      });
+      if (sampleCacheKey) {
+        writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
+      }
+      return res.status(200).json({ ok: true, data });
     }
 
     return res.status(primaryResult.status || 502).json({
@@ -367,6 +443,101 @@ async function buildSearchFallbackFromQuery(query) {
       ...metadataPayload,
       links
     })
+  };
+}
+
+async function buildInputCacheContext(link, platform) {
+  const alias = canonicalizeContractMediaUrl(link);
+  const context = {
+    alias,
+    title: "",
+    artist: "",
+    album: "",
+    image: "",
+    canonicalKey: ""
+  };
+
+  try {
+    if (platform === "spotify") {
+      const metadata = await fetchSpotifyMetadata(link);
+      const spotifyQuery = buildSpotifyQueryFromMetadata(metadata);
+      context.title = spotifyQuery.title || metadata?.title || "";
+      context.artist = spotifyQuery.artist || "";
+      context.image = metadata?.image || "";
+    } else {
+      const appleTrack = extractAppleTrackInputContext(link);
+      if (appleTrack.trackId) {
+        const appleMetadata = await fetchAppleTrackMetadataById(appleTrack.trackId);
+        context.title = appleMetadata?.title || "";
+        context.artist = appleMetadata?.artist || "";
+        context.album = appleMetadata?.album || "";
+        context.image = appleMetadata?.image || "";
+      }
+    }
+  } catch (_error) {
+    return context;
+  }
+
+  context.canonicalKey = buildCanonicalTrackKey(context);
+  return context;
+}
+
+function buildDirectInputFallback(link, inputContext = {}) {
+  const platform = detectAutomaticInputPlatform(link);
+  if (!platform) {
+    return {
+      ok: false,
+      status: 404,
+      error: "link direto fora da promessa automática"
+    };
+  }
+
+  return {
+    ok: true,
+    status: 200,
+    data: {
+      title: inputContext?.title || "música encontrada",
+      description: inputContext?.artist || "",
+      album: inputContext?.album || "",
+      image: inputContext?.image || "",
+      links: [
+        {
+          type: platform,
+          url: link,
+          isVerified: true,
+          source: "input"
+        }
+      ]
+    }
+  };
+}
+
+async function finalizeAndPersistResult(data, options = {}) {
+  const {
+    cacheStatus = "miss",
+    aliases = [],
+    defaultSource = "provider",
+    inputContext = null
+  } = options;
+
+  const withInputContext = applyInputContextToResult(data, inputContext);
+  const responseData = decorateResultForResponse(withInputContext, { cacheStatus });
+  const persisted = await upsertCachedResult(responseData, { aliases, defaultSource });
+  if (persisted?.trackId) {
+    responseData.trackId = persisted.trackId;
+  }
+  return responseData;
+}
+
+function applyInputContextToResult(data, inputContext) {
+  if (!inputContext) return data;
+  return {
+    ...(data || {}),
+    title: data?.title || inputContext.title || "",
+    description: data?.description || inputContext.artist || "",
+    album: data?.album || inputContext.album || "",
+    image: data?.image || inputContext.image || "",
+    links: Array.isArray(data?.links) ? data.links : []
   };
 }
 
@@ -777,7 +948,7 @@ function buildSpotifyQueryFromMetadata(metadata) {
 }
 
 async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
-  if (!query) return { url: "", isVerified: false, artist: "", title: "", album: "" };
+  if (!query) return { url: "", isVerified: false, artist: "", title: "", album: "", source: "itunes" };
 
   try {
     const response = await fetchWithTimeout(
@@ -806,10 +977,11 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
       isVerified: target.score >= 85,
       artist: target?.candidate?.artistName || "",
       title: target?.candidate?.trackName || "",
-      album: target?.candidate?.collectionName || ""
+      album: target?.candidate?.collectionName || "",
+      source: "itunes"
     };
   } catch (_error) {
-    return { url: "", isVerified: false, artist: "", title: "", album: "" };
+    return { url: "", isVerified: false, artist: "", title: "", album: "", source: "itunes" };
   }
 }
 
@@ -931,66 +1103,30 @@ function containsAnyToken(tokens, candidates) {
   return candidates.some(item => tokenSet.has(item));
 }
 
-function buildSearchLinksFromQuery(query, originalSpotifyUrl, appleMusicResult) {
-  const encoded = encodeURIComponent(query);
+function buildSearchLinksFromQuery(_query, originalSpotifyUrl, appleMusicResult) {
   const appleMusicUrl = appleMusicResult?.url || "";
   const appleMusicIsVerified = Boolean(appleMusicResult?.isVerified);
 
   const links = [
-    {
-      type: "spotify",
-      url: originalSpotifyUrl,
-      isVerified: true
-    },
+    originalSpotifyUrl
+      ? {
+          type: "spotify",
+          url: originalSpotifyUrl,
+          isVerified: true,
+          source: "input"
+        }
+      : null,
     appleMusicUrl
       ? {
           type: "appleMusic",
           url: appleMusicUrl,
-          isVerified: appleMusicIsVerified
+          isVerified: appleMusicIsVerified,
+          source: "itunes"
         }
-      : {
-          type: "appleMusic",
-          url: `https://music.apple.com/br/search?term=${encoded}`,
-          isVerified: false
-        },
-    {
-      type: "youTube",
-      url: `https://music.youtube.com/search?q=${encoded}`,
-      isVerified: false
-    },
-    {
-      type: "youtube",
-      url: `https://www.youtube.com/results?search_query=${encoded}`,
-      isVerified: false
-    },
-    {
-      type: "deezer",
-      url: `https://www.deezer.com/search/${encoded}`,
-      isVerified: false
-    },
-    {
-      type: "soundCloud",
-      url: `https://soundcloud.com/search?q=${encoded}`,
-      isVerified: false
-    },
-    {
-      type: "tidal",
-      url: `https://listen.tidal.com/search?q=${encoded}`,
-      isVerified: false
-    },
-    {
-      type: "qobuz",
-      url: `https://www.qobuz.com/us-en/search?query=${encoded}`,
-      isVerified: false
-    },
-    {
-      type: "amazonMusic",
-      url: `https://music.amazon.com/search/${encoded}`,
-      isVerified: false
-    }
+      : null
   ];
 
-  return links.filter(item => item.url);
+  return links.filter(item => item?.url);
 }
 
 function pickBestMetadata(baseData, enrichedData, fallback = {}) {
@@ -1021,7 +1157,8 @@ async function finalizeResultData(data) {
 
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
-  return enrichWithAppleBridgeFallback(secondaryEnriched);
+  const spotifyWebEnriched = await enrichWithSpotifyWebMatch(secondaryEnriched);
+  return enrichWithAppleBridgeFallback(spotifyWebEnriched);
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
@@ -1141,7 +1278,6 @@ function chooseYoutubeCandidate(candidates) {
 function maybeRecoverYoutubeLinks(candidate, platformKey, context) {
   if (!candidate?.url) return null;
   const score = Number(candidate._youtubeScore || 0);
-  const searchFallbackUrl = buildYoutubeSearchFallbackUrl(platformKey, context);
   const semanticSignals = Number(candidate._youtubeSemanticSignals || 0);
   const hasStrongAnchor = Boolean(candidate._youtubeHasStrongAnchor);
   const isProviderLeadCandidate = Boolean(candidate._youtubeProviderLeadCandidate);
@@ -1179,22 +1315,7 @@ function maybeRecoverYoutubeLinks(candidate, platformKey, context) {
     };
   }
 
-  return {
-    type: platformKey === "youtubemusic" ? "youtubeMusic" : "youtube",
-    url: searchFallbackUrl || candidate.url,
-    isVerified: false
-  };
-}
-
-function buildYoutubeSearchFallbackUrl(platformKey, context) {
-  const query = normalizeSearchText(context?.query || "").trim();
-  if (!query) return "";
-  const suffix =
-    platformKey === "youtubemusic" ? "" : " official music video";
-  const encoded = encodeURIComponent(`${query}${suffix}`.trim());
-  return platformKey === "youtubemusic"
-    ? `https://music.youtube.com/search?q=${encoded}`
-    : `https://www.youtube.com/results?search_query=${encoded}`;
+  return null;
 }
 
 function getTrackQualifiers(value) {
@@ -1322,7 +1443,7 @@ async function enrichWithAppleBridgeFallback(data) {
   if (!links.length) return next;
 
   const presentKeys = new Set(links.map(item => String(item?.type || "").toLowerCase()));
-  const requiresBridge = ["tidal", "amazonmusic", "qobuz", "pandora", "soundcloud", "spotify"].some(
+  const requiresBridge = ["spotify", "youtube", "youtubemusic"].some(
     key => !presentKeys.has(key)
   );
   if (!requiresBridge) return next;
@@ -1359,30 +1480,11 @@ async function enrichWithAppleBridgeFallback(data) {
 
 function maybeInjectSpotifySearchFallback(data, links) {
   const nextLinks = Array.isArray(links) ? links.map(item => ({ ...item })) : [];
-  const hasSpotify = nextLinks.some(item => String(item?.type || "").toLowerCase() === "spotify");
-  if (!hasSpotify) {
-    const spotifySearchUrl = buildSpotifySearchUrlFromResult(data);
-    if (spotifySearchUrl) {
-      nextLinks.push({
-        type: "spotify",
-        url: spotifySearchUrl,
-        isVerified: false
-      });
-    }
-  }
 
   return {
     ...data,
     links: dedupeAndNormalizeLinks(nextLinks)
   };
-}
-
-function buildSpotifySearchUrlFromResult(data) {
-  const title = String(data?.title || "").trim();
-  const description = String(data?.description || "").split("•")[0].trim();
-  const query = [title, description].filter(Boolean).join(" ").trim();
-  if (!query) return "";
-  return `https://open.spotify.com/search/${encodeURIComponent(query)}`;
 }
 
 function sanitizeMetadataText(value, maxLen = MAX_METADATA_TEXT_LENGTH, options = {}) {
@@ -1565,6 +1667,58 @@ async function enrichWithSecondaryFallbacks(data) {
   };
 }
 
+async function enrichWithSpotifyWebMatch(data) {
+  const next = { ...(data || {}) };
+  const links = Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : [];
+  const hasDirectSpotify = links.some(item => {
+    const type = String(item?.type || "").toLowerCase();
+    return type === "spotify" && item?.url && !isSearchLikeUrl(item.url, type);
+  });
+  if (hasDirectSpotify) return { ...next, links };
+
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!query) return { ...next, links };
+
+  const startedAt = Date.now();
+  const trackKey = buildCanonicalTrackKey({ title, artist });
+  try {
+    const match = await searchSpotifyWebTrack(query, { title, artist });
+    await recordProviderAttempt({
+      trackKey,
+      provider: "spotify_web",
+      status: match?.url ? "hit" : "miss",
+      latencyMs: Date.now() - startedAt,
+      message: match?.url || "no_match"
+    });
+
+    if (!match?.url) return { ...next, links };
+
+    return {
+      ...next,
+      links: dedupeAndNormalizeLinks([
+        ...links,
+        {
+          type: "spotify",
+          url: match.url,
+          isVerified: Boolean(match.isVerified),
+          source: "spotify_web"
+        }
+      ])
+    };
+  } catch (error) {
+    await recordProviderAttempt({
+      trackKey,
+      provider: "spotify_web",
+      status: "error",
+      latencyMs: Date.now() - startedAt,
+      message: String(error?.message || error || "unknown_error")
+    });
+    return { ...next, links };
+  }
+}
+
 async function fetchDeezerMetadata(url) {
   try {
     const response = await fetchWithTimeout(
@@ -1588,15 +1742,16 @@ function dedupeAndNormalizeLinks(links) {
   const seenCanonical = new Set();
 
   for (const link of links) {
-    const type = String(link?.type || "").trim();
+    const type = normalizeContractPlatformKey(link?.type || "").trim();
     const url = String(link?.url || "").trim();
     if (!type || !url) continue;
 
     const canonical = canonicalizeMediaUrl(url);
+    if (!filterDisplayLinks([{ ...link, type, url: canonical }]).length) continue;
     if (seenCanonical.has(canonical)) continue;
 
     const key = type.toLowerCase();
-    const current = { ...link, type, url: canonical };
+    const current = { ...link, type, url: canonical, source: link?.source || "unknown" };
     const existing = byType.get(key);
 
     if (!existing || isLinkBetter(current, existing)) {
@@ -1630,12 +1785,19 @@ function isLinkBetter(candidate, existing) {
 function scoreLinkQuality(item) {
   const url = String(item?.url || "");
   const key = String(item?.type || "").toLowerCase();
+  const source = String(item?.source || "").toLowerCase();
   let score = item?.isVerified ? 20 : 0;
   if (!isSearchLikeUrl(url, key)) score += 10;
+  if (source === "input") score += 30;
+  if (source === "manual") score += 24;
+  if (source === "itunes") score += 18;
+  if (source === "spotify_web") score += 12;
+  if (source === "songlink") score += 4;
 
   if (key === "applemusic" || key === "itunes") {
     if (/\/album\/.+\?i=\d+/.test(url)) score += 20;
     if (/\/artist\//.test(url)) score -= 15;
+    if (url.includes("geo.music.apple.com")) score -= 18;
   }
   if (key === "youtube" || key === "youtubemusic") {
     if (getYoutubeVideoId(url)) score += 10;
@@ -1672,6 +1834,22 @@ function canonicalizeMediaUrl(value) {
 }
 
 async function enforceInputTrackGroundTruth(data, sourceLink) {
+  const sourcePlatform = detectAutomaticInputPlatform(sourceLink);
+  if (sourcePlatform && sourcePlatform !== "appleMusic") {
+    return {
+      ...(data || {}),
+      links: dedupeAndNormalizeLinks([
+        {
+          type: sourcePlatform,
+          url: sourceLink,
+          isVerified: true,
+          source: "input"
+        },
+        ...(Array.isArray(data?.links) ? data.links : [])
+      ])
+    };
+  }
+
   const sourceAppleTrack = extractAppleTrackInputContext(sourceLink);
   if (!sourceAppleTrack.url) return data;
 
@@ -1699,11 +1877,26 @@ async function enforceInputTrackGroundTruth(data, sourceLink) {
       {
         type: "appleMusic",
         url: sourceAppleTrack.url,
-        isVerified: true
+        isVerified: true,
+        source: "input"
       },
       ...filtered
     ])
   };
+}
+
+function detectAutomaticInputPlatform(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    const host = parsed.hostname.toLowerCase();
+    if (host.includes("open.spotify.com") && parsed.pathname.includes("/track/")) return "spotify";
+    if (host.includes("music.apple.com") && parsed.searchParams.has("i")) return "appleMusic";
+    if (host.includes("music.youtube.com") && getYoutubeVideoId(parsed.toString())) return "youtubeMusic";
+    if ((host.includes("youtube.com") || host.includes("youtu.be")) && getYoutubeVideoId(parsed.toString())) return "youtube";
+    return "";
+  } catch (_error) {
+    return "";
+  }
 }
 
 function extractAppleTrackInputContext(value) {
@@ -1811,7 +2004,7 @@ async function fetchPrimaryApi(link, adapters) {
     return {
       ok: true,
       status: 200,
-      data
+      data: withLinkSource(data, "idhs")
     };
   } catch (_error) {
     metrics.errors += 1;
@@ -1886,7 +2079,8 @@ function normalizeSongLinkPayload(data, { markVerified = false } = {}) {
       return {
         type: mapSongLinkPlatform(platform),
         url,
-        isVerified: markVerified
+        isVerified: markVerified,
+        source: "songlink"
       };
     })
     .filter(Boolean);
@@ -1898,6 +2092,15 @@ function normalizeSongLinkPayload(data, { markVerified = false } = {}) {
     image: entity?.thumbnailUrl || "",
     universalLink: data?.pageUrl || "",
     links
+  };
+}
+
+function withLinkSource(data, source) {
+  return {
+    ...(data || {}),
+    links: Array.isArray(data?.links)
+      ? data.links.map(item => ({ ...item, source: item?.source || source }))
+      : []
   };
 }
 
@@ -1931,6 +2134,9 @@ function detectPlatformFromUrl(url) {
   const value = String(url || "").toLowerCase();
 
   if (value.includes("spotify.")) return "spotify";
+  if (value.includes("music.apple.com") || value.includes("itunes.apple.com")) return "apple music";
+  if (value.includes("music.youtube.com")) return "youtube music";
+  if (value.includes("youtube.com") || value.includes("youtu.be")) return "youtube";
   if (value.includes("soundcloud.")) return "soundcloud";
   if (value.includes("pandora.")) return "pandora";
   if (value.includes("qobuz.")) return "qobuz";
