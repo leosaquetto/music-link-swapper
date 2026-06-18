@@ -10,17 +10,20 @@ Set `DATABASE_URL` to a Postgres/Neon connection string:
 DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require"
 ```
 
-Free setup path:
+Free setup path with Neon CLI:
 
-1. Create a free Neon Postgres database.
-2. Copy the pooled connection string.
-3. Add it to `.env.local` for local development or to Vercel environment variables for production.
-4. Run:
+1. Run `npx neonctl auth` and complete the browser login.
+2. Run `npm run setup:neon`.
+3. Run:
 
 ```bash
 npm run check:env
 npm run check
 ```
+
+`npm run setup:neon` creates a Neon project using the free-tier-compatible defaults, fetches a pooled connection string, and writes `DATABASE_URL` to `.env.local`.
+
+Manual setup is also fine: create a free Neon Postgres database, copy the pooled connection string, and add it to `.env.local` for local development or to Vercel environment variables for production.
 
 When `DATABASE_URL` is absent, the API still converts links, but `tracks`, `track_links`, `track_aliases`, and `provider_attempts` are not persisted.
 
