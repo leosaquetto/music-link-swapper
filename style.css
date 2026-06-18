@@ -33,6 +33,7 @@
   --provider-apple-music: #ed474c;
   --provider-spotify: #25d05f;
   --provider-youtube: #fd0100;
+  --provider-icon-foreground: #e5e7ed;
 }
 
 :root[data-theme="dark"] {
@@ -57,6 +58,7 @@
   --provider-apple-music: #ed474c;
   --provider-spotify: #25d05f;
   --provider-youtube: #fd0100;
+  --provider-icon-foreground: #333234;
 }
 
 html,
@@ -84,7 +86,7 @@ html {
 }
 
 body {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   min-height: 100svh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
@@ -390,10 +392,9 @@ body.needs-viewport-fill .viewport-fill-spacer {
 }
 
 h1 {
-  /* Aumento direto: de 28px/38px para 34px/48px */
-  font-size: clamp(34px, 7.5vw, 48px); 
+  font-size: 48px;
   line-height: 0.95;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
   
   /* Mantendo exatamente o efeito de brilho anterior */
   background: linear-gradient(
@@ -424,9 +425,9 @@ h1 {
   margin-top: 7px;
   font-size: 12px;
   line-height: 1;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   color: var(--byline);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 600;
 }
 
@@ -775,6 +776,11 @@ h1 {
   position: relative;
   overflow: visible;
   padding-bottom: 14px;
+  --sheet-drag-y: 0px;
+}
+
+.result-backdrop {
+  display: none;
 }
 
 .result-header {
@@ -831,9 +837,8 @@ h1 {
   color: #ed474c;
   font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 8px;
+  letter-spacing: 0;
+  margin-bottom: 6px;
 }
 
 .result-title-row {
@@ -851,8 +856,9 @@ h1 {
 
 h2 {
   font-size: 22px;
-  line-height: 1.06;
-  letter-spacing: -0.03em;
+  line-height: 1.12;
+  letter-spacing: 0;
+  font-weight: 800;
 }
 
 .result-meta {
@@ -906,8 +912,8 @@ h2 {
 .group-title {
   color: var(--muted);
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  font-weight: 700;
+  letter-spacing: 0;
   margin-bottom: 0;
 }
 
@@ -940,35 +946,83 @@ h2 {
   font-size: 10px;
 }
 
+.public-card-bar {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: rgba(127, 134, 149, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-card-copy {
+  min-width: 0;
+}
+
+.public-card-label {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.public-card-hint {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.public-card-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.public-card-bar.is-validating .public-card-actions {
+  opacity: 0.55;
+}
+
+.public-card-actions .mini-action:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
 .correction-card {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line-soft);
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: rgba(127, 134, 149, 0.07);
 }
 
 .correction-form {
   display: grid;
-  gap: 10px;
+  gap: 11px;
 }
 
 .correction-title {
   color: var(--text);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
+  line-height: 1.25;
 }
 
 .correction-hint {
   margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.45;
 }
 
 .correction-fields {
   display: grid;
-  grid-template-columns: minmax(108px, 0.72fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: end;
 }
@@ -979,16 +1033,14 @@ h2 {
   color: var(--muted);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   min-width: 0;
 }
 
-.correction-select,
 .correction-input {
   width: 100%;
   min-width: 0;
-  height: 38px;
+  height: 42px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--panel-strong);
@@ -1001,15 +1053,74 @@ h2 {
     background 160ms ease;
 }
 
-.correction-select {
-  padding: 0 10px;
+.correction-platform-group {
+  display: grid;
+  gap: 7px;
+}
+
+.correction-label-text {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.correction-platform-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.correction-platform-pill {
+  min-height: 36px;
+  padding: 0 11px 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-strong);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.correction-platform-pill.is-selected {
+  border-color: rgba(52, 199, 89, 0.42);
+  background: rgba(52, 199, 89, 0.13);
+  color: var(--text);
+  box-shadow: 0 6px 16px rgba(30, 90, 47, 0.09);
+}
+
+.correction-platform-pill:focus-visible {
+  outline: none;
+  border-color: rgba(52, 199, 89, 0.62);
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.11);
+}
+
+.correction-platform-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(127, 134, 149, 0.11);
+}
+
+.correction-platform-icon svg {
+  width: 14px;
+  height: 14px;
 }
 
 .correction-input {
   padding: 0 12px;
 }
 
-.correction-select:focus,
 .correction-input:focus {
   border-color: rgba(52, 199, 89, 0.6);
   box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.11);
@@ -1021,12 +1132,13 @@ h2 {
 }
 
 .correction-submit {
-  height: 38px;
+  height: 42px;
   border: 0;
   border-radius: 12px;
-  padding: 0 14px;
-  background: rgba(52, 199, 89, 0.16);
-  color: var(--accent);
+  min-width: 82px;
+  padding: 0 16px;
+  background: var(--accent);
+  color: #071208;
   font-size: 12px;
   font-weight: 800;
   transition:
@@ -1036,8 +1148,14 @@ h2 {
 }
 
 .correction-submit:disabled {
-  opacity: 0.58;
+  opacity: 0.45;
   cursor: default;
+}
+
+.correction-card.is-saving .correction-platform-pill,
+.correction-card.is-saving .correction-input {
+  pointer-events: none;
+  opacity: 0.64;
 }
 
 .correction-error {
@@ -1052,8 +1170,30 @@ h2 {
 }
 
 .correction-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.correction-state-mark {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 11px;
   display: grid;
-  gap: 4px;
+  place-items: center;
+  background: rgba(52, 199, 89, 0.13);
+  color: var(--accent);
+}
+
+.correction-state-pending .correction-state-mark {
+  background: rgba(127, 134, 149, 0.12);
+  color: var(--muted);
+}
+
+.correction-state-mark svg {
+  width: 18px;
+  height: 18px;
 }
 
 .correction-state-message {
@@ -1986,6 +2126,83 @@ body.legal-modal-open {
     margin-bottom: 5px;
   }
 
+  h1 {
+    font-size: 34px;
+  }
+
+  .result-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1120;
+    display: block;
+    background: rgba(7, 8, 14, 0.54);
+    backdrop-filter: blur(7px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+
+  .result-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .result-card.is-result-sheet {
+    position: fixed;
+    z-index: 1130;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(86dvh, 760px);
+    margin: 0;
+    padding: 16px 14px 14px;
+    border-radius: 22px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    transform: translateY(calc(24px + var(--sheet-drag-y))) scale(0.985);
+    transition:
+      opacity 220ms ease,
+      transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .result-card.is-result-sheet::before {
+    content: "";
+    display: block;
+    width: 38px;
+    height: 4px;
+    margin: -6px auto 10px;
+    border-radius: 999px;
+    background: rgba(127, 134, 149, 0.38);
+  }
+
+  .result-card.is-result-sheet.is-sheet-open {
+    opacity: 1;
+    transform: translateY(var(--sheet-drag-y)) scale(1);
+  }
+
+  .result-card.is-result-sheet.result-card-live,
+  .result-card.is-result-sheet.is-exiting {
+    animation: none;
+  }
+
+  .result-card.is-result-sheet.is-dragging {
+    transition: none;
+    user-select: none;
+    cursor: grabbing;
+  }
+
+  body.result-sheet-open {
+    overflow: hidden;
+  }
+
+  body.result-sheet-open .main-stack {
+    z-index: 1200;
+  }
+
   .button-row-compact {
     grid-template-columns: minmax(0, 1fr) repeat(2, var(--control-size));
     margin-top: 7px;
@@ -2027,9 +2244,17 @@ body.legal-modal-open {
     padding-bottom: 12px;
   }
 
+  .result-card.is-result-sheet .result-header {
+    cursor: grab;
+  }
+
   .platform-groups {
     margin-top: 8px;
     gap: 10px;
+  }
+
+  .public-card-bar {
+    margin-top: 10px;
   }
 
   .app-logo {
@@ -2105,6 +2330,14 @@ body.legal-modal-open {
 
   .correction-submit {
     width: 100%;
+  }
+
+  .public-card-bar {
+    align-items: flex-start;
+  }
+
+  .public-card-actions {
+    gap: 5px;
   }
 
   .app-logo {
@@ -2284,12 +2517,14 @@ body.legal-modal-open {
 :root:not([data-theme="dark"]) .platform-icon-itunes,
 :root[data-theme="dark"] .platform-icon-appleMusic,
 :root[data-theme="dark"] .platform-icon-itunes {
-  color: var(--provider-apple-music);
+  background: var(--provider-apple-music);
+  color: var(--provider-icon-foreground);
 }
 
 :root:not([data-theme="dark"]) .platform-icon-spotify,
 :root[data-theme="dark"] .platform-icon-spotify {
-  color: var(--provider-spotify);
+  background: var(--provider-spotify);
+  color: var(--provider-icon-foreground);
 }
 
 :root:not([data-theme="dark"]) .platform-icon-youTube,
@@ -2298,7 +2533,8 @@ body.legal-modal-open {
 :root[data-theme="dark"] .platform-icon-youTube,
 :root[data-theme="dark"] .platform-icon-youtube,
 :root[data-theme="dark"] .platform-icon-youtubeMusic {
-  color: var(--provider-youtube);
+  background: var(--provider-youtube);
+  color: var(--provider-icon-foreground);
 }
 
 :root[data-theme="dark"] .footer {

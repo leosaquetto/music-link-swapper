@@ -56,6 +56,30 @@ The API also returns:
 
 Search URLs such as `open.spotify.com/search/...` or `music.youtube.com/search?...` must not be returned as result links.
 
+## Public result cards
+
+Cached results can be reopened through:
+
+```text
+/?track=trk_...
+```
+
+The frontend resolves that query through the read-only endpoint:
+
+```text
+GET /api/track?trackId=trk_...
+```
+
+The endpoint returns the same normalized result contract used by `POST /api/convert`, but only from the persistent music library. It does not rerun matching providers or create a new track.
+
+Failure behavior is explicit:
+
+- `400`: missing or malformed `trackId`.
+- `503`: persistent library is not configured.
+- `404`: the track is absent from cache or has no published direct links.
+
+Only `track_links.status = 'published'` entries are exposed. Pending manual corrections remain private and do not appear on public cards. Before copying, sharing, or opening a public-card URL, the frontend validates the `trackId` against this endpoint and shows a toast instead of sharing a dead link when validation fails.
+
 ## YouTube and YouTube Music
 
 YouTube and YouTube Music can appear automatically only when the app has a trusted direct video ID from:
@@ -109,5 +133,7 @@ Before deploying matching changes:
 - Run `npm run check:env`.
 - Confirm `POST /api/convert` returns no `/search` URLs.
 - Confirm `data.links` has no `notAvailable` display rows.
+- Confirm a cached `?track=trk_...` card loads and an unknown id shows the public-card error state.
+- Confirm pending manual links do not appear in `GET /api/track`.
 - Test at least one Spotify input, one Apple Music input, and one YouTube input.
 - Check Vercel runtime logs for error/fatal logs after production smoke tests.

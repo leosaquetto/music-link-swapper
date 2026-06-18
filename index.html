@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./style.css" />
@@ -120,6 +120,8 @@
 
         <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
 
+        <div id="resultBackdrop" class="result-backdrop hidden" aria-hidden="true"></div>
+
         <section id="resultCard" class="card result-card hidden reveal reveal-delay-2">
           <div class="result-header">
             <div id="coverWrap" class="cover-wrap hidden">
@@ -172,6 +174,24 @@
               </div>
             </div>
           </div>
+
+          <section id="publicCardBar" class="public-card-bar hidden" aria-live="polite">
+            <div class="public-card-copy">
+              <p id="publicCardLabel" class="public-card-label">card público</p>
+              <p id="publicCardHint" class="public-card-hint">link compartilhável deste resultado</p>
+            </div>
+            <div class="public-card-actions">
+              <button id="publicTrackCopyButton" class="mini-action copy" type="button" aria-label="copiar card público" title="copiar card público">
+                <span class="button-icon"></span>
+              </button>
+              <button id="publicTrackShareButton" class="mini-action share" type="button" aria-label="compartilhar card público" title="compartilhar card público">
+                <span class="button-icon"></span>
+              </button>
+              <button id="publicTrackOpenButton" class="mini-action open" type="button" aria-label="abrir card público" title="abrir card público">
+                <span class="button-icon"></span>
+              </button>
+            </div>
+          </section>
 
           <div id="platformGroups" class="platform-groups"></div>
           <section id="correctionCard" class="correction-card hidden" aria-live="polite"></section>

@@ -40,6 +40,7 @@ Fluxos complementares existentes:
 - Historico local de ate 5 swaps recentes.
 - Copia do link original, copia dos links principais e copia individual por plataforma.
 - Compartilhamento nativo dos links principais ou de uma plataforma especifica via `navigator.share`, quando disponivel.
+- Link publico por resultado cacheado no formato `/?track=trk_...`, validado por `GET /api/track` antes de copiar, compartilhar ou abrir.
 - Abertura de links em nova aba ou, em mobile, tentativa de deeplink por esquema de plataforma.
 - Modal com instrucoes para instalar como Web App no iPhone.
 - Link para Shortcut do iCloud no footer.
@@ -111,6 +112,15 @@ Resposta de erro esperada:
   "error": "mensagem amigavel"
 }
 ```
+
+## API `/api/track`
+
+`GET /api/track?trackId=trk_...` reabre um resultado persistido sem executar provedores novamente. A resposta de sucesso reutiliza `{ ok: true, data }` com o mesmo contrato normalizado de `/api/convert`.
+
+- `400`: `trackId` ausente ou malformado.
+- `503`: biblioteca persistente nao configurada.
+- `404`: faixa ausente do cache ou sem links publicados.
+- Links manuais `pending` nunca sao expostos; somente links com status `published` entram no card publico.
 
 Regras e limites observados:
 

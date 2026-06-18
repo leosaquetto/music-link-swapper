@@ -1,4 +1,6 @@
 const API_URL = "/api/convert";
+const TRACK_API_URL = "/api/track";
+const TRACK_ID_PATTERN = /^trk_[a-f0-9]{20}$/i;
 const SAMPLE_LINKS = [
   "https://music.apple.com/br/album/who-will-you-follow/1891104460?i=1891104594",
   "https://music.apple.com/br/album/swim/1868862375?i=1868862384",
@@ -100,9 +102,17 @@ const TRANSLATIONS = {
     completeLinkSave: "salvar",
     completeLinkSaved: "link adicionado.",
     completeLinkPending: "link recebido para revisão.",
+    completeLinkSaving: "salvando...",
     completeLinkInvalid: "cole um link direto válido.",
     completeLinkPlatformMismatch: "esse link não parece ser da plataforma escolhida.",
-    completeLinkError: "não consegui salvar esse link agora."
+    completeLinkError: "não consegui salvar esse link agora.",
+    publicCard: "card público",
+    publicCardHint: "link compartilhável deste resultado",
+    publicCardCopied: "card público copiado.",
+    publicCardShared: "card público compartilhado.",
+    publicCardUnavailable: "card público indisponível.",
+    publicCardLoading: "abrindo card público...",
+    publicCardNotFound: "não encontrei esse card público."
   },
   en: {
     loadingSwap: "swapping...",
@@ -154,9 +164,17 @@ const TRANSLATIONS = {
     completeLinkSave: "save",
     completeLinkSaved: "link added.",
     completeLinkPending: "link received for review.",
+    completeLinkSaving: "saving...",
     completeLinkInvalid: "paste a valid direct link.",
     completeLinkPlatformMismatch: "this link does not look like the selected platform.",
-    completeLinkError: "could not save this link now."
+    completeLinkError: "could not save this link now.",
+    publicCard: "public card",
+    publicCardHint: "shareable link for this result",
+    publicCardCopied: "public card copied.",
+    publicCardShared: "public card shared.",
+    publicCardUnavailable: "public card unavailable.",
+    publicCardLoading: "opening public card...",
+    publicCardNotFound: "could not find this public card."
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
@@ -208,9 +226,17 @@ const TRANSLATIONS = {
     completeLinkSave: "guardar",
     completeLinkSaved: "enlace agregado.",
     completeLinkPending: "enlace recibido para revisión.",
+    completeLinkSaving: "guardando...",
     completeLinkInvalid: "pega un enlace directo válido.",
     completeLinkPlatformMismatch: "este enlace no parece ser de la plataforma elegida.",
-    completeLinkError: "no pude guardar este enlace ahora."
+    completeLinkError: "no pude guardar este enlace ahora.",
+    publicCard: "card público",
+    publicCardHint: "enlace compartible de este resultado",
+    publicCardCopied: "card público copiado.",
+    publicCardShared: "card público compartido.",
+    publicCardUnavailable: "card público no disponible.",
+    publicCardLoading: "abriendo card público...",
+    publicCardNotFound: "no encontré este card público."
   },
   "it-it": {
     loadingSwap: "conversione...",
@@ -262,9 +288,17 @@ const TRANSLATIONS = {
     completeLinkSave: "salva",
     completeLinkSaved: "link aggiunto.",
     completeLinkPending: "link ricevuto per revisione.",
+    completeLinkSaving: "salvataggio...",
     completeLinkInvalid: "incolla un link diretto valido.",
     completeLinkPlatformMismatch: "questo link non sembra della piattaforma scelta.",
-    completeLinkError: "non ho potuto salvare questo link ora."
+    completeLinkError: "non ho potuto salvare questo link ora.",
+    publicCard: "card pubblico",
+    publicCardHint: "link condivisibile di questo risultato",
+    publicCardCopied: "card pubblico copiato.",
+    publicCardShared: "card pubblico condiviso.",
+    publicCardUnavailable: "card pubblico non disponibile.",
+    publicCardLoading: "apertura card pubblico...",
+    publicCardNotFound: "non ho trovato questo card pubblico."
   },
   "fr-fr": {
     loadingSwap: "conversion...",
@@ -316,9 +350,17 @@ const TRANSLATIONS = {
     completeLinkSave: "enregistrer",
     completeLinkSaved: "lien ajouté.",
     completeLinkPending: "lien reçu pour vérification.",
+    completeLinkSaving: "enregistrement...",
     completeLinkInvalid: "collez un lien direct valide.",
     completeLinkPlatformMismatch: "ce lien ne semble pas correspondre à la plateforme choisie.",
-    completeLinkError: "impossible d’enregistrer ce lien maintenant."
+    completeLinkError: "impossible d’enregistrer ce lien maintenant.",
+    publicCard: "carte publique",
+    publicCardHint: "lien partageable de ce résultat",
+    publicCardCopied: "carte publique copiée.",
+    publicCardShared: "carte publique partagée.",
+    publicCardUnavailable: "carte publique indisponible.",
+    publicCardLoading: "ouverture de la carte publique...",
+    publicCardNotFound: "carte publique introuvable."
   }
 };
 
@@ -440,12 +482,18 @@ const state = {
   iosInstallModalHideTimer: null,
   isRecentSwapsModalOpen: false,
   recentSwapsModalHideTimer: null,
+  isResultSheetOpen: false,
+  resultSheetHideTimer: null,
   isLegalModalOpen: false,
   legalModalHideTimer: null,
   activeLegalType: "privacy",
   modalScrollLockDepth: 0,
   lockedScrollY: 0,
   activeSheetDrag: null,
+  publicTrackValidation: {
+    trackId: "",
+    status: "idle"
+  },
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -463,6 +511,7 @@ const els = {
   recentSwapsButton: document.getElementById("recentSwapsButton"),
   supportedChips: document.getElementById("supportedChips"),
   statusCard: document.getElementById("statusCard"),
+  resultBackdrop: document.getElementById("resultBackdrop"),
   resultCard: document.getElementById("resultCard"),
   coverWrap: document.getElementById("coverWrap"),
   coverShimmer: document.getElementById("coverShimmer"),
@@ -477,6 +526,12 @@ const els = {
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
+  publicCardBar: document.getElementById("publicCardBar"),
+  publicCardLabel: document.getElementById("publicCardLabel"),
+  publicCardHint: document.getElementById("publicCardHint"),
+  publicTrackCopyButton: document.getElementById("publicTrackCopyButton"),
+  publicTrackShareButton: document.getElementById("publicTrackShareButton"),
+  publicTrackOpenButton: document.getElementById("publicTrackOpenButton"),
   floatingToast: document.getElementById("floatingToast"),
   themeToggle: document.getElementById("themeToggle"),
   languageToggle: document.getElementById("languageToggle"),
@@ -541,8 +596,10 @@ function bootstrap() {
   bindEvents();
   bindSheetGestures();
   bindLaunchQueueConsumer();
-  hydrateFromIncomingUrl();
-  tryAutoPasteFromClipboard();
+  const hydratedIncoming = hydrateFromIncomingUrl();
+  if (!hydratedIncoming) {
+    tryAutoPasteFromClipboard();
+  }
 }
 
 function forceHeroGifLogo() {
@@ -636,6 +693,20 @@ function updateLocalizedStaticCopy() {
   if (els.privacyPolicyButton) els.privacyPolicyButton.textContent = t("privacyPolicy");
   if (els.termsOfUseButton) els.termsOfUseButton.textContent = t("termsOfUse");
   if (els.clearRecentSwapsText) els.clearRecentSwapsText.textContent = t("clearSwaps");
+  if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
+  if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
+  if (els.publicTrackCopyButton) {
+    els.publicTrackCopyButton.setAttribute("aria-label", t("publicCardCopied").replace(/\.$/, ""));
+    els.publicTrackCopyButton.setAttribute("title", t("publicCardCopied").replace(/\.$/, ""));
+  }
+  if (els.publicTrackShareButton) {
+    els.publicTrackShareButton.setAttribute("aria-label", t("publicCardShared").replace(/\.$/, ""));
+    els.publicTrackShareButton.setAttribute("title", t("publicCardShared").replace(/\.$/, ""));
+  }
+  if (els.publicTrackOpenButton) {
+    els.publicTrackOpenButton.setAttribute("aria-label", t("publicCardLoading").replace(/\.\.\.$/, ""));
+    els.publicTrackOpenButton.setAttribute("title", t("publicCardLoading").replace(/\.\.\.$/, ""));
+  }
 }
 
 function refreshLocalizedDynamicContent() {
@@ -777,6 +848,18 @@ function injectButtonIcons() {
 
   if (els.sharePrimaryButton) {
     els.sharePrimaryButton.innerHTML = `<span class="button-icon">${SVG_ICONS.share}</span>`;
+  }
+
+  if (els.publicTrackCopyButton) {
+    els.publicTrackCopyButton.innerHTML = `<span class="button-icon">${SVG_ICONS.copy}</span>`;
+  }
+
+  if (els.publicTrackShareButton) {
+    els.publicTrackShareButton.innerHTML = `<span class="button-icon">${SVG_ICONS.share}</span>`;
+  }
+
+  if (els.publicTrackOpenButton) {
+    els.publicTrackOpenButton.innerHTML = `<span class="button-icon">${SVG_ICONS.open}</span>`;
   }
 
   if (els.copyOriginalButton) {
@@ -957,6 +1040,7 @@ function bindSheetGestures() {
   bindSheetDismissGesture(els.iosInstallSheet, closeIOSInstallModal);
   bindSheetDismissGesture(els.recentSwapsSheet, closeRecentSwapsModal);
   bindSheetDismissGesture(els.legalSheet, closeLegalModal);
+  bindSheetDismissGesture(els.resultCard, dismissResultSheet);
 }
 
 function bindSheetDismissGesture(sheet, closeFn) {
@@ -964,6 +1048,8 @@ function bindSheetDismissGesture(sheet, closeFn) {
 
   sheet.addEventListener("pointerdown", event => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (sheet === els.resultCard && !state.isResultSheetOpen) return;
+    if (sheet === els.resultCard && !event.target?.closest?.(".result-header")) return;
     if (event.target?.closest?.("button, a, input, select, textarea, .recent-swaps-list, .legal-body")) return;
 
     state.activeSheetDrag = {
@@ -1006,6 +1092,93 @@ function bindSheetDismissGesture(sheet, closeFn) {
 
   sheet.addEventListener("pointerup", finishDrag);
   sheet.addEventListener("pointercancel", finishDrag);
+}
+
+function isMobileResultSheet() {
+  return window.matchMedia?.("(max-width: 640px)")?.matches === true;
+}
+
+function openResultSheetIfNeeded() {
+  if (!els.resultCard || !els.resultBackdrop || !isMobileResultSheet()) {
+    closeResultSheet({ immediate: true, preserveResult: true });
+    return;
+  }
+
+  if (state.isResultSheetOpen) return;
+
+  if (state.resultSheetHideTimer) {
+    clearTimeout(state.resultSheetHideTimer);
+    state.resultSheetHideTimer = null;
+  }
+
+  state.isResultSheetOpen = true;
+  document.body.classList.add("result-sheet-open");
+  els.resultCard.classList.add("is-result-sheet");
+  els.resultBackdrop.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    els.resultBackdrop?.classList.add("is-open");
+    els.resultCard?.classList.add("is-sheet-open");
+  });
+  els.resultBackdrop.setAttribute("aria-hidden", "false");
+  lockPageScroll("result-sheet-open");
+}
+
+function dismissResultSheet() {
+  if (!state.isResultSheetOpen) return;
+  closeResultSheet();
+  setTimeout(() => {
+    if (!state.isResultSheetOpen) resetForm();
+  }, 230);
+}
+
+function closeResultSheet({ immediate = false, preserveResult = true } = {}) {
+  if (!els.resultCard || !els.resultBackdrop) return;
+  const wasOpen = state.isResultSheetOpen;
+  state.isResultSheetOpen = false;
+  els.resultBackdrop.classList.remove("is-open");
+  els.resultBackdrop.setAttribute("aria-hidden", "true");
+  els.resultCard.classList.remove("is-sheet-open");
+
+  if (wasOpen) {
+    unlockPageScroll("result-sheet-open");
+  } else {
+    document.body.classList.remove("result-sheet-open");
+  }
+
+  const finish = () => {
+    els.resultBackdrop?.classList.add("hidden");
+    els.resultCard?.classList.remove("is-result-sheet");
+    if (!preserveResult) hideResult();
+  };
+
+  if (state.resultSheetHideTimer) {
+    clearTimeout(state.resultSheetHideTimer);
+  }
+
+  if (immediate) {
+    finish();
+    state.resultSheetHideTimer = null;
+    return;
+  }
+
+  state.resultSheetHideTimer = setTimeout(() => {
+    finish();
+    state.resultSheetHideTimer = null;
+  }, 240);
+}
+
+function syncResultPresentation({ openMobile = false } = {}) {
+  if (!state.currentResult || els.resultCard?.classList.contains("hidden")) {
+    closeResultSheet({ immediate: true, preserveResult: true });
+    return;
+  }
+
+  if (isMobileResultSheet()) {
+    if (openMobile) openResultSheetIfNeeded();
+    return;
+  }
+
+  closeResultSheet({ immediate: true, preserveResult: true });
 }
 
 function bindEvents() {
@@ -1058,6 +1231,10 @@ function bindEvents() {
     closeLegalModal();
   });
 
+  els.resultBackdrop?.addEventListener("click", () => {
+    dismissResultSheet();
+  });
+
   els.clearRecentSwapsButton?.addEventListener("click", event => {
     if (!state.recentSwaps.length) return;
     state.recentSwaps = [];
@@ -1083,9 +1260,17 @@ function bindEvents() {
       closeRecentSwapsModal();
       return;
     }
+    if (event.key === "Escape" && state.isResultSheetOpen) {
+      dismissResultSheet();
+      return;
+    }
     if (event.key === "Escape" && state.isLegalModalOpen) {
       closeLegalModal();
     }
+  });
+
+  window.addEventListener("resize", () => {
+    syncResultPresentation();
   });
 
   els.convertButton?.addEventListener("click", () => {
@@ -1109,7 +1294,8 @@ function bindEvents() {
 
   els.resultDismissButton?.addEventListener("click", event => {
     pulseActionButton(event.currentTarget);
-    resetForm();
+    if (state.isResultSheetOpen) dismissResultSheet();
+    else resetForm();
   });
 
   els.pasteButton?.addEventListener("click", async () => {
@@ -1177,6 +1363,61 @@ function bindEvents() {
     showFloatingToast(t("topCopied"), "success");
   });
 
+  els.publicTrackCopyButton?.addEventListener("click", async event => {
+    const publicUrl = resolveValidatedPublicTrackUrl();
+    if (!publicUrl) return;
+
+    const copied = await copyText(publicUrl);
+    if (!copied) {
+      showFloatingToast(t("copyDenied"), "error");
+      return;
+    }
+
+    pulseActionButton(event.currentTarget);
+    triggerHaptic("medium");
+    showFloatingToast(t("publicCardCopied"), "success");
+  });
+
+  els.publicTrackShareButton?.addEventListener("click", async event => {
+    const publicUrl = resolveValidatedPublicTrackUrl();
+    if (!publicUrl) return;
+
+    const titleBits = [state.currentResult?.artist, state.currentResult?.title].filter(Boolean).join(" • ");
+    const shareTitle = titleBits || "music link swapper";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareTitle,
+          url: publicUrl
+        });
+        pulseActionButton(event.currentTarget);
+        triggerHaptic("light");
+        showFloatingToast(t("publicCardShared"), "success");
+        return;
+      } catch (_error) {}
+    }
+
+    const copied = await copyText(publicUrl);
+    if (!copied) {
+      showFloatingToast(t("copyDenied"), "error");
+      return;
+    }
+    pulseActionButton(event.currentTarget);
+    triggerHaptic("medium");
+    showFloatingToast(t("publicCardCopied"), "success");
+  });
+
+  els.publicTrackOpenButton?.addEventListener("click", event => {
+    const publicUrl = resolveValidatedPublicTrackUrl();
+    if (!publicUrl) return;
+
+    pulseActionButton(event.currentTarget, "open");
+    triggerHaptic("light");
+    window.location.assign(publicUrl);
+  });
+
   els.copyOriginalButton?.addEventListener("click", async event => {
     if (!state.currentOriginalUrl) return;
     const copied = await copyText(state.currentOriginalUrl);
@@ -1209,6 +1450,12 @@ function bindEvents() {
 
 function hydrateFromIncomingUrl() {
   const params = new URLSearchParams(window.location.search);
+  const incomingTrackId = resolveIncomingTrackId(params);
+  if (incomingTrackId) {
+    hydratePublicTrack(incomingTrackId);
+    return true;
+  }
+
   const incomingUrl = resolveIncomingLink(params);
 
   if (incomingUrl) {
@@ -1224,7 +1471,10 @@ function hydrateFromIncomingUrl() {
       }, 100);
     });
     window.history.replaceState({}, document.title, window.location.pathname);
+    return true;
   }
+
+  return false;
 }
 
 function handleIncomingTargetUrl(targetUrl) {
@@ -1234,6 +1484,11 @@ function handleIncomingTargetUrl(targetUrl) {
 
   try {
     const parsed = new URL(targetUrl, window.location.origin);
+    const trackId = resolveIncomingTrackId(parsed.searchParams);
+    if (trackId) {
+      hydratePublicTrack(trackId);
+      return;
+    }
     incomingUrl = resolveIncomingLink(parsed.searchParams);
   } catch (_error) {
     incomingUrl = parseUrlCandidate(targetUrl);
@@ -1252,6 +1507,57 @@ function handleIncomingTargetUrl(targetUrl) {
       onConvert({ shouldScrollToStatus: true });
     }, 80);
   });
+}
+
+function resolveIncomingTrackId(params) {
+  const candidate = cleanText(params.get("track") || params.get("trackId"));
+  if (!candidate || !TRACK_ID_PATTERN.test(candidate)) return "";
+  return candidate;
+}
+
+async function hydratePublicTrack(trackId) {
+  const id = cleanText(trackId);
+  if (!TRACK_ID_PATTERN.test(id)) return;
+
+  setLoading(true, t("publicCardLoading"));
+  hideResult();
+  showStatus(t("publicCardLoading"), "default");
+  startCoverShimmer();
+
+  try {
+    const result = await fetchPublicTrack(id);
+    if (!result) {
+      stopCoverShimmer();
+      showStatus(t("publicCardNotFound"), "error");
+      return;
+    }
+
+    state.currentOriginalUrl = null;
+    state.currentResult = result;
+    state.publicTrackValidation = { trackId: id, status: "valid" };
+    setPublicTrackActionsBusy(false);
+    renderResult(result, { skipSave: true });
+    hideStatus();
+  } catch (_error) {
+    stopCoverShimmer();
+    showStatus(t("publicCardNotFound"), "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function fetchPublicTrack(trackId) {
+  const id = cleanText(trackId);
+  if (!TRACK_ID_PATTERN.test(id)) return null;
+
+  const response = await fetch(`${TRACK_API_URL}?trackId=${encodeURIComponent(id)}`, {
+    method: "GET",
+    headers: { Accept: "application/json" }
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.links)) return null;
+
+  return normalizeApiPayload(payload.data, "", false);
 }
 
 function resolveIncomingLink(params) {
@@ -1648,6 +1954,7 @@ function renderResult(result, { skipSave = false } = {}) {
     els.copyOriginalButton.classList.add("hidden");
   }
   els.resultDismissButton?.classList.remove("hidden");
+  renderPublicCardBar(result);
 
   const groups = ["primary", "others"];
   for (const groupName of groups) {
@@ -1723,6 +2030,17 @@ function renderResult(result, { skipSave = false } = {}) {
   renderCorrectionPrompt(result);
   renderResultLegend();
   if (!skipSave) saveRecentSwap(result);
+  syncResultPresentation({ openMobile: true });
+}
+
+function renderPublicCardBar(result) {
+  if (!els.publicCardBar) return;
+  const trackId = cleanText(result?.trackId || "");
+  const hasPublicTrack = TRACK_ID_PATTERN.test(trackId);
+  els.publicCardBar.classList.toggle("hidden", !hasPublicTrack);
+  if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
+  if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
+  if (hasPublicTrack) validatePublicTrackAvailability(trackId);
 }
 
 function getSectionGroup(sectionName = "") {
@@ -1813,19 +2131,32 @@ function renderCorrectionPrompt(result) {
     return;
   }
 
-  const options = missing
+  const platformOptions = missing
     .map(key => {
       const meta = PLATFORM_META[key];
-      if (!meta) return "";
-      return `<option value="${escapeHtml(key)}">${escapeHtml(meta.name)}</option>`;
+      if (!meta) return null;
+      return { key, meta };
     })
-    .filter(Boolean)
-    .join("");
+    .filter(Boolean);
 
-  if (!options) {
+  if (!platformOptions.length) {
     hideCorrectionPrompt();
     return;
   }
+
+  const initialPlatform = platformOptions[0].key;
+  const pills = platformOptions.map(({ key, meta }, index) => `
+    <button
+      class="correction-platform-pill ${index === 0 ? "is-selected" : ""} platform-pill-${escapeHtml(key)}"
+      type="button"
+      role="radio"
+      aria-checked="${index === 0 ? "true" : "false"}"
+      data-platform="${escapeHtml(key)}"
+    >
+      <span class="correction-platform-icon platform-icon-${escapeHtml(key)}" aria-hidden="true">${meta.icon}</span>
+      <span>${escapeHtml(meta.name)}</span>
+    </button>
+  `).join("");
 
   els.correctionCard.classList.remove("hidden", "is-saving", "is-complete");
   els.correctionCard.innerHTML = `
@@ -1834,13 +2165,14 @@ function renderCorrectionPrompt(result) {
         <p class="correction-title">${escapeHtml(t("completeLink"))}</p>
         <p class="correction-hint">${escapeHtml(t("completeLinkHint"))}</p>
       </div>
+      <input class="correction-platform-input" type="hidden" name="platform" value="${escapeHtml(initialPlatform)}" />
+      <div class="correction-platform-group">
+        <p class="correction-label-text">${escapeHtml(t("completeLinkPlatform"))}</p>
+        <div class="correction-platform-pills" role="radiogroup" aria-label="${escapeHtml(t("completeLinkPlatform"))}">
+          ${pills}
+        </div>
+      </div>
       <div class="correction-fields">
-        <label class="correction-label">
-          <span>${escapeHtml(t("completeLinkPlatform"))}</span>
-          <select class="correction-select" name="platform" aria-label="${escapeHtml(t("completeLinkPlatform"))}">
-            ${options}
-          </select>
-        </label>
         <label class="correction-label correction-url-label">
           <span>${escapeHtml(t("completeLinkUrl"))}</span>
           <input class="correction-input" name="url" type="url" inputmode="url" autocomplete="off" required aria-describedby="correctionError" />
@@ -1852,17 +2184,41 @@ function renderCorrectionPrompt(result) {
   `;
 
   const form = els.correctionCard.querySelector("form");
-  const platformSelect = form?.querySelector(".correction-select");
+  const platformInput = form?.querySelector(".correction-platform-input");
+  const platformPills = Array.from(form?.querySelectorAll(".correction-platform-pill") || []);
   const urlInput = form?.querySelector(".correction-input");
   const submitButton = form?.querySelector(".correction-submit");
 
   const syncValidation = () => {
-    const validation = getManualLinkValidation(platformSelect?.value, urlInput?.value);
+    const validation = getManualLinkValidation(platformInput?.value, urlInput?.value);
     setCorrectionError(form, validation.message, { invalid: !!validation.message && !!cleanText(urlInput?.value) });
     if (submitButton) submitButton.disabled = !validation.ok;
   };
 
-  platformSelect?.addEventListener("change", syncValidation);
+  const selectPlatform = platform => {
+    const normalized = normalizePlatformKey(platform);
+    if (!platformOptions.some(option => option.key === normalized)) return;
+    if (platformInput) platformInput.value = normalized;
+    platformPills.forEach(pill => {
+      const selected = pill.getAttribute("data-platform") === normalized;
+      pill.classList.toggle("is-selected", selected);
+      pill.setAttribute("aria-checked", selected ? "true" : "false");
+    });
+    syncValidation();
+  };
+
+  platformPills.forEach((pill, index) => {
+    pill.addEventListener("click", () => selectPlatform(pill.getAttribute("data-platform")));
+    pill.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault();
+      const delta = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
+      const next = platformPills[(index + delta + platformPills.length) % platformPills.length];
+      next?.focus();
+      selectPlatform(next?.getAttribute("data-platform"));
+    });
+  });
+
   urlInput?.addEventListener("input", syncValidation);
   syncValidation();
 
@@ -1892,10 +2248,14 @@ function renderCorrectionState(message, tone = "success") {
   if (!els.correctionCard) return;
   els.correctionCard.classList.remove("hidden", "is-saving");
   els.correctionCard.classList.add("is-complete");
+  const icon = tone === "pending" ? SVG_ICONS.found : SVG_ICONS.verified;
   els.correctionCard.innerHTML = `
     <div class="correction-state correction-state-${escapeHtml(tone)}" role="status">
-      <p class="correction-title">${escapeHtml(t("completeLink"))}</p>
-      <p class="correction-state-message">${escapeHtml(message)}</p>
+      <span class="correction-state-mark" aria-hidden="true">${icon}</span>
+      <div>
+        <p class="correction-title">${escapeHtml(t("completeLink"))}</p>
+        <p class="correction-state-message">${escapeHtml(message)}</p>
+      </div>
     </div>
   `;
 }
@@ -1915,7 +2275,10 @@ async function submitManualLink(form, result) {
 
   const submitButton = form.querySelector(".correction-submit");
   els.correctionCard?.classList.add("is-saving");
-  if (submitButton) submitButton.disabled = true;
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = t("completeLinkSaving");
+  }
 
   try {
     const response = await fetch("/api/manual-link", {
@@ -1959,6 +2322,7 @@ async function submitManualLink(form, result) {
   } finally {
     els.correctionCard?.classList.remove("is-saving");
     if (form.isConnected && submitButton) {
+      submitButton.textContent = t("completeLinkSave");
       submitButton.disabled = !getManualLinkValidation(platform, form.querySelector(".correction-input")?.value).ok;
     }
   }
@@ -2016,6 +2380,70 @@ async function shareLink(item) {
   }
 
   return false;
+}
+
+function resolveValidatedPublicTrackUrl() {
+  const trackId = cleanText(state.currentResult?.trackId || "");
+  if (!TRACK_ID_PATTERN.test(trackId)) {
+    showFloatingToast(t("publicCardUnavailable"), "error");
+    return "";
+  }
+
+  const validation = state.publicTrackValidation;
+  if (validation.trackId !== trackId || validation.status !== "valid") {
+    showFloatingToast(t("publicCardUnavailable"), "error");
+    return "";
+  }
+
+  return buildPublicTrackUrl(trackId);
+}
+
+async function validatePublicTrackAvailability(trackId) {
+  const id = cleanText(trackId);
+  if (!TRACK_ID_PATTERN.test(id)) return;
+
+  const current = state.publicTrackValidation;
+  if (current.trackId === id && (current.status === "loading" || current.status === "valid")) {
+    if (current.status === "valid") setPublicTrackActionsBusy(false);
+    return;
+  }
+
+  state.publicTrackValidation = { trackId: id, status: "loading" };
+  setPublicTrackActionsBusy(true);
+
+  const refreshed = await fetchPublicTrack(id).catch(() => null);
+  if (cleanText(state.currentResult?.trackId || "") !== id) return;
+
+  state.publicTrackValidation = {
+    trackId: id,
+    status: refreshed ? "valid" : "invalid"
+  };
+  setPublicTrackActionsBusy(false);
+
+  if (refreshed) {
+    state.currentResult = {
+      ...state.currentResult,
+      ...refreshed
+    };
+  }
+}
+
+function setPublicTrackActionsBusy(busy) {
+  els.publicCardBar?.classList.toggle("is-validating", busy);
+  els.publicCardBar?.setAttribute("aria-busy", busy ? "true" : "false");
+  [
+    els.publicTrackCopyButton,
+    els.publicTrackShareButton,
+    els.publicTrackOpenButton
+  ].forEach(button => {
+    if (button) button.disabled = busy;
+  });
+}
+
+function buildPublicTrackUrl(trackId) {
+  const url = new URL(window.location.pathname || "/", window.location.origin);
+  url.searchParams.set("track", trackId);
+  return url.href;
 }
 
 function openPlatformUrl(item) {
@@ -2259,6 +2687,7 @@ function softlyDismissKeyboard() {
 
 function hideResult() {
   clearTimeout(state.hideResultTimer);
+  closeResultSheet({ immediate: true, preserveResult: true });
 
   if (!els.resultCard.classList.contains("hidden")) {
     els.resultCard.classList.remove("result-card-live");
@@ -2269,6 +2698,7 @@ function hideResult() {
       els.sharePrimaryButton.classList.add("hidden");
       els.copyOriginalButton.classList.add("hidden");
       els.resultDismissButton?.classList.add("hidden");
+      els.publicCardBar?.classList.add("hidden");
       hideCorrectionPrompt();
       els.resultLegend?.classList.add("hidden");
       if (els.resultLegend) els.resultLegend.innerHTML = "";
@@ -2284,6 +2714,7 @@ function hideResult() {
   els.sharePrimaryButton.classList.add("hidden");
   els.copyOriginalButton.classList.add("hidden");
   els.resultDismissButton?.classList.add("hidden");
+  els.publicCardBar?.classList.add("hidden");
   hideCorrectionPrompt();
   els.resultLegend?.classList.add("hidden");
   if (els.resultLegend) els.resultLegend.innerHTML = "";
@@ -2336,10 +2767,10 @@ function showFloatingToast(message, tone = "default") {
   }, 1950);
 }
 
-function setLoading(loading) {
+function setLoading(loading, label = "") {
   els.convertButton.disabled = loading;
   if (loading) {
-    els.convertButton.textContent = state.isSearchMode ? t("loadingSearch") : t("loadingSwap");
+    els.convertButton.textContent = label || (state.isSearchMode ? t("loadingSearch") : t("loadingSwap"));
     return;
   }
   updateConvertButtonLabel();
@@ -2599,24 +3030,36 @@ function getManualLinkValidation(platform, url) {
 function isUrlForPlatform(platform, parsedUrl) {
   const host = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
   const path = parsedUrl.pathname.toLowerCase();
+  const href = parsedUrl.href;
 
   if (platform === "appleMusic" || platform === "itunes") {
-    return host === "music.apple.com" || host.endsWith(".music.apple.com") || host === "itunes.apple.com";
+    return (host === "music.apple.com" || host.endsWith(".music.apple.com")) && parsedUrl.searchParams.has("i");
   }
 
   if (platform === "spotify") {
-    return host === "open.spotify.com" || host === "spotify.link" || host.endsWith(".spotify.link");
+    return host === "open.spotify.com" && path.includes("/track/");
   }
 
   if (platform === "youtubeMusic") {
-    return host === "music.youtube.com" && !path.includes("/search");
+    return host === "music.youtube.com" && !path.includes("/search") && Boolean(getYoutubeVideoId(href));
   }
 
   if (platform === "youtube" || platform === "youTube") {
-    return (host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be") && host !== "music.youtube.com";
+    return (host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be") && host !== "music.youtube.com" && Boolean(getYoutubeVideoId(href));
   }
 
   return isSupportedStreamingUrl(parsedUrl.href);
+}
+
+function getYoutubeVideoId(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "youtu.be" || host.endsWith(".youtu.be")) return url.pathname.replace("/", "").trim();
+    if (host === "youtube.com" || host.endsWith(".youtube.com")) return cleanText(url.searchParams.get("v") || "");
+  } catch (_error) {}
+
+  return "";
 }
 
 function cleanText(str) {
