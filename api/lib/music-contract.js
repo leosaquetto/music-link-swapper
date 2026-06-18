@@ -161,9 +161,60 @@ export function filterDisplayLinks(links) {
     }
   }
 
-  return Array.from(byPlatform.values()).sort(
+  return withYoutubePlatformPairs(Array.from(byPlatform.values())).sort(
     (a, b) => AUTOMATIC_PLATFORM_KEYS.indexOf(a.type) - AUTOMATIC_PLATFORM_KEYS.indexOf(b.type)
   );
+}
+
+export function buildYoutubePlatformLinks(videoId, { source = "youtube_api", isVerified = false } = {}) {
+  const id = String(videoId || "").trim();
+  if (!id) return [];
+  return [
+    {
+      type: "youtube",
+      url: `https://www.youtube.com/watch?v=${id}`,
+      isVerified: Boolean(isVerified),
+      source
+    },
+    {
+      type: "youtubeMusic",
+      url: `https://music.youtube.com/watch?v=${id}`,
+      isVerified: Boolean(isVerified),
+      source
+    }
+  ];
+}
+
+export function withYoutubePlatformPairs(links) {
+  const next = (Array.isArray(links) ? links : [])
+    .map(item => ({
+      ...item,
+      type: normalizePlatformKey(item?.type || item?.platform),
+      url: canonicalizeMediaUrl(item?.url || "")
+    }))
+    .filter(item => item.type && item.url);
+
+  const youtubeCandidates = next.filter(item => {
+    const type = normalizePlatformKey(item.type);
+    return (type === "youtube" || type === "youtubeMusic") && getYoutubeVideoId(item.url) && !isSearchLikeUrl(item.url, type);
+  });
+
+  if (!youtubeCandidates.length) return next;
+
+  const best = youtubeCandidates.reduce((winner, current) => (
+    scoreLinkQuality(current) >= scoreLinkQuality(winner) ? current : winner
+  ));
+  const videoId = getYoutubeVideoId(best.url);
+  if (!videoId) return next;
+
+  const present = new Set(next.map(item => normalizePlatformKey(item.type)));
+  const source = String(best.source || "youtube_api");
+  const generated = buildYoutubePlatformLinks(videoId, {
+    source,
+    isVerified: Boolean(best.isVerified)
+  }).filter(item => !present.has(item.type));
+
+  return [...next, ...generated];
 }
 
 export function getMissingPlatforms(links) {
@@ -216,7 +267,9 @@ function scoreLinkQuality(item) {
   if (!isSearchLikeUrl(url, platform)) score += 20;
   if (item?.source === "input") score += 12;
   if (item?.source === "manual") score += 10;
+  if (item?.source === "statslc_bridge") score += 9;
   if (item?.source === "spotify_web") score += 8;
+  if (item?.source === "youtube_api") score += 8;
   if (platform === "appleMusic" && /\/album\/.+\?i=\d+/.test(url)) score += 18;
   if (platform === "appleMusic" && url.includes("geo.music.apple.com")) score -= 18;
   if ((platform === "youtube" || platform === "youtubeMusic") && getYoutubeVideoId(url)) score += 12;

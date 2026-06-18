@@ -2,8 +2,9 @@
 import { existsSync, readFileSync } from "node:fs";
 
 const ENV_FILES = [".env.local", ".env"];
-const OPTIONAL_KEYS = ["MANUAL_LINK_TOKEN", "YOUTUBE_API_KEY"];
-const BOOLEAN_KEYS = ["SPOTIFY_WEB_MATCHING_ENABLED"];
+const OPTIONAL_KEYS = ["MANUAL_LINK_TOKEN", "STATSLC_BRIDGE_TOKEN", "YOUTUBE_API_KEY"];
+const OPTIONAL_URL_KEYS = ["STATSLC_BRIDGE_URL"];
+const BOOLEAN_KEYS = ["SPOTIFY_WEB_MATCHING_ENABLED", "STATSLC_BRIDGE_ENABLED", "YOUTUBE_MATCHING_ENABLED"];
 
 const fileEnv = loadEnvFiles(ENV_FILES);
 const env = {
@@ -15,13 +16,18 @@ const issues = [];
 const warnings = [];
 
 validateDatabaseUrl(env.DATABASE_URL, { issues, warnings });
-validateBoolean("SPOTIFY_WEB_MATCHING_ENABLED", env.SPOTIFY_WEB_MATCHING_ENABLED, { issues });
+for (const key of BOOLEAN_KEYS) {
+  validateBoolean(key, env[key], { issues });
+}
 
 for (const key of OPTIONAL_KEYS) {
   if (env[key] === undefined || env[key] === "") continue;
   if (String(env[key]).trim().length < 8) {
     warnings.push(`${key} is set but looks very short.`);
   }
+}
+for (const key of OPTIONAL_URL_KEYS) {
+  validateOptionalUrl(key, env[key], { issues });
 }
 
 if (issues.length) {
@@ -78,6 +84,16 @@ function validateBoolean(key, value, { issues }) {
   const normalized = String(value).trim().toLowerCase();
   if (!["true", "false", "1", "0", "yes", "no"].includes(normalized)) {
     issues.push(`${key} must be true or false when set.`);
+  }
+}
+
+function validateOptionalUrl(key, value, { issues }) {
+  const raw = String(value || "").trim();
+  if (!raw) return;
+  try {
+    new URL(raw);
+  } catch (_error) {
+    issues.push(`${key} must be a valid URL when set.`);
   }
 }
 

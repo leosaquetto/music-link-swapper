@@ -43,13 +43,21 @@ When `DATABASE_URL` starts with `pglite://`, the cache is local to that filesyst
 
 ```bash
 SPOTIFY_WEB_MATCHING_ENABLED="true"
+STATSLC_BRIDGE_ENABLED="true"
+STATSLC_BRIDGE_URL="https://statslc.leosaquetto.com/api/catalog-link-bridge"
+STATSLC_BRIDGE_TOKEN=""
+YOUTUBE_MATCHING_ENABLED="true"
 MANUAL_LINK_TOKEN=""
 YOUTUBE_API_KEY=""
 ```
 
 - `SPOTIFY_WEB_MATCHING_ENABLED=false` disables Spotify Web Player matching instantly.
+- `STATSLC_BRIDGE_ENABLED=false` disables the internal stats-lc/stats.fm catalog bridge instantly.
+- `STATSLC_BRIDGE_URL` points to the stats-lc API bridge used to enrich Spotify and Apple Music IDs before text-search fallbacks.
+- `STATSLC_BRIDGE_TOKEN` is optional locally, but should match `CATALOG_LINK_BRIDGE_TOKEN` on `stats-lc-api` in production.
+- `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
-- `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider or manual correction returns direct video links.
+- `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.
 
 ## Tests
 

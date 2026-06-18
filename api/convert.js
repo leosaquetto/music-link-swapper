@@ -7,12 +7,23 @@ import {
 } from "./lib/music-library.js";
 import {
   buildCanonicalTrackKey,
+  buildYoutubePlatformLinks,
   canonicalizeMediaUrl as canonicalizeContractMediaUrl,
   decorateResultForResponse,
   filterDisplayLinks,
-  normalizePlatformKey as normalizeContractPlatformKey
+  getMissingPlatforms,
+  normalizePlatformKey as normalizeContractPlatformKey,
+  withYoutubePlatformPairs
 } from "./lib/music-contract.js";
 import { searchSpotifyWebTrack } from "./lib/spotify-web.js";
+import {
+  isStatslcBridgeConfigured,
+  searchStatslcBridge
+} from "./lib/statslc-bridge.js";
+import {
+  isYoutubeDataMatchingConfigured,
+  searchYoutubeVideoForTrack
+} from "./lib/youtube-data.js";
 
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
@@ -167,7 +178,11 @@ export default async function handler(req, res) {
     const inputAlias = canonicalizeContractMediaUrl(link);
     const cachedByAlias = await readCachedResultByAlias(inputAlias);
     if (cachedByAlias) {
-      return res.status(200).json({ ok: true, data: cachedByAlias });
+      const data = await maybeUpgradeCachedResult(cachedByAlias, {
+        aliases: [inputAlias],
+        defaultSource: "cache_upgrade"
+      });
+      return res.status(200).json({ ok: true, data });
     }
 
     const platform = detectPlatformFromUrl(link);
@@ -175,8 +190,15 @@ export default async function handler(req, res) {
     if (inputContext.canonicalKey) {
       const cachedByTrack = await readCachedResultByTrackKey(inputContext.canonicalKey);
       if (cachedByTrack) {
-        await attachAliasesToTrack(cachedByTrack.trackId, [inputAlias]);
-        return res.status(200).json({ ok: true, data: cachedByTrack });
+        const data = await maybeUpgradeCachedResult(cachedByTrack, {
+          aliases: [inputAlias],
+          defaultSource: "cache_upgrade",
+          inputContext
+        });
+        if (data?.trackId) {
+          await attachAliasesToTrack(data.trackId, [inputAlias]);
+        }
+        return res.status(200).json({ ok: true, data });
       }
     }
 
@@ -527,6 +549,63 @@ async function finalizeAndPersistResult(data, options = {}) {
     responseData.trackId = persisted.trackId;
   }
   return responseData;
+}
+
+async function maybeUpgradeCachedResult(cachedData, { aliases = [], defaultSource = "cache_upgrade", inputContext = null } = {}) {
+  if (!shouldUpgradeCachedResult(cachedData)) return cachedData;
+
+  try {
+    const finalizedData = await finalizeResultData(cachedData);
+    if (!isCachedUpgradeUseful(cachedData, finalizedData)) return cachedData;
+
+    const withInputContext = applyInputContextToResult(finalizedData, inputContext);
+    const responseData = decorateResultForResponse(withInputContext, {
+      cacheStatus: "hit",
+      trackId: cachedData?.trackId || ""
+    });
+    const persistData = prepareCachedUpgradeForPersist(responseData, defaultSource);
+    const persisted = await upsertCachedResult(persistData, { aliases, defaultSource });
+    if (persisted?.trackId) {
+      responseData.trackId = persisted.trackId;
+    }
+    return responseData;
+  } catch (error) {
+    console.warn("[music-link-swapper] cached upgrade failed", error?.message || error);
+    return cachedData;
+  }
+}
+
+function shouldUpgradeCachedResult(data) {
+  const missingPlatforms = Array.isArray(data?.missingPlatforms)
+    ? data.missingPlatforms
+    : getMissingPlatforms(data?.links || []);
+  if (!missingPlatforms.length) return false;
+  if (pickSongLinkEnrichmentCandidate(data?.links || [], missingPlatforms)) return true;
+
+  return missingPlatforms.some(platform => {
+    if (platform === "youtube" || platform === "youtubeMusic") {
+      return isYoutubeDataMatchingConfigured();
+    }
+    return platform === "spotify" || platform === "appleMusic";
+  });
+}
+
+function isCachedUpgradeUseful(before, after) {
+  const beforeLinks = filterDisplayLinks(before?.links || []);
+  const afterLinks = filterDisplayLinks(after?.links || []);
+  if (afterLinks.length > beforeLinks.length) return true;
+  return getMissingPlatforms(afterLinks).length < getMissingPlatforms(beforeLinks).length;
+}
+
+function prepareCachedUpgradeForPersist(data, defaultSource) {
+  return {
+    ...data,
+    links: (Array.isArray(data?.links) ? data.links : []).map(link => (
+      String(link?.source || "").toLowerCase() === "cache"
+        ? { ...link, source: defaultSource }
+        : link
+    ))
+  };
 }
 
 function applyInputContextToResult(data, inputContext) {
@@ -1144,7 +1223,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
 async function finalizeResultData(data) {
   const payload = data || {};
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
-  const youtubeAdjustedLinks = refineYoutubePlatformsWithCandidates(normalizedLinks, payload);
+  const youtubeAdjustedLinks = withYoutubePlatformPairs(refineYoutubePlatformsWithCandidates(normalizedLinks, payload));
   const imageFromLinks = pickImageFromLinks(normalizedLinks);
   const base = {
     ...payload,
@@ -1157,8 +1236,16 @@ async function finalizeResultData(data) {
 
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
-  const spotifyWebEnriched = await enrichWithSpotifyWebMatch(secondaryEnriched);
-  return enrichWithAppleBridgeFallback(spotifyWebEnriched);
+  const statslcEnriched = await enrichWithStatslcBridge(secondaryEnriched);
+  const spotifyWebEnriched = await enrichWithSpotifyWebMatch(statslcEnriched);
+  const postSpotifyStatslcEnriched = await enrichWithStatslcBridge(spotifyWebEnriched);
+  const appleBridgeEnriched = await enrichWithAppleBridgeFallback(postSpotifyStatslcEnriched);
+  const songLinkEnriched = await enrichWithSongLinkDirectLinks(appleBridgeEnriched);
+  const youtubePaired = {
+    ...songLinkEnriched,
+    links: withYoutubePlatformPairs(Array.isArray(songLinkEnriched?.links) ? songLinkEnriched.links : [])
+  };
+  return enrichWithYoutubeDataMatch(youtubePaired);
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
@@ -1487,6 +1574,92 @@ function maybeInjectSpotifySearchFallback(data, links) {
   };
 }
 
+async function enrichWithSongLinkDirectLinks(data) {
+  const next = { ...(data || {}) };
+  const links = dedupeAndNormalizeLinks(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
+  const missing = getMissingPlatforms(links);
+  if (!missing.length) return { ...next, links };
+
+  const candidate = pickSongLinkEnrichmentCandidate(links, missing);
+  if (!candidate?.url) return { ...next, links };
+
+  const startedAt = Date.now();
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const trackKey = buildCanonicalTrackKey({ title, artist, isrc: next.isrc });
+  try {
+    const result = await fetchSongLink(candidate.url, { markVerified: true });
+    await recordProviderAttempt({
+      trackKey,
+      provider: "songlink_enrichment",
+      status: result.ok ? "hit" : "miss",
+      latencyMs: Date.now() - startedAt,
+      message: result.ok
+        ? (result.data?.links || []).map(item => item.type).join(",")
+        : result.error || "no_match"
+    });
+
+    if (!result.ok) return { ...next, links };
+
+    const merged = mergeLinkResults({ ...next, links }, result.data);
+    return {
+      ...next,
+      title: next.title || result.data?.title || "música encontrada",
+      description: next.description || result.data?.description || "",
+      album: next.album || result.data?.album || "",
+      image: next.image || result.data?.image || "",
+      links: dedupeAndNormalizeLinks(merged.links)
+    };
+  } catch (error) {
+    await recordProviderAttempt({
+      trackKey,
+      provider: "songlink_enrichment",
+      status: "error",
+      latencyMs: Date.now() - startedAt,
+      message: String(error?.message || error || "unknown_error")
+    });
+    return { ...next, links };
+  }
+}
+
+function pickSongLinkEnrichmentCandidate(links, missing) {
+  const missingSet = new Set((Array.isArray(missing) ? missing : []).map(item => normalizeContractPlatformKey(item)));
+  const canEnrichFromNonSpotify =
+    missingSet.has("youtube") ||
+    missingSet.has("youtubeMusic") ||
+    missingSet.has("appleMusic");
+
+  const candidates = (Array.isArray(links) ? links : [])
+    .map(item => ({
+      ...item,
+      type: normalizeContractPlatformKey(item?.type || "")
+    }))
+    .filter(item => {
+      if (!item?.url || isSearchLikeUrl(item.url, item.type)) return false;
+      if (String(item.source || "").toLowerCase() === "songlink") return false;
+      if (item.type === "spotify") return missingSet.has("appleMusic") || missingSet.has("youtube") || missingSet.has("youtubeMusic");
+      if (!canEnrichFromNonSpotify) return false;
+      return item.type === "appleMusic" || item.type === "youtube" || item.type === "youtubeMusic";
+    })
+    .sort((left, right) => songLinkEnrichmentPriority(right, missingSet) - songLinkEnrichmentPriority(left, missingSet));
+
+  return candidates[0] || null;
+}
+
+function songLinkEnrichmentPriority(item, missingSet) {
+  const type = normalizeContractPlatformKey(item?.type || "");
+  let score = 0;
+  if (type === "spotify") score += 100;
+  if (type === "appleMusic") score += 55;
+  if (type === "youtubeMusic") score += 35;
+  if (type === "youtube") score += 30;
+  if (type === "spotify" && missingSet.has("appleMusic")) score += 20;
+  if (type === "spotify" && (missingSet.has("youtube") || missingSet.has("youtubeMusic"))) score += 18;
+  if (item?.isVerified) score += 10;
+  if (item?.source === "input" || item?.source === "cache") score += 8;
+  return score;
+}
+
 function sanitizeMetadataText(value, maxLen = MAX_METADATA_TEXT_LENGTH, options = {}) {
   const { blankWhenNoisy = false } = options;
   const text = String(value || "").replace(/\s+/g, " ").trim();
@@ -1667,6 +1840,128 @@ async function enrichWithSecondaryFallbacks(data) {
   };
 }
 
+async function enrichWithStatslcBridge(data) {
+  const next = { ...(data || {}) };
+  const links = dedupeAndNormalizeLinks(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
+  const missing = getMissingPlatforms(links);
+  const canHelp = missing.includes("spotify") || missing.includes("appleMusic");
+  if (!canHelp || !isStatslcBridgeConfigured()) return { ...next, links };
+
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  const spotifyId = extractSpotifyTrackIdFromLinks(links);
+  const appleMusicId = extractAppleMusicTrackIdFromLinks(links);
+  const statsfmTrackId = String(next.statsfmTrackId || next.statsfmId || "").trim();
+  if (!query && !spotifyId && !appleMusicId && !statsfmTrackId) return { ...next, links };
+
+  const startedAt = Date.now();
+  const trackKey = buildCanonicalTrackKey({ title, artist, isrc: next.isrc });
+  try {
+    const match = await searchStatslcBridge({
+      query,
+      title,
+      artist,
+      durationMs: Number(next.durationMs || next.duration || 0) || 0,
+      spotifyId,
+      appleMusicId,
+      statsfmTrackId,
+      isrc: next.isrc
+    });
+
+    await recordProviderAttempt({
+      trackKey,
+      provider: "statslc_bridge",
+      status: match?.links?.length ? "hit" : "miss",
+      latencyMs: Date.now() - startedAt,
+      message: match?.links?.map(item => item.type).join(",") || "no_match"
+    });
+
+    if (!match?.links?.length) return { ...next, links };
+
+    const bridgeLinks = await normalizeStatslcBridgeLinks(match.links, next);
+    if (!bridgeLinks.length) return { ...next, links };
+
+    const bridgeTrack = match.track || {};
+    return {
+      ...next,
+      title: sanitizeMetadataText(next.title || bridgeTrack.title, MAX_METADATA_TEXT_LENGTH) || next.title || bridgeTrack.title || "música encontrada",
+      description: sanitizeMetadataText(next.description || bridgeTrack.artist, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
+      image: next.image || bridgeTrack.image || "",
+      links: dedupeAndNormalizeLinks([
+        ...links,
+        ...bridgeLinks
+      ])
+    };
+  } catch (error) {
+    await recordProviderAttempt({
+      trackKey,
+      provider: "statslc_bridge",
+      status: "error",
+      latencyMs: Date.now() - startedAt,
+      message: String(error?.message || error || "unknown_error")
+    });
+    return { ...next, links };
+  }
+}
+
+async function normalizeStatslcBridgeLinks(links, data) {
+  const out = [];
+  for (const link of Array.isArray(links) ? links : []) {
+    const type = normalizeContractPlatformKey(link?.type || "");
+    if (type === "spotify") {
+      const spotifyId = extractSpotifyTrackId(link?.url) || extractSpotifyTrackId(link?.id);
+      if (spotifyId) {
+        out.push({
+          type: "spotify",
+          url: `https://open.spotify.com/track/${spotifyId}`,
+          isVerified: Boolean(link?.isVerified),
+          source: "statslc_bridge"
+        });
+      }
+      continue;
+    }
+
+    if (type === "appleMusic") {
+      const appleLink = await resolveStatslcAppleMusicLink(link, data);
+      if (appleLink?.url) out.push(appleLink);
+    }
+  }
+  return out;
+}
+
+async function resolveStatslcAppleMusicLink(link, data) {
+  const directUrl = String(link?.url || "").trim();
+  if (filterDisplayLinks([{ type: "appleMusic", url: directUrl }]).length) {
+    return {
+      type: "appleMusic",
+      url: canonicalizeMediaUrl(directUrl),
+      isVerified: Boolean(link?.isVerified),
+      source: "statslc_bridge"
+    };
+  }
+
+  const appleMusicId = extractAppleMusicTrackId(directUrl) || extractAppleMusicTrackId(link?.id);
+  if (!appleMusicId) return null;
+
+  const metadata = await fetchAppleTrackMetadataById(appleMusicId);
+  if (!metadata?.url) return null;
+
+  const targetTitle = String(data?.title || "").trim();
+  const targetArtist = extractArtistFromPayload(data);
+  const score = scoreTextAlignment(
+    { title: targetTitle || metadata.title, artist: targetArtist || metadata.artist },
+    { title: metadata.title, artist: metadata.artist }
+  );
+
+  return {
+    type: "appleMusic",
+    url: canonicalizeMediaUrl(metadata.url),
+    isVerified: Boolean(link?.isVerified) && score >= 72,
+    source: "statslc_bridge"
+  };
+}
+
 async function enrichWithSpotifyWebMatch(data) {
   const next = { ...(data || {}) };
   const links = Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : [];
@@ -1719,6 +2014,64 @@ async function enrichWithSpotifyWebMatch(data) {
   }
 }
 
+async function enrichWithYoutubeDataMatch(data) {
+  const next = { ...(data || {}) };
+  const links = withYoutubePlatformPairs(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
+  const hasDirectYoutube = links.some(item => {
+    const type = normalizeContractPlatformKey(item?.type || "");
+    return (type === "youtube" || type === "youtubeMusic") && getYoutubeVideoId(item?.url || "") && !isSearchLikeUrl(item.url, type);
+  });
+
+  if (hasDirectYoutube || !isYoutubeDataMatchingConfigured()) {
+    return { ...next, links };
+  }
+
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!title || !artist || !query) return { ...next, links };
+
+  const startedAt = Date.now();
+  const trackKey = buildCanonicalTrackKey({ title, artist });
+  try {
+    const match = await searchYoutubeVideoForTrack(query, {
+      title,
+      artist,
+      durationMs: Number(next.durationMs || next.duration || 0) || 0
+    });
+
+    await recordProviderAttempt({
+      trackKey,
+      provider: "youtube_api",
+      status: match?.videoId ? "hit" : "miss",
+      latencyMs: Date.now() - startedAt,
+      message: match?.url || "no_match"
+    });
+
+    if (!match?.videoId) return { ...next, links };
+
+    return {
+      ...next,
+      links: dedupeAndNormalizeLinks([
+        ...links,
+        ...buildYoutubePlatformLinks(match.videoId, {
+          source: "youtube_api",
+          isVerified: Boolean(match.isVerified)
+        })
+      ])
+    };
+  } catch (error) {
+    await recordProviderAttempt({
+      trackKey,
+      provider: "youtube_api",
+      status: "error",
+      latencyMs: Date.now() - startedAt,
+      message: String(error?.message || error || "unknown_error")
+    });
+    return { ...next, links };
+  }
+}
+
 async function fetchDeezerMetadata(url) {
   try {
     const response = await fetchWithTimeout(
@@ -1760,20 +2113,7 @@ function dedupeAndNormalizeLinks(links) {
     }
   }
 
-  const values = Array.from(byType.values());
-  const youtubeMusicIds = new Set(
-    values
-      .filter(item => String(item.type).toLowerCase() === "youtubemusic")
-      .map(item => getYoutubeVideoId(item.url))
-      .filter(Boolean)
-  );
-
-  return values.filter(item => {
-    const key = String(item.type).toLowerCase();
-    if (key !== "youtube") return true;
-    const videoId = getYoutubeVideoId(item.url);
-    return !(videoId && youtubeMusicIds.has(videoId));
-  });
+  return withYoutubePlatformPairs(Array.from(byType.values()));
 }
 
 function isLinkBetter(candidate, existing) {
@@ -1790,6 +2130,7 @@ function scoreLinkQuality(item) {
   if (!isSearchLikeUrl(url, key)) score += 10;
   if (source === "input") score += 30;
   if (source === "manual") score += 24;
+  if (source === "statslc_bridge") score += 20;
   if (source === "itunes") score += 18;
   if (source === "spotify_web") score += 12;
   if (source === "songlink") score += 4;
@@ -1926,6 +2267,7 @@ async function fetchAppleTrackMetadataById(trackId) {
     if (!firstSong) return null;
 
     return {
+      url: String(firstSong?.trackViewUrl || "").trim(),
       title: String(firstSong?.trackName || "").trim(),
       artist: String(firstSong?.artistName || "").trim(),
       album: String(firstSong?.collectionName || "").trim(),
@@ -1933,6 +2275,54 @@ async function fetchAppleTrackMetadataById(trackId) {
     };
   } catch (_error) {
     return null;
+  }
+}
+
+function extractSpotifyTrackIdFromLinks(links) {
+  for (const link of Array.isArray(links) ? links : []) {
+    const id = extractSpotifyTrackId(link?.url || link?.id);
+    if (id) return id;
+  }
+  return "";
+}
+
+function extractSpotifyTrackId(value) {
+  const raw = String(value || "").trim();
+  if (/^[A-Za-z0-9]{22}$/.test(raw)) return raw;
+  try {
+    const parsed = new URL(raw);
+    if (!parsed.hostname.toLowerCase().includes("open.spotify.com")) return "";
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const trackIndex = parts.findIndex(part => part === "track");
+    const id = trackIndex !== -1 ? parts[trackIndex + 1] : "";
+    return /^[A-Za-z0-9]{22}$/.test(id) ? id : "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+function extractAppleMusicTrackIdFromLinks(links) {
+  for (const link of Array.isArray(links) ? links : []) {
+    const id = extractAppleMusicTrackId(link?.url || link?.id);
+    if (id) return id;
+  }
+  return "";
+}
+
+function extractAppleMusicTrackId(value) {
+  const raw = String(value || "").trim();
+  if (/^\d{5,}$/.test(raw)) return raw;
+  try {
+    const parsed = new URL(raw);
+    if (!parsed.hostname.toLowerCase().includes("music.apple.com")) return "";
+    const queryTrackId = parsed.searchParams.get("i") || "";
+    if (/^\d{5,}$/.test(queryTrackId)) return queryTrackId;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const songIndex = parts.findIndex(part => part === "song");
+    const id = songIndex !== -1 ? parts.slice(songIndex + 1).find(part => /^\d{5,}$/.test(part)) : "";
+    return /^\d{5,}$/.test(id) ? id : "";
+  } catch (_error) {
+    return "";
   }
 }
 

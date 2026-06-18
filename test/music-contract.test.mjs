@@ -23,9 +23,10 @@ test("filterDisplayLinks keeps only direct automatic platform links", () => {
 
   assert.deepEqual(
     links.map(item => item.type),
-    ["spotify", "appleMusic", "youtube"]
+    ["spotify", "appleMusic", "youtube", "youtubeMusic"]
   );
   assert.equal(links[0].url, "https://open.spotify.com/track/123");
+  assert.equal(links.find(item => item.type === "youtubeMusic").url, "https://music.youtube.com/watch?v=abc123");
   assert.equal(links.some(item => item.url.includes("/search")), false);
 });
 
@@ -79,6 +80,6 @@ test("getMissingPlatforms only reports automatic v1 platforms", () => {
       { type: "deezer", url: "https://www.deezer.com/track/1" },
       { type: "youtube", url: "https://www.youtube.com/watch?v=abc" }
     ]),
-    ["appleMusic", "youtubeMusic"]
+    ["appleMusic"]
   );
 });

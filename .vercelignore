@@ -3,7 +3,5 @@ node_modules/
 .playwright-cli/
 .env
 .env.*
-!.env.example
 .vercel/
 coverage/
-.env*.local

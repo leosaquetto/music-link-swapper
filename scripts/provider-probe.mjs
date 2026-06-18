@@ -2,11 +2,11 @@
 import { performance } from "node:perf_hooks";
 
 import { searchSpotifyWebTrack } from "../api/lib/spotify-web.js";
+import { searchYoutubeVideoForTrack } from "../api/lib/youtube-data.js";
 
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
 const IDHS_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
-const YOUTUBE_SEARCH_API_URL = "https://www.googleapis.com/youtube/v3/search";
 
 const fixtures = [
   { title: "One More Time", artist: "Daft Punk", inputUrl: "https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV" },
@@ -139,17 +139,12 @@ async function probeIdhs(fixture) {
 
 async function probeYoutubeApi(_fixture, query) {
   if (!process.env.YOUTUBE_API_KEY) return { hit: false, url: "", error: "missing_youtube_api_key" };
-  const url = new URL(YOUTUBE_SEARCH_API_URL);
-  url.searchParams.set("key", process.env.YOUTUBE_API_KEY);
-  url.searchParams.set("q", query);
-  url.searchParams.set("part", "snippet");
-  url.searchParams.set("type", "video");
-  url.searchParams.set("maxResults", "1");
-  const response = await fetchWithTimeout(url.toString());
-  if (!response.ok) return { hit: false, url: "", error: `youtube_${response.status}` };
-  const payload = await response.json();
-  const videoId = payload?.items?.[0]?.id?.videoId || "";
-  return { hit: Boolean(videoId), url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : "" };
+  const match = await searchYoutubeVideoForTrack(query, _fixture);
+  return {
+    hit: Boolean(match?.url),
+    url: match?.url || "",
+    error: match?.url ? "" : "no_match"
+  };
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 10_000) {
