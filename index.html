@@ -70,7 +70,10 @@
           <div class="label-row">
             <label id="inputLabel" class="label" for="linkInput">link da música</label>
             <div class="label-actions">
-              <button id="searchModeButton" class="tiny-button tiny-icon-button" type="button" aria-label="modo pesquisa" title="modo pesquisa"></button>
+              <div class="mode-segmented" role="group" aria-label="modo de entrada">
+                <button id="linkModeButton" class="mode-segment is-active" type="button" aria-pressed="true">link</button>
+                <button id="searchModeButton" class="mode-segment" type="button" aria-pressed="false">nome</button>
+              </div>
               <button id="recentSwapsButton" class="tiny-button tiny-icon-button" type="button" aria-label="swaps recentes" title="swaps recentes"></button>
               <button id="useSampleButton" class="tiny-button tiny-icon-button" type="button" aria-label="sortear exemplo" title="sortear exemplo"></button>
             </div>
@@ -135,6 +138,14 @@
 
                 <div class="result-head-actions">
                   <button
+                    id="resultDismissButton"
+                    class="mini-head-action hidden"
+                    type="button"
+                    aria-label="limpar resultado"
+                    title="limpar resultado"
+                  ></button>
+
+                  <button
                     id="copyOriginalButton"
                     class="mini-head-action hidden"
                     type="button"
@@ -165,8 +176,6 @@
           <div id="platformGroups" class="platform-groups"></div>
           <section id="correctionCard" class="correction-card hidden" aria-live="polite"></section>
           <div id="resultLegend" class="result-legend hidden" aria-live="polite"></div>
-          <p id="resultPoweredBy" class="result-powered-by hidden">powered by <a href="https://idonthavespotify.sjdonado.com" target="_blank" rel="noopener noreferrer">idonthavespotify</a> &amp; <a href="https://odesli.co" target="_blank" rel="noopener noreferrer"><strong>odesli</strong></a></p>
-          <button id="resultDismissButton" class="result-dismiss-button" type="button" aria-label="limpar resultado">✕</button>
         </section>
       </main>
 

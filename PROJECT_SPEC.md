@@ -1,6 +1,6 @@
 # Music Link Swapper - especificacao do estado atual
 
-Documento de mapeamento do projeto como ele esta hoje. Ele descreve a superficie existente, as integracoes e os pontos frageis observados no codigo atual, sem assumir que tudo esta funcionando em producao e sem propor correcoes nesta etapa.
+Documento de mapeamento do projeto como ele esta hoje. Ele descreve a superficie existente, as integracoes e os pontos frageis observados no codigo atual. As regras atuais de matching, cache persistente e provedores ficam em [`docs/link-matching.md`](./docs/link-matching.md); variaveis de ambiente ficam em [`docs/environment.md`](./docs/environment.md).
 
 ## Visao geral
 
@@ -8,14 +8,18 @@ O Music Link Swapper e um web app estatico com uma funcao serverless para conver
 
 A aplicacao parece desenhada para uso mobile-first/PWA, com suporte a instalacao no iPhone, atalhos, clipboard, compartilhamento nativo, historico local e tema claro/escuro. O deploy esperado e Vercel, indicado pela pasta `api/` e por `vercel.json`.
 
-Nao ha `package.json`, scripts locais, dependencias instalaveis, harness de testes ou pipeline real de build neste repositorio raiz. A pasta `reference/idonthavespotify` contem uma copia de referencia de outro projeto e nao parece participar diretamente do runtime do Music Link Swapper.
+O repositorio possui `package.json` com scripts de validacao e testes. A pasta `reference/idonthavespotify` contem uma copia de referencia de outro projeto e nao participa diretamente do runtime do Music Link Swapper.
 
 ## Estrutura do repositorio
 
 - `index.html`: shell HTML da aplicacao, metatags PWA, estrutura da UI, modais, footer e import de `app.js`.
 - `style.css`: todo o sistema visual do app, incluindo temas, layout mobile, cards, modais, listas de plataformas, botoes, estados e responsividade.
 - `app.js`: logica principal do frontend, traducoes, eventos, chamada da API, normalizacao de payload, renderizacao de resultados, historico local, clipboard, share e tema.
-- `api/convert.js`: endpoint serverless `POST /api/convert`, integracoes externas, fallback de metadados, cache em memoria, rate limit e normalizacao de links.
+- `api/convert.js`: endpoint serverless `POST /api/convert`, integracoes externas, cache persistente opcional, fallback de metadados, rate limit e normalizacao de links.
+- `api/lib/music-library.js`: persistencia Postgres/Neon/PGlite para biblioteca cacheada.
+- `api/lib/music-contract.js`: contrato de links diretos, plataformas automaticas e campos de resposta.
+- `api/lib/statslc-bridge.js`: cliente do bridge interno stats-lc/stats.fm para Spotify e Apple Music.
+- `api/lib/youtube-data.js`: matching opcional por YouTube Data API.
 - `manifest.json`: manifesto PWA com nome, icones, display standalone, protocol handler `web+swapper` e launch handler.
 - `telegram.js`: helper para Telegram WebApp, mas nao esta importado por `index.html` no estado atual.
 - `vercel.json`: somente declara o schema da Vercel, sem rotas, rewrites, headers ou configuracoes adicionais.
@@ -59,7 +63,8 @@ Principais responsabilidades de `app.js`:
 - Validar superficialmente links de streaming antes de chamar a API.
 - Normalizar resposta da API para um modelo de UI.
 - Renderizar capa, titulo, artista/descricao, grupos de plataformas, badges e legendas.
-- Adicionar links de busca por plataforma quando faltam links diretos.
+- Renderizar somente links diretos retornados pela API.
+- Mostrar prompts discretos de correcao quando plataformas automaticas estao ausentes, sem criar linhas de plataforma mortas.
 - Persistir e renderizar historico local.
 - Controlar modais de iOS install, historico e legal.
 - Controlar clipboard, share, haptics e deeplinks.
@@ -86,9 +91,13 @@ Resposta de sucesso esperada:
       {
         "type": "spotify",
         "url": "https://...",
-        "isVerified": true
+        "isVerified": true,
+        "source": "input"
       }
-    ]
+    ],
+    "trackId": "trk_...",
+    "cacheStatus": "hit",
+    "missingPlatforms": ["appleMusic"]
   }
 }
 ```
@@ -114,7 +123,9 @@ Regras e limites observados:
   - query: 3 requisicoes/10s e 10 requisicoes/60s;
   - apos 3 strikes, bloqueio por 10 minutos.
 - Cache em memoria para Spotify URL, Spotify query, falhas Spotify e resultados de links de exemplo.
-- Os caches e rate limits sao volateis por instancia serverless, portanto nao sao persistentes nem globais.
+- Cache persistente opcional em Postgres/Neon/PGlite para `tracks`, `track_links`, `track_aliases` e `provider_attempts`.
+- Rate limits e caches curtos em memoria continuam volateis por instancia serverless.
+- `data.links` deve conter somente links diretos e abríveis. URLs de busca geradas nao sao links de resultado validos.
 
 ## Modelo de dados esperado pelo frontend
 
@@ -124,7 +135,10 @@ O frontend espera `payload.ok === true` e `payload.data.links` como array. A par
 - `artist`: artista extraido da descricao ou fallback.
 - `description`: texto contextual.
 - `image`: capa normalizada.
-- `links`: lista normalizada por plataforma.
+- `links`: lista normalizada por plataforma, contendo somente URLs diretas.
+- `trackId`: id local persistido quando disponivel.
+- `cacheStatus`: `hit`, `miss` ou `partial`.
+- `missingPlatforms`: plataformas automaticas ausentes, usadas para prompt de correcao.
 - `sourceLink`: link original, quando o fluxo veio de link.
 - `fromSearchMode`: indica resultado criado por busca textual.
 
@@ -132,20 +146,23 @@ Cada item de plataforma renderizado pelo frontend pode conter:
 
 - `type`/`key`: identificador tecnico da plataforma.
 - `name`: nome amigavel.
-- `url`: URL final ou URL de busca.
+- `url`: URL direta final.
 - `isVerified`: sinal de link verificado.
-- `notAvailable`: sinal de indisponibilidade.
-- `isSearchResult`: derivado quando a URL e uma busca/fallback, nao link direto.
+- `source`: origem do link, como `input`, `cache`, `spotify_web`, `itunes`, `songlink`, `idhs`, `youtube_api`, `statslc_bridge` ou `manual`.
 - `icon`: SVG inline escolhido pelo frontend.
 
-As plataformas principais sao agrupadas separadamente das demais. O app tambem tenta adicionar URLs de busca para plataformas ausentes quando ha uma query derivada de titulo + artista.
+As plataformas automaticas v1 sao Spotify, Apple Music, YouTube e YouTube Music. Plataformas ausentes nao sao renderizadas como linhas de erro ou links de busca.
 
 ## Integracoes externas
 
 Integracoes usadas pela API:
 
-- `https://idonthavespotify.sjdonado.com/api/search?v=1`: API primaria para conversao por link.
-- `https://api.song.link/v1-alpha.1/links`: Song.link/Odesli como fonte primaria ou fallback.
+- Postgres/Neon/PGlite: biblioteca persistente de faixas, links, aliases e tentativas de provider.
+- `https://idonthavespotify.sjdonado.com/api/search?v=1`: IDHS como enriquecimento/fallback externo.
+- `https://api.song.link/v1-alpha.1/links`: Song.link/Odesli como enriquecimento de links diretos antes de usar a YouTube Data API.
+- `https://statslc.leosaquetto.com/api/catalog-link-bridge`: bridge interno stats-lc/stats.fm para enriquecer Spotify e Apple Music.
+- Spotify Web Player partner API: matching Spotify quando habilitado.
+- YouTube Data API: matching opcional para YouTube e YouTube Music quando ainda nao ha link direto confiavel.
 - `https://itunes.apple.com/search`: busca Apple/iTunes para fallback por query.
 - `https://itunes.apple.com/lookup`: lookup por track id quando o link de entrada e Apple Music/iTunes.
 - `https://open.spotify.com/oembed`: fallback de metadados Spotify.
@@ -154,9 +171,12 @@ Integracoes usadas pela API:
 
 Prioridade especial:
 
-- Para Pandora, Amazon Music, Tidal, SoundCloud e Qobuz, a API tenta priorizar Song.link antes da API primaria.
-- Para Spotify, quando as fontes principais falham, a API tenta obter metadados via Spotify, montar query, buscar Apple Music via iTunes e enriquecer via Song.link/API primaria.
+- A API sempre consulta cache persistente antes de provedores externos quando `DATABASE_URL` esta configurado.
+- Song.link/Odesli fica antes da YouTube Data API para economizar quota e enriquecer o cache quando devolver links diretos uteis.
+- O bridge stats-lc/stats.fm e oportunista para Spotify e Apple Music; ele nao bloqueia o fluxo se falhar ou nao encontrar match.
+- Para Spotify, quando as fontes principais falham, a API tenta obter metadados via Spotify, montar query, buscar Apple Music via iTunes e enriquecer via Song.link/IDHS.
 - Para Apple Music/iTunes, a API tenta usar o track id do link de entrada como fonte de verdade para titulo, artista, album e capa.
+- YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API ou correcao aceita.
 
 O rodape do resultado no frontend declara dependencia de `idonthavespotify` e `odesli`.
 
@@ -215,36 +235,35 @@ No Music Link Swapper atual:
 
 ## Estado atual e pontos frageis
 
-Pontos mapeados sem correcao aplicada:
+Pontos mapeados:
 
-- Nao existe `package.json`; nao ha comando padrao local para instalar, buildar, testar ou iniciar o app.
-- Nao ha teste automatizado no repositorio raiz.
 - O workflow GitHub Actions e placeholder e nao valida o projeto.
 - `telegram.js` existe, mas `index.html` importa somente `app.js`.
 - `assets/faveicon.png` existe, mas o HTML usa `assets/logo.svg`, `assets/logo.png`, `assets/logo.png` como apple touch icon e imagens remotas.
 - `vercel.json` nao configura nada alem do schema.
 - A API depende fortemente de provedores externos que podem mudar, bloquear scraping, alterar payloads ou sair do ar.
 - A API primaria `idonthavespotify.sjdonado.com` e externa ao repositorio; seu contrato real pode mudar sem controle local.
-- Song.link/Odesli, iTunes, Spotify oEmbed/Open Graph e Deezer oEmbed sao pontos externos de falha.
-- Rate limit e caches em memoria nao sobrevivem a cold starts e nao sao compartilhados entre instancias.
-- O frontend adiciona fallbacks de busca por plataforma; esses links podem ser uteis, mas nao equivalem a links diretos verificados.
+- Song.link/Odesli, iTunes, Spotify Web/oEmbed/Open Graph, stats-lc bridge, YouTube Data API e Deezer oEmbed sao pontos externos de falha ou latencia.
+- Rate limit e caches curtos em memoria nao sobrevivem a cold starts e nao sao compartilhados entre instancias.
+- O cache persistente depende de `DATABASE_URL`; sem ele a conversao funciona, mas a biblioteca compartilhada nao aprende.
 - A lista de exemplos e fixa e focada em links Apple Music.
 - Ha textos legais embutidos no `app.js`, nao em documentos separados.
-- Nao ha indicacao local de ambiente, variaveis secretas ou observabilidade alem de logs/metric heartbeat no proprio endpoint.
+- Observabilidade ainda depende principalmente de logs Vercel e provider attempts salvos quando ha banco.
 
 ## Checklist sugerido para auditorias futuras
 
 Antes de corrigir ou evoluir o projeto, validar:
 
 - Se `POST /api/convert` responde em producao para um link Apple Music simples.
-- Se Spotify ainda fornece metadados via oEmbed ou Open Graph.
+- Se `POST /api/convert` nao retorna nenhuma URL de busca em `data.links`.
+- Se Spotify Web matching e/ou os fallbacks Spotify ainda retornam metadados.
 - Se Song.link/Odesli ainda aceita os links-alvo e retorna `linksByPlatform`.
 - Se a API externa IDHS ainda aceita o contrato `{ link, adapters }`.
-- Se o modo pesquisa retorna pelo menos Apple Music ou URLs de busca uteis.
+- Se o bridge stats-lc responde `401` sem token e `200` com token.
+- Se YouTube Data API ainda retorna candidatos precisos sem gastar quota desnecessaria quando Song.link/Odesli ja resolveu.
 - Se o frontend lida bem com erro 400, 429, 500, 502 e 503.
 - Se a experiencia mobile/PWA abre, cola, compartilha e limpa resultado corretamente.
 - Se os icones e a imagem remota do logo carregam em rede real.
 - Se o Shortcut do iCloud ainda existe e aponta para o fluxo desejado.
 - Se vale carregar, remover ou reintegrar `telegram.js`.
 - Se e necessario criar scripts locais, README, testes minimos e CI real.
-

@@ -57,6 +57,8 @@ const TRANSLATIONS = {
     search: "pesquisar",
     linkLabel: "link da música",
     searchLabel: "pesquisa por nome",
+    linkMode: "link",
+    nameMode: "nome",
     linkPlaceholder: "cole o link da música aqui",
     searchPlaceholder: "digite o nome do artista + música",
     byline: "por leo saquetto",
@@ -81,6 +83,7 @@ const TRANSLATIONS = {
     identified: "identificado",
     notLocated: "não localizado",
     linkCopied: "link copiado.",
+    copyDenied: "não consegui copiar agora.",
     swapsFoundSingle: "1 swap encontrado!",
     swapsFoundPlural: "{count} swaps encontrados!",
     topCopied: "principais copiadas.",
@@ -97,6 +100,8 @@ const TRANSLATIONS = {
     completeLinkSave: "salvar",
     completeLinkSaved: "link adicionado.",
     completeLinkPending: "link recebido para revisão.",
+    completeLinkInvalid: "cole um link direto válido.",
+    completeLinkPlatformMismatch: "esse link não parece ser da plataforma escolhida.",
     completeLinkError: "não consegui salvar esse link agora."
   },
   en: {
@@ -106,6 +111,8 @@ const TRANSLATIONS = {
     search: "search",
     linkLabel: "song link",
     searchLabel: "search by name",
+    linkMode: "link",
+    nameMode: "name",
     linkPlaceholder: "paste the song link here",
     searchPlaceholder: "type artist + song name",
     byline: "by leo saquetto",
@@ -130,6 +137,7 @@ const TRANSLATIONS = {
     identified: "identified",
     notLocated: "not found",
     linkCopied: "link copied.",
+    copyDenied: "could not copy right now.",
     swapsFoundSingle: "1 swap found!",
     swapsFoundPlural: "{count} swaps found!",
     topCopied: "main links copied.",
@@ -146,6 +154,8 @@ const TRANSLATIONS = {
     completeLinkSave: "save",
     completeLinkSaved: "link added.",
     completeLinkPending: "link received for review.",
+    completeLinkInvalid: "paste a valid direct link.",
+    completeLinkPlatformMismatch: "this link does not look like the selected platform.",
     completeLinkError: "could not save this link now."
   },
   "es-es": {
@@ -155,6 +165,8 @@ const TRANSLATIONS = {
     search: "buscar",
     linkLabel: "enlace de la canción",
     searchLabel: "búsqueda por nombre",
+    linkMode: "enlace",
+    nameMode: "nombre",
     linkPlaceholder: "pega aquí el enlace de la canción",
     searchPlaceholder: "escribe artista + canción",
     byline: "por leo saquetto",
@@ -179,6 +191,7 @@ const TRANSLATIONS = {
     identified: "identificado",
     notLocated: "no encontrado",
     linkCopied: "enlace copiado.",
+    copyDenied: "no pude copiar ahora.",
     swapsFoundSingle: "¡1 swap encontrado!",
     swapsFoundPlural: "¡{count} swaps encontrados!",
     topCopied: "principales copiadas.",
@@ -195,6 +208,8 @@ const TRANSLATIONS = {
     completeLinkSave: "guardar",
     completeLinkSaved: "enlace agregado.",
     completeLinkPending: "enlace recibido para revisión.",
+    completeLinkInvalid: "pega un enlace directo válido.",
+    completeLinkPlatformMismatch: "este enlace no parece ser de la plataforma elegida.",
     completeLinkError: "no pude guardar este enlace ahora."
   },
   "it-it": {
@@ -204,6 +219,8 @@ const TRANSLATIONS = {
     search: "cerca",
     linkLabel: "link della canzone",
     searchLabel: "ricerca per nome",
+    linkMode: "link",
+    nameMode: "nome",
     linkPlaceholder: "incolla qui il link della canzone",
     searchPlaceholder: "digita artista + canzone",
     byline: "di leo saquetto",
@@ -228,6 +245,7 @@ const TRANSLATIONS = {
     identified: "identificato",
     notLocated: "non trovato",
     linkCopied: "link copiato.",
+    copyDenied: "non ho potuto copiare ora.",
     swapsFoundSingle: "1 swap trovato!",
     swapsFoundPlural: "{count} swaps trovati!",
     topCopied: "principali copiate.",
@@ -244,6 +262,8 @@ const TRANSLATIONS = {
     completeLinkSave: "salva",
     completeLinkSaved: "link aggiunto.",
     completeLinkPending: "link ricevuto per revisione.",
+    completeLinkInvalid: "incolla un link diretto valido.",
+    completeLinkPlatformMismatch: "questo link non sembra della piattaforma scelta.",
     completeLinkError: "non ho potuto salvare questo link ora."
   },
   "fr-fr": {
@@ -253,6 +273,8 @@ const TRANSLATIONS = {
     search: "rechercher",
     linkLabel: "lien de la chanson",
     searchLabel: "recherche par nom",
+    linkMode: "lien",
+    nameMode: "nom",
     linkPlaceholder: "collez le lien de la chanson ici",
     searchPlaceholder: "tapez artiste + chanson",
     byline: "par leo saquetto",
@@ -277,6 +299,7 @@ const TRANSLATIONS = {
     identified: "identifié",
     notLocated: "non trouvé",
     linkCopied: "lien copié.",
+    copyDenied: "impossible de copier maintenant.",
     swapsFoundSingle: "1 swap trouvé !",
     swapsFoundPlural: "{count} swaps trouvés !",
     topCopied: "principaux copiés.",
@@ -293,6 +316,8 @@ const TRANSLATIONS = {
     completeLinkSave: "enregistrer",
     completeLinkSaved: "lien ajouté.",
     completeLinkPending: "lien reçu pour vérification.",
+    completeLinkInvalid: "collez un lien direct valide.",
+    completeLinkPlatformMismatch: "ce lien ne semble pas correspondre à la plateforme choisie.",
     completeLinkError: "impossible d’enregistrer ce lien maintenant."
   }
 };
@@ -420,6 +445,7 @@ const state = {
   activeLegalType: "privacy",
   modalScrollLockDepth: 0,
   lockedScrollY: 0,
+  activeSheetDrag: null,
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -431,6 +457,8 @@ const els = {
   clearButton: document.getElementById("clearButton"),
   pasteButton: document.getElementById("pasteButton"),
   useSampleButton: document.getElementById("useSampleButton"),
+  modeSegmented: document.querySelector(".mode-segmented"),
+  linkModeButton: document.getElementById("linkModeButton"),
   searchModeButton: document.getElementById("searchModeButton"),
   recentSwapsButton: document.getElementById("recentSwapsButton"),
   supportedChips: document.getElementById("supportedChips"),
@@ -445,7 +473,6 @@ const els = {
   platformGroups: document.getElementById("platformGroups"),
   correctionCard: document.getElementById("correctionCard"),
   resultLegend: document.getElementById("resultLegend"),
-  resultPoweredBy: document.getElementById("resultPoweredBy"),
   resultDismissButton: document.getElementById("resultDismissButton"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
@@ -466,9 +493,11 @@ const els = {
   iosInstallModal: document.getElementById("iosInstallModal"),
   iosInstallBackdrop: document.getElementById("iosInstallBackdrop"),
   iosInstallClose: document.getElementById("iosInstallClose"),
+  iosInstallSheet: document.querySelector(".ios-install-sheet"),
   recentSwapsModal: document.getElementById("recentSwapsModal"),
   recentSwapsBackdrop: document.getElementById("recentSwapsBackdrop"),
   recentSwapsClose: document.getElementById("recentSwapsClose"),
+  recentSwapsSheet: document.querySelector(".recent-swaps-sheet"),
   recentSwapsList: document.getElementById("recentSwapsList"),
   clearRecentSwapsButton: document.getElementById("clearRecentSwapsButton"),
   clearRecentSwapsText: document.getElementById("clearRecentSwapsText"),
@@ -478,6 +507,7 @@ const els = {
   legalModal: document.getElementById("legalModal"),
   legalBackdrop: document.getElementById("legalBackdrop"),
   legalClose: document.getElementById("legalClose"),
+  legalSheet: document.querySelector(".legal-sheet"),
   legalModalTitle: document.getElementById("legalModalTitle"),
   legalModalBody: document.getElementById("legalModalBody")
 };
@@ -509,6 +539,7 @@ function bootstrap() {
   initTheme();
   initIOSInstallPrompt();
   bindEvents();
+  bindSheetGestures();
   bindLaunchQueueConsumer();
   hydrateFromIncomingUrl();
   tryAutoPasteFromClipboard();
@@ -602,9 +633,6 @@ function updateLocalizedStaticCopy() {
     els.recentSwapsButton.setAttribute("aria-label", t("recentSwaps"));
     els.recentSwapsButton.setAttribute("title", t("recentSwaps"));
   }
-  if (els.resultPoweredBy) {
-    els.resultPoweredBy.classList.remove("hidden");
-  }
   if (els.privacyPolicyButton) els.privacyPolicyButton.textContent = t("privacyPolicy");
   if (els.termsOfUseButton) els.termsOfUseButton.textContent = t("termsOfUse");
   if (els.clearRecentSwapsText) els.clearRecentSwapsText.textContent = t("clearSwaps");
@@ -615,7 +643,7 @@ function refreshLocalizedDynamicContent() {
     renderResult(state.currentResult, { skipSave: true });
     const directCount = (state.currentResult.links || []).length;
     if (directCount > 0) {
-      showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
+      hideStatus();
     }
   }
   if (state.isRecentSwapsModalOpen) {
@@ -759,8 +787,8 @@ function injectButtonIcons() {
     syncThemeToggleIcon();
   }
 
-  if (els.searchModeButton) {
-    els.searchModeButton.innerHTML = `<span class="button-icon">${SVG_ICONS.search}</span>`;
+  if (els.resultDismissButton) {
+    els.resultDismissButton.innerHTML = `<span class="button-icon">${SVG_ICONS.clear}</span>`;
   }
 
   if (els.recentSwapsButton) {
@@ -925,6 +953,61 @@ function closeLegalModal() {
   }, 240);
 }
 
+function bindSheetGestures() {
+  bindSheetDismissGesture(els.iosInstallSheet, closeIOSInstallModal);
+  bindSheetDismissGesture(els.recentSwapsSheet, closeRecentSwapsModal);
+  bindSheetDismissGesture(els.legalSheet, closeLegalModal);
+}
+
+function bindSheetDismissGesture(sheet, closeFn) {
+  if (!sheet || typeof closeFn !== "function") return;
+
+  sheet.addEventListener("pointerdown", event => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.target?.closest?.("button, a, input, select, textarea, .recent-swaps-list, .legal-body")) return;
+
+    state.activeSheetDrag = {
+      sheet,
+      closeFn,
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      lastY: event.clientY,
+      startedAt: performance.now()
+    };
+    sheet.classList.add("is-dragging");
+    sheet.setPointerCapture?.(event.pointerId);
+  });
+
+  sheet.addEventListener("pointermove", event => {
+    const drag = state.activeSheetDrag;
+    if (!drag || drag.sheet !== sheet || drag.pointerId !== event.pointerId) return;
+
+    const deltaY = Math.max(0, event.clientY - drag.startY);
+    drag.lastY = event.clientY;
+    sheet.style.setProperty("--sheet-drag-y", `${Math.min(deltaY, 180)}px`);
+    if (deltaY > 4) event.preventDefault();
+  });
+
+  const finishDrag = event => {
+    const drag = state.activeSheetDrag;
+    if (!drag || drag.sheet !== sheet || drag.pointerId !== event.pointerId) return;
+
+    const deltaY = Math.max(0, drag.lastY - drag.startY);
+    const elapsed = Math.max(1, performance.now() - drag.startedAt);
+    const velocity = deltaY / elapsed;
+    state.activeSheetDrag = null;
+    sheet.classList.remove("is-dragging");
+    sheet.style.setProperty("--sheet-drag-y", "0px");
+
+    if (deltaY > 82 || velocity > 0.55) {
+      drag.closeFn();
+    }
+  };
+
+  sheet.addEventListener("pointerup", finishDrag);
+  sheet.addEventListener("pointercancel", finishDrag);
+}
+
 function bindEvents() {
   els.themeToggle?.addEventListener("click", toggleTheme);
   els.languageToggle?.addEventListener("click", event => {
@@ -1009,21 +1092,14 @@ function bindEvents() {
     onConvert({ shouldScrollToStatus: true });
   });
 
-  els.searchModeButton?.addEventListener("click", event => {
-    state.isSearchMode = !state.isSearchMode;
+  els.linkModeButton?.addEventListener("click", event => {
     pulseActionButton(event.currentTarget, "toggle");
-    syncSearchModeUI();
+    setSearchMode(false);
+  });
 
-    if (state.isSearchMode) {
-      if (els.input) {
-        els.input.focus({ preventScroll: true });
-        const valueLength = els.input.value?.length || 0;
-        els.input.setSelectionRange(valueLength, valueLength);
-      }
-      showFloatingToast("modo pesquisa ativado.");
-    } else {
-      softlyDismissKeyboard();
-    }
+  els.searchModeButton?.addEventListener("click", event => {
+    pulseActionButton(event.currentTarget, "toggle");
+    setSearchMode(true, { announce: true, focus: true });
   });
 
   els.clearButton?.addEventListener("click", event => {
@@ -1061,10 +1137,14 @@ function bindEvents() {
     if (!state.currentResult) return;
     const text = buildPrimaryLinksText(state.currentResult);
     if (!text) return;
-    await copyText(text);
+    const copied = await copyText(text);
+    if (!copied) {
+      showFloatingToast(t("copyDenied"), "error");
+      return;
+    }
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showFloatingToast(t("topCopied"));
+    showFloatingToast(t("topCopied"), "success");
   });
 
   els.sharePrimaryButton?.addEventListener("click", async event => {
@@ -1082,23 +1162,31 @@ function bindEvents() {
         });
         pulseActionButton(event.currentTarget);
         triggerHaptic("light");
-        showFloatingToast(t("topShared"));
+        showFloatingToast(t("topShared"), "success");
         return;
       } catch (_error) {}
     }
 
-    await copyText(text);
+    const copied = await copyText(text);
+    if (!copied) {
+      showFloatingToast(t("copyDenied"), "error");
+      return;
+    }
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showFloatingToast(t("topCopied"));
+    showFloatingToast(t("topCopied"), "success");
   });
 
   els.copyOriginalButton?.addEventListener("click", async event => {
     if (!state.currentOriginalUrl) return;
-    await copyText(state.currentOriginalUrl);
+    const copied = await copyText(state.currentOriginalUrl);
+    if (!copied) {
+      showFloatingToast(t("copyDenied"), "error");
+      return;
+    }
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
-    showFloatingToast(t("originalCopied"));
+    showFloatingToast(t("originalCopied"), "success");
   });
 
   els.input?.addEventListener("keydown", event => {
@@ -1127,7 +1215,8 @@ function hydrateFromIncomingUrl() {
     els.input.value = incomingUrl;
     state.autoConvertedFromQuery = true;
     state.lastAutoUrl = incomingUrl;
-    showStatus("link recebido automaticamente.", "success", { autoHide: true });
+    hideStatus();
+    showFloatingToast("link recebido automaticamente.", "success");
 
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -1155,7 +1244,8 @@ function handleIncomingTargetUrl(targetUrl) {
   els.input.value = incomingUrl;
   state.autoConvertedFromQuery = true;
   state.lastAutoUrl = incomingUrl;
-  showStatus("link recebido automaticamente.", "success", { autoHide: true });
+  hideStatus();
+  showFloatingToast("link recebido automaticamente.", "success");
 
   requestAnimationFrame(() => {
     setTimeout(() => {
@@ -1232,7 +1322,8 @@ async function tryAutoPasteFromClipboard() {
       els.input.value = url;
       state.lastClipboardText = typeof text === "string" ? text.trim() : "";
       state.lastAutoUrl = url;
-      showStatus("link detectado no clipboard.", "success", { autoHide: true });
+      hideStatus();
+      showFloatingToast("link detectado no clipboard.", "success");
       setTimeout(() => onConvert({ shouldScrollToStatus: true }), 80);
     }
   } catch (_error) {}
@@ -1270,8 +1361,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   const modeAtSubmit = state.isSearchMode && !shouldFallbackToLinkSwap;
 
   if (shouldFallbackToLinkSwap) {
-    state.isSearchMode = false;
-    syncSearchModeUI();
+    setSearchMode(false);
   }
   state.scrollAfterConvert = shouldScrollToStatus;
 
@@ -1334,13 +1424,14 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     state.currentResult = result;
     renderResult(result);
     const directCount = result.links.length;
-    showStatus(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
+    hideStatus();
+    showFloatingToast(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
     els.input.value = "";
 
     if (state.scrollAfterConvert) {
       requestAnimationFrame(() => {
         setTimeout(() => {
-          els.statusCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+          els.resultCard?.scrollIntoView({ behavior: getScrollBehavior(), block: "start" });
         }, state.autoConvertedFromQuery ? 40 : 100);
       });
     }
@@ -1358,8 +1449,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     state.autoConvertedFromQuery = false;
     state.scrollAfterConvert = false;
     if (modeAtSubmit) {
-      state.isSearchMode = false;
-      syncSearchModeUI();
+      setSearchMode(false);
     }
   }
 }
@@ -1557,6 +1647,7 @@ function renderResult(result, { skipSave = false } = {}) {
   } else {
     els.copyOriginalButton.classList.add("hidden");
   }
+  els.resultDismissButton?.classList.remove("hidden");
 
   const groups = ["primary", "others"];
   for (const groupName of groups) {
@@ -1674,7 +1765,11 @@ function createPlatformItem(item) {
   `;
 
   row.querySelector('[data-action="copy"]').addEventListener("click", async event => {
-    await copyText(item.url);
+    const copied = await copyText(item.url);
+    if (!copied) {
+      showFloatingToast(t("copyDenied"), "error");
+      return;
+    }
     pulseActionButton(event.currentTarget);
     triggerHaptic("medium");
     showInlineToast(row, `${item.name} ${t("copiedSuffix")}`);
@@ -1688,7 +1783,11 @@ function createPlatformItem(item) {
     if (shared) {
       showInlineToast(row, `${item.name} ${t("sharedSuffix")}`);
     } else {
-      await copyText(item.url);
+      const copied = await copyText(item.url);
+      if (!copied) {
+        showFloatingToast(t("copyDenied"), "error");
+        return;
+      }
       showInlineToast(row, `${item.name} ${t("copiedSuffix")}`);
     }
   });
@@ -1728,7 +1827,7 @@ function renderCorrectionPrompt(result) {
     return;
   }
 
-  els.correctionCard.classList.remove("hidden", "is-saving");
+  els.correctionCard.classList.remove("hidden", "is-saving", "is-complete");
   els.correctionCard.innerHTML = `
     <form class="correction-form" novalidate>
       <div class="correction-copy">
@@ -1744,14 +1843,30 @@ function renderCorrectionPrompt(result) {
         </label>
         <label class="correction-label correction-url-label">
           <span>${escapeHtml(t("completeLinkUrl"))}</span>
-          <input class="correction-input" name="url" type="url" inputmode="url" autocomplete="off" required />
+          <input class="correction-input" name="url" type="url" inputmode="url" autocomplete="off" required aria-describedby="correctionError" />
         </label>
-        <button class="correction-submit" type="submit">${escapeHtml(t("completeLinkSave"))}</button>
+        <button class="correction-submit" type="submit" disabled>${escapeHtml(t("completeLinkSave"))}</button>
       </div>
+      <p id="correctionError" class="correction-error" role="alert"></p>
     </form>
   `;
 
-  els.correctionCard.querySelector("form")?.addEventListener("submit", event => {
+  const form = els.correctionCard.querySelector("form");
+  const platformSelect = form?.querySelector(".correction-select");
+  const urlInput = form?.querySelector(".correction-input");
+  const submitButton = form?.querySelector(".correction-submit");
+
+  const syncValidation = () => {
+    const validation = getManualLinkValidation(platformSelect?.value, urlInput?.value);
+    setCorrectionError(form, validation.message, { invalid: !!validation.message && !!cleanText(urlInput?.value) });
+    if (submitButton) submitButton.disabled = !validation.ok;
+  };
+
+  platformSelect?.addEventListener("change", syncValidation);
+  urlInput?.addEventListener("input", syncValidation);
+  syncValidation();
+
+  form?.addEventListener("submit", event => {
     event.preventDefault();
     submitManualLink(event.currentTarget, result);
   });
@@ -1760,8 +1875,29 @@ function renderCorrectionPrompt(result) {
 function hideCorrectionPrompt() {
   if (!els.correctionCard) return;
   els.correctionCard.classList.add("hidden");
-  els.correctionCard.classList.remove("is-saving");
+  els.correctionCard.classList.remove("is-saving", "is-complete");
   els.correctionCard.innerHTML = "";
+}
+
+function setCorrectionError(form, message = "", { invalid = false } = {}) {
+  if (!form) return;
+  const input = form.querySelector(".correction-input");
+  const error = form.querySelector(".correction-error");
+  input?.classList.toggle("is-invalid", invalid);
+  input?.setAttribute("aria-invalid", invalid ? "true" : "false");
+  if (error) error.textContent = message;
+}
+
+function renderCorrectionState(message, tone = "success") {
+  if (!els.correctionCard) return;
+  els.correctionCard.classList.remove("hidden", "is-saving");
+  els.correctionCard.classList.add("is-complete");
+  els.correctionCard.innerHTML = `
+    <div class="correction-state correction-state-${escapeHtml(tone)}" role="status">
+      <p class="correction-title">${escapeHtml(t("completeLink"))}</p>
+      <p class="correction-state-message">${escapeHtml(message)}</p>
+    </div>
+  `;
 }
 
 async function submitManualLink(form, result) {
@@ -1770,9 +1906,10 @@ async function submitManualLink(form, result) {
   const formData = new FormData(form);
   const platform = normalizePlatformKey(formData.get("platform"));
   const url = cleanText(formData.get("url"));
+  const validation = getManualLinkValidation(platform, url);
 
-  if (!platform || !url) {
-    showFloatingToast(t("completeLinkError"));
+  if (!validation.ok) {
+    setCorrectionError(form, validation.message || t("completeLinkInvalid"), { invalid: true });
     return;
   }
 
@@ -1810,17 +1947,20 @@ async function submitManualLink(form, result) {
         renderResult(nextResult, { skipSave: true });
       }
 
-      showFloatingToast(t("completeLinkSaved"));
+      renderCorrectionState(t("completeLinkSaved"), "success");
+      showFloatingToast(t("completeLinkSaved"), "success");
       return;
     }
 
-    form.reset();
-    showFloatingToast(t("completeLinkPending"));
+    renderCorrectionState(t("completeLinkPending"), "pending");
+    showFloatingToast(t("completeLinkPending"), "success");
   } catch (_error) {
-    showFloatingToast(t("completeLinkError"));
+    showFloatingToast(t("completeLinkError"), "error");
   } finally {
     els.correctionCard?.classList.remove("is-saving");
-    if (submitButton) submitButton.disabled = false;
+    if (form.isConnected && submitButton) {
+      submitButton.disabled = !getManualLinkValidation(platform, form.querySelector(".correction-input")?.value).ok;
+    }
   }
 }
 
@@ -1952,7 +2092,7 @@ function showCoverImage(src) {
 }
 
 function showInlineToast(_container, message) {
-  showFloatingToast(message);
+  showFloatingToast(message, "success");
 }
 
 function hydrateRecentSwaps() {
@@ -2081,9 +2221,13 @@ function renderRecentSwaps() {
 
     card.querySelector('[data-action="copy"]')?.addEventListener("click", async event => {
       if (!item.originalUrl) return;
-      await copyText(item.originalUrl);
+      const copied = await copyText(item.originalUrl);
+      if (!copied) {
+        showFloatingToast(t("copyDenied"), "error");
+        return;
+      }
       pulseActionButton(event.currentTarget);
-      showFloatingToast(t("linkCopied"));
+      showFloatingToast(t("linkCopied"), "success");
     });
 
     card.querySelector('[data-action="swap"]')?.addEventListener("click", event => {
@@ -2096,8 +2240,7 @@ function renderRecentSwaps() {
       }
 
       if (item.queryText) {
-        state.isSearchMode = true;
-        syncSearchModeUI();
+        setSearchMode(true);
         els.input.value = item.queryText;
         onConvert({ shouldScrollToStatus: true });
       }
@@ -2125,6 +2268,7 @@ function hideResult() {
       els.copyPrimaryButton.classList.add("hidden");
       els.sharePrimaryButton.classList.add("hidden");
       els.copyOriginalButton.classList.add("hidden");
+      els.resultDismissButton?.classList.add("hidden");
       hideCorrectionPrompt();
       els.resultLegend?.classList.add("hidden");
       if (els.resultLegend) els.resultLegend.innerHTML = "";
@@ -2139,6 +2283,7 @@ function hideResult() {
   els.copyPrimaryButton.classList.add("hidden");
   els.sharePrimaryButton.classList.add("hidden");
   els.copyOriginalButton.classList.add("hidden");
+  els.resultDismissButton?.classList.add("hidden");
   hideCorrectionPrompt();
   els.resultLegend?.classList.add("hidden");
   if (els.resultLegend) els.resultLegend.innerHTML = "";
@@ -2167,13 +2312,15 @@ function hideStatus() {
   els.statusCard.classList.add("hidden");
 }
 
-function showFloatingToast(message) {
+function showFloatingToast(message, tone = "default") {
   if (!els.floatingToast) return;
 
   clearTimeout(state.floatingToastTimer);
   clearTimeout(state.floatingToastHideTimer);
   els.floatingToast.textContent = message;
-  els.floatingToast.classList.remove("hidden", "show");
+  els.floatingToast.classList.remove("hidden", "show", "is-success", "is-error");
+  if (tone === "success") els.floatingToast.classList.add("is-success");
+  if (tone === "error") els.floatingToast.classList.add("is-error");
 
   requestAnimationFrame(() => {
     els.floatingToast.classList.add("show");
@@ -2183,9 +2330,10 @@ function showFloatingToast(message) {
     els.floatingToast.classList.remove("show");
     state.floatingToastHideTimer = setTimeout(() => {
       els.floatingToast.classList.add("hidden");
+      els.floatingToast.classList.remove("is-success", "is-error");
       state.floatingToastHideTimer = null;
-    }, 260);
-  }, 2050);
+    }, 220);
+  }, 1950);
 }
 
 function setLoading(loading) {
@@ -2230,9 +2378,42 @@ function resetForm({ announce = false } = {}) {
   }
 }
 
+function setSearchMode(enabled, { announce = false, focus = false } = {}) {
+  const nextMode = !!enabled;
+  const changed = state.isSearchMode !== nextMode;
+  state.isSearchMode = nextMode;
+  syncSearchModeUI();
+
+  if (nextMode && focus && els.input) {
+    els.input.focus({ preventScroll: true });
+    const valueLength = els.input.value?.length || 0;
+    els.input.setSelectionRange(valueLength, valueLength);
+  }
+
+  if (!nextMode && changed) {
+    softlyDismissKeyboard();
+  }
+
+  if (announce && nextMode) {
+    showFloatingToast("modo pesquisa ativado.");
+  }
+}
+
 function syncSearchModeUI() {
+  els.modeSegmented?.setAttribute("aria-label", `${t("linkLabel")} / ${t("searchLabel")}`);
+  if (els.linkModeButton) {
+    els.linkModeButton.textContent = t("linkMode");
+    els.linkModeButton.classList.toggle("is-active", !state.isSearchMode);
+    els.linkModeButton.setAttribute("aria-pressed", state.isSearchMode ? "false" : "true");
+    els.linkModeButton.setAttribute("aria-label", t("linkLabel"));
+    els.linkModeButton.setAttribute("title", t("linkLabel"));
+  }
   if (els.searchModeButton) {
+    els.searchModeButton.textContent = t("nameMode");
     els.searchModeButton.classList.toggle("is-active", state.isSearchMode);
+    els.searchModeButton.setAttribute("aria-pressed", state.isSearchMode ? "true" : "false");
+    els.searchModeButton.setAttribute("aria-label", t("searchLabel"));
+    els.searchModeButton.setAttribute("title", t("searchLabel"));
   }
   if (els.inputLabel) {
     els.inputLabel.textContent = state.isSearchMode ? t("searchLabel") : t("linkLabel");
@@ -2250,7 +2431,6 @@ function syncSearchModeUI() {
 function renderResultLegend() {
   if (!els.resultLegend) return;
   els.resultLegend.classList.add("hidden");
-  els.resultPoweredBy?.classList.remove("hidden");
   els.resultLegend.innerHTML = "";
 }
 
@@ -2391,22 +2571,93 @@ function isSupportedStreamingUrl(url) {
   return STREAMING_HOST_HINTS.some(hint => lower.includes(hint));
 }
 
+function getManualLinkValidation(platform, url) {
+  const normalizedPlatform = normalizePlatformKey(platform);
+  const cleanUrl = cleanText(url);
+  if (!cleanUrl) {
+    return { ok: false, message: "" };
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(cleanUrl);
+  } catch (_error) {
+    return { ok: false, message: t("completeLinkInvalid") };
+  }
+
+  if (!/^https?:$/i.test(parsed.protocol)) {
+    return { ok: false, message: t("completeLinkInvalid") };
+  }
+
+  if (!isUrlForPlatform(normalizedPlatform, parsed)) {
+    return { ok: false, message: t("completeLinkPlatformMismatch") };
+  }
+
+  return { ok: true, message: "" };
+}
+
+function isUrlForPlatform(platform, parsedUrl) {
+  const host = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+  const path = parsedUrl.pathname.toLowerCase();
+
+  if (platform === "appleMusic" || platform === "itunes") {
+    return host === "music.apple.com" || host.endsWith(".music.apple.com") || host === "itunes.apple.com";
+  }
+
+  if (platform === "spotify") {
+    return host === "open.spotify.com" || host === "spotify.link" || host.endsWith(".spotify.link");
+  }
+
+  if (platform === "youtubeMusic") {
+    return host === "music.youtube.com" && !path.includes("/search");
+  }
+
+  if (platform === "youtube" || platform === "youTube") {
+    return (host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be") && host !== "music.youtube.com";
+  }
+
+  return isSupportedStreamingUrl(parsedUrl.href);
+}
+
 function cleanText(str) {
   return String(str || "").replace(/\s+/g, " ").trim();
 }
 
 async function copyText(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
+  const value = String(text || "");
+  if (!value) return false;
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch (_error) {
+    return false;
   }
 
-  const temp = document.createElement("textarea");
-  temp.value = text;
-  document.body.appendChild(temp);
-  temp.select();
-  document.execCommand("copy");
-  temp.remove();
+  try {
+    const temp = document.createElement("textarea");
+    temp.value = value;
+    temp.setAttribute("readonly", "");
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    const copied = document.execCommand("copy");
+    temp.remove();
+    return copied;
+  } catch (_error) {
+    return false;
+  }
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+}
+
+function getScrollBehavior() {
+  return prefersReducedMotion() ? "auto" : "smooth";
 }
 
 

@@ -2,6 +2,9 @@
 
 This app works without paid services. Persistent cache needs a Postgres-compatible URL.
 
+For the current provider order, direct-link-only contract, and cache rules, see
+[`docs/link-matching.md`](./link-matching.md).
+
 ## Local zero-cost cache
 
 For local development, use PGlite:
