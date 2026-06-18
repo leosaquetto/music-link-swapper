@@ -65,6 +65,7 @@ Principais responsabilidades de `app.js`:
 - Renderizar capa, titulo, artista/descricao, grupos de plataformas, badges e legendas.
 - Renderizar somente links diretos retornados pela API.
 - Mostrar prompts discretos de correcao quando plataformas automaticas estao ausentes, sem criar linhas de plataforma mortas.
+- Validar correcoes manuais no frontend antes do envio, bloqueando URL invalida e mismatch de plataforma.
 - Persistir e renderizar historico local.
 - Controlar modais de iOS install, historico e legal.
 - Controlar clipboard, share, haptics e deeplinks.
@@ -178,7 +179,24 @@ Prioridade especial:
 - Para Apple Music/iTunes, a API tenta usar o track id do link de entrada como fonte de verdade para titulo, artista, album e capa.
 - YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API ou correcao aceita.
 
-O rodape do resultado no frontend declara dependencia de `idonthavespotify` e `odesli`.
+O resultado nao exibe mais assinatura visual de provedores externos. Dependencias como IDHS/Song.link seguem como integracoes internas de matching/enriquecimento, documentadas em [`docs/link-matching.md`](./docs/link-matching.md).
+
+## UX do resultado e correcao manual
+
+A experiencia atual evita status persistente em sucesso: loading e erro usam `statusCard`, enquanto sucesso de swap aparece em toast breve e o proprio card de resultado e a confirmacao principal.
+
+O modo de entrada e um controle segmentado `link`/`nome`, com placeholder, CTA e atributos acessiveis sincronizados ao estado.
+
+O card de resultado deve manter:
+
+- Acoes de cabecalho para limpar resultado, copiar link original, copiar principais e compartilhar.
+- Cores de icones aplicadas somente nos resultados do swap, nao nos chips de plataformas suportadas:
+  - Apple Music: vermelho do modo claro tambem no escuro.
+  - Spotify: `#25D05F`.
+  - YouTube/YouTube Music: `#FD0100`.
+- Toast de erro quando clipboard for negado, sem quebrar handlers nem gerar erro de console.
+
+O bloco "completar link" deve continuar tratado como superficie de correcao, nao como nova linha de resultado. Ele valida URL e plataforma antes do `POST /api/manual-link`; no retorno, troca o formulario por estado final de link adicionado ou recebido para revisao.
 
 ## PWA, iOS e Telegram
 

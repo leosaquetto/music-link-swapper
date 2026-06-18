@@ -94,6 +94,13 @@ Manual corrections go through `POST /api/manual-link` with:
 
 The API validates the host/platform and stores low-confidence corrections as hidden/pending instead of polluting the shared cache.
 
+Validation has two layers:
+
+- Frontend and backend reject invalid URLs, search URLs, and platform mismatches before a correction can be accepted.
+- Backend semantic confidence is available only when metadata can be fetched for the submitted platform. Apple Music uses iTunes Lookup; Spotify uses Spotify oEmbed. Corrections with weak or unavailable metadata remain pending unless a trusted correction token is provided.
+
+YouTube and YouTube Music manual corrections currently do not fetch metadata in `POST /api/manual-link`; they should be treated as review-first unless submitted with a trusted token. This protects the shared cache from wrong-song submissions while still allowing useful user corrections to be collected.
+
 ## Regression checklist
 
 Before deploying matching changes:
