@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { performance } from "node:perf_hooks";
 
+import { findBestDeezerTrack } from "../api/lib/deezer.js";
 import { searchSpotifyWebTrack } from "../api/lib/spotify-web.js";
 import { searchYoutubeVideoForTrack } from "../api/lib/youtube-data.js";
 
@@ -43,6 +44,7 @@ const selectedFixtures = fixtures.slice(0, Math.max(1, Math.min(limit, fixtures.
 const providers = [
   ["spotify_web", probeSpotifyWeb],
   ["itunes", probeItunes],
+  ["deezer_api", probeDeezerApi],
   ["songlink", probeSonglink],
   ["idhs", probeIdhs],
   ["youtube_api", probeYoutubeApi]
@@ -107,6 +109,19 @@ async function probeItunes(fixture, query) {
     hit: Boolean(song?.trackViewUrl),
     url: song?.trackViewUrl || "",
     expected: [fixture.artist, fixture.title].filter(Boolean).join(" - ")
+  };
+}
+
+async function probeDeezerApi(fixture, query) {
+  const match = await findBestDeezerTrack({
+    query,
+    title: fixture.title,
+    artist: fixture.artist
+  });
+  return {
+    hit: Boolean(match?.url),
+    url: match?.url || "",
+    error: match?.url ? "" : "no_match"
   };
 }
 

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export const AUTOMATIC_PLATFORM_KEYS = ["spotify", "appleMusic", "youtube", "youtubeMusic"];
+export const AUTOMATIC_PLATFORM_KEYS = ["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"];
 
 const AUTOMATIC_PLATFORM_SET = new Set(AUTOMATIC_PLATFORM_KEYS.map(key => key.toLowerCase()));
 
@@ -13,6 +13,7 @@ export function normalizePlatformKey(key) {
   if (compact === "youtubemusic") return "youtubeMusic";
   if (normalized === "youtube" || normalized === "youtu") return "youtube";
   if (normalized === "spotify") return "spotify";
+  if (normalized === "deezer") return "deezer";
   if (normalized === "soundcloud") return "soundCloud";
   if (compact === "amazon" || compact === "amazonmusic") return "amazonMusic";
   return raw;
@@ -52,6 +53,14 @@ export function canonicalizeMediaUrl(value) {
       return url.toString();
     }
 
+    if (host.includes("deezer.com")) {
+      const trackId = extractDeezerTrackId(url.toString());
+      if (trackId) return `https://www.deezer.com/track/${trackId}`;
+      url.search = "";
+      url.hash = "";
+      return url.toString();
+    }
+
     url.hash = "";
     return url.toString();
   } catch (_error) {
@@ -67,6 +76,7 @@ export function isSearchLikeUrl(url, platform = "") {
   if (key === "applemusic") return lower.includes("music.apple.com") && lower.includes("/search");
   if (key === "youtube") return lower.includes("/results?search_query=") || lower.includes("youtube.com/search");
   if (key === "youtubemusic") return lower.includes("music.youtube.com/search");
+  if (key === "deezer") return lower.includes("deezer.com/search");
   return /[?&](q|query|search_query|term)=/.test(lower) && lower.includes("search");
 }
 
@@ -253,6 +263,7 @@ export function validatePlatformUrl(platform, url) {
     const ok =
       (key === "spotify" && host.includes("open.spotify.com") && parsed.pathname.includes("/track/")) ||
       (key === "appleMusic" && host.includes("music.apple.com") && parsed.searchParams.has("i")) ||
+      (key === "deezer" && host.includes("deezer.com") && Boolean(extractDeezerTrackId(value))) ||
       (key === "youtube" && (host.includes("youtube.com") || host.includes("youtu.be")) && Boolean(getYoutubeVideoId(value))) ||
       (key === "youtubeMusic" && host.includes("music.youtube.com") && Boolean(getYoutubeVideoId(value)));
     return { ok, platform: key, url: value };
@@ -270,9 +281,24 @@ function scoreLinkQuality(item) {
   if (item?.source === "manual") score += 10;
   if (item?.source === "statslc_bridge") score += 9;
   if (item?.source === "spotify_web") score += 8;
+  if (item?.source === "deezer_api") score += 8;
   if (item?.source === "youtube_api") score += 8;
   if (platform === "appleMusic" && /\/album\/.+\?i=\d+/.test(url)) score += 18;
   if (platform === "appleMusic" && url.includes("geo.music.apple.com")) score -= 18;
   if ((platform === "youtube" || platform === "youtubeMusic") && getYoutubeVideoId(url)) score += 12;
   return score;
+}
+
+function extractDeezerTrackId(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    const host = url.hostname.toLowerCase();
+    if (!host.includes("deezer.com")) return "";
+    const parts = url.pathname.split("/").filter(Boolean);
+    const trackIndex = parts.findIndex(part => part.toLowerCase() === "track");
+    const id = trackIndex !== -1 ? parts[trackIndex + 1] : "";
+    return /^\d+$/.test(id) ? id : "";
+  } catch (_error) {
+    return "";
+  }
 }

@@ -81,7 +81,7 @@ A superficie inicial atual inclui:
 
 - splash claro/escuro com `assets/logo.svg`;
 - subtitulo `crossover entre plataformas`;
-- icones das quatro plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
+- icones das cinco plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
 - fundo com orbs rosa e verde animados somente no eixo horizontal;
 - marca `LEO SAQUETTO` no rodape com o simbolo oficial do repositorio `leosaquettoapp`.
 
@@ -134,6 +134,10 @@ Resposta de erro esperada:
 - `404`: faixa ausente do cache ou sem links publicados.
 - Links manuais `pending` nunca sao expostos; somente links com status `published` entram no card publico.
 
+## API `/api/deezer/search`
+
+`GET /api/deezer/search?q=<texto>&limit=<1-20>&index=<0+>` pesquisa tracks no catalogo publico da Deezer e retorna candidatos normalizados. O endpoint e somente leitura, respeita `DEEZER_MATCHING_ENABLED=false`, valida consulta/paginacao e nao grava cache.
+
 Regras e limites observados:
 
 - Metodo diferente de `POST` retorna 405.
@@ -172,10 +176,10 @@ Cada item de plataforma renderizado pelo frontend pode conter:
 - `name`: nome amigavel.
 - `url`: URL direta final.
 - `isVerified`: sinal de link verificado.
-- `source`: origem do link, como `input`, `cache`, `spotify_web`, `itunes`, `songlink`, `idhs`, `youtube_api`, `statslc_bridge` ou `manual`.
+- `source`: origem do link, como `input`, `cache`, `spotify_web`, `itunes`, `deezer_api`, `songlink`, `idhs`, `youtube_api`, `statslc_bridge` ou `manual`.
 - `icon`: SVG inline escolhido pelo frontend.
 
-As plataformas automaticas v1 sao Spotify, Apple Music, YouTube e YouTube Music. Plataformas ausentes nao sao renderizadas como linhas de erro ou links de busca.
+As plataformas automaticas sao Spotify, Apple Music, Deezer, YouTube e YouTube Music. Plataformas ausentes nao sao renderizadas como linhas de erro ou links de busca.
 
 ## Integracoes externas
 
@@ -186,13 +190,13 @@ Integracoes usadas pela API:
 - `https://api.song.link/v1-alpha.1/links`: Song.link/Odesli como enriquecimento de links diretos antes de usar a YouTube Data API.
 - `https://statslc.leosaquetto.com/api/catalog-link-bridge`: bridge interno stats-lc/stats.fm para enriquecer Spotify e Apple Music.
 - Spotify Web Player partner API: matching Spotify quando habilitado.
+- Deezer Simple API: lookup por track id, busca por track e endpoint interno `/api/deezer/search`, todos sem OAuth nesta etapa.
 - YouTube Data API: matching opcional para YouTube e YouTube Music quando ainda nao ha link direto confiavel.
 - YouTube oEmbed, noembed e YouTube Data API `videos.list`: fallback de metadados para inputs YouTube/YouTube Music oficiais.
 - `https://itunes.apple.com/search`: busca Apple/iTunes para fallback por query.
 - `https://itunes.apple.com/lookup`: lookup por track id quando o link de entrada e Apple Music/iTunes.
 - `https://open.spotify.com/oembed`: fallback de metadados Spotify.
 - Open Graph do Spotify: tentativa de buscar HTML do link Spotify e extrair metadados.
-- `https://www.deezer.com/oembed`: enriquecimento pontual de metadados Deezer.
 
 Prioridade especial:
 
@@ -201,6 +205,7 @@ Prioridade especial:
 - O bridge stats-lc/stats.fm e oportunista para Spotify e Apple Music; ele nao bloqueia o fluxo se falhar ou nao encontrar match.
 - Para Spotify, quando as fontes principais falham, a API tenta obter metadados via Spotify, montar query, buscar Apple Music via iTunes e enriquecer via Song.link/IDHS.
 - Para Apple Music/iTunes, a API tenta usar o track id do link de entrada como fonte de verdade para titulo, artista, album e capa.
+- Para Deezer, a API usa `/track/{id}` como fonte de verdade em inputs diretos e `/search/track` para matching por titulo/artista, aceitando somente URLs diretas `deezer.com/track/{id}`.
 - YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API ou correcao aceita.
 - Cache parcial pode ser reidratado com metadados confiaveis do input antes de rodar provedores. Isso evita que registros antigos como `musica encontrada` bloqueiem um match 4/4.
 
@@ -217,6 +222,7 @@ Rodada de 2026-06-19:
 - Adicionada busca Apple/iTunes alternativa para titulos live com local/data quando a busca exata e estreita demais.
 - Tratado artista fraco como `resultado por busca` para permitir que Apple/iTunes corrija metadados antes do matching YouTube.
 - Validado em producao que faixas oficiais de YouTube Music, Apple Music e Spotify podem retornar Spotify, Apple Music, YouTube e YouTube Music com links diretos, sem search URLs.
+- Adicionado Deezer como quinta plataforma automatica, incluindo cliente `deezer_api`, endpoint `/api/deezer/search`, validacao de link direto e kill switch `DEEZER_MATCHING_ENABLED=false`.
 
 Essas regras sao regressao critica. Antes de alterar matching ou UI de resultados, leia [`docs/agent-rules.md`](./docs/agent-rules.md).
 

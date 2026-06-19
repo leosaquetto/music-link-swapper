@@ -8,6 +8,10 @@ import {
   scoreTextAlignment,
   validatePlatformUrl
 } from "./lib/music-contract.js";
+import {
+  extractDeezerTrackId,
+  fetchDeezerTrackById
+} from "./lib/deezer.js";
 
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const ITUNES_LOOKUP_API_URL = "https://itunes.apple.com/lookup";
@@ -76,7 +80,23 @@ export default async function handler(req, res) {
 async function fetchManualLinkMetadata(platform, url) {
   if (platform === "appleMusic") return fetchAppleMetadata(url);
   if (platform === "spotify") return fetchSpotifyMetadata(url);
+  if (platform === "deezer") return fetchDeezerMetadata(url);
   return null;
+}
+
+async function fetchDeezerMetadata(url) {
+  try {
+    const trackId = extractDeezerTrackId(url);
+    const track = trackId ? await fetchDeezerTrackById(trackId) : null;
+    if (!track) return null;
+    return {
+      title: track.title,
+      artist: track.artist,
+      description: track.album || "Deezer"
+    };
+  } catch (_error) {
+    return null;
+  }
 }
 
 async function fetchAppleMetadata(url) {

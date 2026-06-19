@@ -4,7 +4,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 
 ## Product contract
 
-- The v1 automatic promise is only Spotify, Apple Music, YouTube, and YouTube Music.
+- The automatic promise is only Spotify, Apple Music, Deezer, YouTube, and YouTube Music.
 - Result cards must render only direct, openable links.
 - Never show generated search URLs as result links.
 - Never render missing platforms as failed rows.
@@ -25,6 +25,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
   3. YouTube Data API `videos.list`.
 - Preserve the Spotify Web matching kill switch: `SPOTIFY_WEB_MATCHING_ENABLED=false`.
 - Preserve the YouTube matching kill switch: `YOUTUBE_MATCHING_ENABLED=false`.
+- Preserve the Deezer matching/search kill switch: `DEEZER_MATCHING_ENABLED=false`.
 - Preserve the stats-lc bridge kill switch: `STATSLC_BRIDGE_ENABLED=false`.
 
 ## Known regression patterns
@@ -33,6 +34,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Do not compare platform labels before normalizing them. Inputs like `youtube music` must normalize to `youtubeMusic`.
 - Do not treat generic metadata such as `musica encontrada`, `track found`, or `resultado por busca` as reliable title/artist truth.
 - Do not build canonical keys from stale generic cache metadata when the input platform can provide cleaner metadata.
+- Do not expose Deezer search URLs as result links; only direct `deezer.com/track/{id}` links are valid.
 - Do not remove YouTube/YouTube Music pairing when a trusted video ID exists.
 - Do not add UI rows for `notAvailable`, "nao localizado", or search fallback links.
 - Do not broaden Apple/iTunes matching so much that a different artist can win just because the title is similar.

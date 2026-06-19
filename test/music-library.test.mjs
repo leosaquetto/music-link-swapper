@@ -69,7 +69,7 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
     assert.equal(cachedByAlias.title, "One More Time");
     assert.deepEqual(
       cachedByAlias.links.map(link => link.type),
-      ["spotify", "appleMusic"]
+      ["spotify", "appleMusic", "deezer"]
     );
     assert.equal(cachedByAlias.links.some(link => link.url.includes("/search")), false);
 
@@ -87,12 +87,13 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
     });
     assert.deepEqual(
       afterManual.links.map(link => link.type),
-      ["spotify", "appleMusic", "youtube", "youtubeMusic"]
+      ["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"]
     );
 
     const rows = sql.raw("select platform, count(*)::int as count from track_links where status = 'published' group by platform order by platform");
     assert.deepEqual(rows, [
       { platform: "appleMusic", count: 1 },
+      { platform: "deezer", count: 1 },
       { platform: "spotify", count: 1 },
       { platform: "youtube", count: 1 }
     ]);

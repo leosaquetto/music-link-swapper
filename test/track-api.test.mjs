@@ -23,7 +23,7 @@ test("GET /api/track returns a cached public card by trackId", async () => {
     assert.equal(response.body.data.title, "One More Time");
     assert.deepEqual(
       response.body.data.links.map(link => link.type),
-      ["spotify", "appleMusic"]
+      ["spotify", "appleMusic", "deezer"]
     );
   } finally {
     await __resetMusicLibraryForTests();
@@ -103,7 +103,7 @@ test("GET /api/track excludes pending manual links from public cards", async () 
 
     assert.equal(response.statusCode, 200);
     assert.deepEqual(response.body.data.links.map(link => link.type), ["spotify"]);
-    assert.deepEqual(response.body.data.missingPlatforms, ["appleMusic", "youtube", "youtubeMusic"]);
+    assert.deepEqual(response.body.data.missingPlatforms, ["appleMusic", "deezer", "youtube", "youtubeMusic"]);
   } finally {
     await __resetMusicLibraryForTests();
   }
@@ -137,6 +137,12 @@ async function seedPublicTrack(overrides = {}) {
         url: "https://music.apple.com/us/album/one-more-time/697194953?i=697195462",
         isVerified: true,
         source: "itunes"
+      },
+      {
+        type: "deezer",
+        url: "https://www.deezer.com/track/3135553",
+        isVerified: true,
+        source: "deezer_api"
       }
     ]
   }, { defaultSource: "test" });

@@ -32,6 +32,7 @@
   --footer-signature: #687083;
   --provider-apple-music: #ed474c;
   --provider-spotify: #25d05f;
+  --provider-deezer: #a43cfe;
   --provider-youtube: #fd0100;
   --provider-icon-foreground: #e5e7ed;
   --launch-background: #111217;
@@ -58,6 +59,7 @@
   --footer-signature: #a0a4ad;
   --provider-apple-music: #ed474c;
   --provider-spotify: #25d05f;
+  --provider-deezer: #a43cfe;
   --provider-youtube: #fd0100;
   --provider-icon-foreground: #101113;
   --launch-background: #0b0b0d;
@@ -2940,6 +2942,10 @@ body.legal-modal-open {
   color: var(--provider-spotify);
 }
 
+.platform-icon-deezer {
+  color: var(--provider-deezer);
+}
+
 .platform-icon-youTube,
 .platform-icon-youtube,
 .platform-icon-youtubeMusic {
@@ -2957,6 +2963,12 @@ body.legal-modal-open {
 :root:not([data-theme="dark"]) .platform-icon-spotify,
 :root[data-theme="dark"] .platform-icon-spotify {
   background: var(--provider-spotify);
+  color: var(--provider-icon-foreground);
+}
+
+:root:not([data-theme="dark"]) .platform-icon-deezer,
+:root[data-theme="dark"] .platform-icon-deezer {
+  background: var(--provider-deezer);
   color: var(--provider-icon-foreground);
 }
 

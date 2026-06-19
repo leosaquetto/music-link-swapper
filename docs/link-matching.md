@@ -1,8 +1,8 @@
 # Link matching and cache strategy
 
-The product follows a Tapelink-style regular link promise for v1:
+The product follows a Tapelink-style regular link promise:
 
-- Automatic links are limited to Spotify, Apple Music, YouTube, and YouTube Music.
+- Automatic links are limited to Spotify, Apple Music, Deezer, YouTube, and YouTube Music.
 - Result cards render only direct, openable links.
 - Generated search URLs are never valid display links.
 - Missing platforms are exposed only as `missingPlatforms` for correction prompts, not as failed rows.
@@ -15,16 +15,17 @@ Agent-facing rules for preserving this behavior live in [`agent-rules.md`](./age
 
 1. Postgres/Neon cache by normalized input URL.
 2. Postgres/Neon cache by canonical track key.
-3. Input metadata context for Spotify, Apple Music, YouTube, and YouTube Music.
+3. Input metadata context for Spotify, Apple Music, Deezer, YouTube, and YouTube Music.
 4. Direct input link preservation when the submitted URL is already a valid platform link.
 5. stats-lc bridge for Spotify and Apple Music enrichment from stats.fm catalog IDs.
 6. Spotify Web Player matching when enabled.
 7. Apple Music/iTunes lookup and search.
-8. Songlink/Odesli enrichment for direct links returned by that provider.
-9. YouTube Data API matching only when still missing YouTube or YouTube Music.
-10. Manual correction, hidden unless a primary platform is missing.
+8. Deezer public API lookup/search when enabled.
+9. Songlink/Odesli enrichment for direct links returned by that provider.
+10. YouTube Data API matching only when still missing YouTube or YouTube Music.
+11. Manual correction, hidden unless a primary platform is missing.
 
-Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, or Spotify link, the app can persist that result without spending YouTube API quota. If it returns only unrelated platforms or the same input platform, the app skips those links.
+Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, Deezer, or Spotify link, the app can persist that result without spending YouTube API quota. If it returns only unrelated platforms or the same input platform, the app skips those links.
 
 Cache hits that are missing platforms can be upgraded. Before upgrade, the API must apply reliable input metadata so stale partial rows such as `musica encontrada` or `resultado por busca` do not become canonical truth.
 
@@ -47,6 +48,7 @@ When `DATABASE_URL` is absent, conversion still works, but durable cache and pro
 - `cache`
 - `spotify_web`
 - `itunes`
+- `deezer_api`
 - `songlink`
 - `idhs`
 - `youtube_api`
@@ -59,7 +61,27 @@ The API also returns:
 - `data.cacheStatus`: `hit`, `miss`, or `partial`.
 - `data.missingPlatforms`: supported automatic platforms that are still missing, for correction UI only.
 
-Search URLs such as `open.spotify.com/search/...` or `music.youtube.com/search?...` must not be returned as result links.
+Search URLs such as `open.spotify.com/search/...`, `deezer.com/search/...`, or `music.youtube.com/search?...` must not be returned as result links.
+
+## Deezer
+
+Deezer is a first-class automatic platform when the app has a trusted direct track id:
+
+- input URL;
+- cache;
+- Deezer public API lookup/search;
+- Songlink/Odesli or another trusted provider;
+- accepted manual correction.
+
+The app uses only public catalog endpoints. It does not require OAuth for this flow, does not expose preview/audio files, and never stores audio. Set `DEEZER_MATCHING_ENABLED=false` to disable Deezer lookup/search instantly.
+
+The read-only search endpoint is:
+
+```text
+GET /api/deezer/search?q=<text>&limit=<1-20>&index=<0+>
+```
+
+It returns normalized Deezer track candidates for app/API use. Display cards still use only direct `/track/{id}` links; the search endpoint itself is not a display-link source unless a candidate has been selected and normalized to a direct track URL.
 
 ## Public result cards
 
@@ -120,7 +142,7 @@ This metadata path is separate from search matching. It exists so official YouTu
 - Generic metadata such as `musica encontrada`, `track found`, and `resultado por busca` is treated as weak and can be replaced by trusted input/provider metadata.
 - Apple/iTunes search has an alternate simplified query for live titles with venue/date suffixes.
 - YouTube metadata can fall back from public embed endpoints to YouTube Data API `videos.list`.
-- Production validation covered official YouTube Music, Apple Music, and Spotify examples returning all four automatic platforms with direct URLs.
+- Production validation covered official YouTube Music, Apple Music, and Spotify examples returning the previous four automatic platforms with direct URLs. Deezer was added afterward and should be smoke-tested separately after deploy.
 
 Known fixtures that should keep working:
 
@@ -156,7 +178,7 @@ The API validates the host/platform and stores low-confidence corrections as hid
 Validation has two layers:
 
 - Frontend and backend reject invalid URLs, search URLs, and platform mismatches before a correction can be accepted.
-- Backend semantic confidence is available only when metadata can be fetched for the submitted platform. Apple Music uses iTunes Lookup; Spotify uses Spotify oEmbed. Corrections with weak or unavailable metadata remain pending unless a trusted correction token is provided.
+- Backend semantic confidence is available only when metadata can be fetched for the submitted platform. Apple Music uses iTunes Lookup, Spotify uses Spotify oEmbed, and Deezer uses Deezer track lookup. Corrections with weak or unavailable metadata remain pending unless a trusted correction token is provided.
 
 YouTube and YouTube Music manual corrections currently do not fetch metadata in `POST /api/manual-link`; they should be treated as review-first unless submitted with a trusted token. This protects the shared cache from wrong-song submissions while still allowing useful user corrections to be collected.
 
@@ -172,7 +194,8 @@ Before deploying matching changes:
 - Confirm a cached `?track=trk_...` card loads and an unknown id shows the public-card error state.
 - Confirm public-card refresh does not drop fresher links already present in the current result.
 - Confirm pending manual links do not appear in `GET /api/track`.
-- Test at least one Spotify input, one Apple Music input, and one YouTube input.
+- Test at least one Spotify input, one Apple Music input, one Deezer input, and one YouTube input.
+- Test `/api/deezer/search?q=Daft%20Punk%20One%20More%20Time`.
 - Test at least one YouTube Music official art-track input that starts from cache miss.
 - Test at least one partial-cache upgrade when a platform is missing.
 - Check Vercel runtime logs for error/fatal logs after production smoke tests.

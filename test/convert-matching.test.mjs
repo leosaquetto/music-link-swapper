@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { __testHooks } from "../api/convert.js";
+import convertHandler, { __testHooks } from "../api/convert.js";
 
 const SPOTIFY_TRACK_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT";
+process.env.DEEZER_MATCHING_ENABLED = "false";
 
 test("Spotify fallback adds a verified Apple Music match when Apple is missing", async () => {
   await withMockFetch(async input => {
@@ -476,6 +477,132 @@ test("YouTube input context falls back to YouTube Data metadata when public embe
   });
 });
 
+test("Deezer input context reads track metadata and canonical key from Deezer API", async () => {
+  const previousDeezer = process.env.DEEZER_MATCHING_ENABLED;
+  process.env.DEEZER_MATCHING_ENABLED = "true";
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url === "https://api.deezer.com/track/3135553") {
+      return jsonResponse(buildDeezerTrack({
+        id: 3135553,
+        title: "One More Time",
+        artist: "Daft Punk",
+        album: "Discovery",
+        isrc: "GBDUW0000053"
+      }));
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const context = await __testHooks.buildInputCacheContext(
+        "https://www.deezer.com/br/track/3135553?utm_source=test",
+        "deezer"
+      );
+
+      assert.equal(context.title, "One More Time");
+      assert.equal(context.artist, "Daft Punk");
+      assert.equal(context.album, "Discovery");
+      assert.equal(context.isrc, "GBDUW0000053");
+      assert.equal(context.canonicalKey, "isrc:gbduw0000053");
+    } finally {
+      restoreEnv("DEEZER_MATCHING_ENABLED", previousDeezer);
+    }
+  });
+});
+
+test("Deezer matching adds a verified direct Deezer track link", async () => {
+  const previousDeezer = process.env.DEEZER_MATCHING_ENABLED;
+  process.env.DEEZER_MATCHING_ENABLED = "true";
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url.startsWith("https://api.deezer.com/search/track")) {
+      return jsonResponse({
+        total: 1,
+        data: [
+          buildDeezerTrack({
+            id: 3135553,
+            title: "One More Time",
+            artist: "Daft Punk",
+            album: "Discovery",
+            duration: 320,
+            isrc: "GBDUW0000053"
+          })
+        ]
+      });
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const result = await __testHooks.enrichWithDeezerMatch({
+        title: "One More Time",
+        description: "Daft Punk",
+        links: [
+          {
+            type: "spotify",
+            url: "https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV",
+            isVerified: true,
+            source: "input"
+          }
+        ]
+      });
+
+      const deezer = result.links.find(link => link.type === "deezer");
+      assert.ok(deezer);
+      assert.equal(deezer.url, "https://www.deezer.com/track/3135553");
+      assert.equal(deezer.source, "deezer_api");
+      assert.equal(deezer.isVerified, true);
+    } finally {
+      restoreEnv("DEEZER_MATCHING_ENABLED", previousDeezer);
+    }
+  });
+});
+
+test("POST /api/convert preserves Deezer input link with Deezer metadata", async () => {
+  const previousDeezer = process.env.DEEZER_MATCHING_ENABLED;
+  process.env.DEEZER_MATCHING_ENABLED = "true";
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url === "https://api.deezer.com/track/3135553") {
+      return jsonResponse(buildDeezerTrack({
+        id: 3135553,
+        title: "One More Time",
+        artist: "Daft Punk",
+        album: "Discovery",
+        isrc: "GBDUW0000053"
+      }));
+    }
+    if (url === "https://idonthavespotify.sjdonado.com/api/search?v=1") {
+      return textResponse(JSON.stringify({ error: "upstream unavailable" }), { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://api.song.link/v1-alpha.1/links")) {
+      return jsonResponse({ error: "songlink unavailable" }, { ok: false, status: 502 });
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const response = await callConvertApi({
+        body: {
+          link: "https://www.deezer.com/br/track/3135553?utm_source=test",
+          adapters: ["deezer"]
+        }
+      });
+
+      assert.equal(response.statusCode, 200);
+      assert.equal(response.body.ok, true);
+      assert.equal(response.body.data.title, "One More Time");
+      assert.equal(response.body.data.description, "Daft Punk");
+      assert.equal(response.body.data.links[0].type, "deezer");
+      assert.equal(response.body.data.links[0].url, "https://www.deezer.com/track/3135553");
+      assert.equal(response.body.data.links[0].source, "input");
+    } finally {
+      restoreEnv("DEEZER_MATCHING_ENABLED", previousDeezer);
+    }
+  });
+});
+
 test("Songlink normalization excludes non-automatic platforms", () => {
   const normalized = __testHooks.normalizeSongLinkPayload({
     entityUniqueId: "song::123",
@@ -489,6 +616,7 @@ test("Songlink normalization excludes non-automatic platforms", () => {
     linksByPlatform: {
       spotify: { url: "https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV" },
       appleMusic: { url: "https://music.apple.com/us/album/one-more-time/697194953?i=697195462" },
+      deezer: { url: "https://www.deezer.com/track/3135553" },
       youtube: { url: "https://www.youtube.com/watch?v=FGBhQbmPwH8" },
       youtubeMusic: { url: "https://music.youtube.com/watch?v=FGBhQbmPwH8" },
       amazonMusic: { url: "https://music.amazon.com/albums/example" },
@@ -499,9 +627,42 @@ test("Songlink normalization excludes non-automatic platforms", () => {
 
   assert.deepEqual(
     normalized.links.map(link => link.type).sort(),
-    ["appleMusic", "spotify", "youtube", "youtubeMusic"].sort()
+    ["appleMusic", "deezer", "spotify", "youtube", "youtubeMusic"].sort()
   );
 });
+
+async function callConvertApi({ method = "POST", body = {}, url = "/api/convert" } = {}) {
+  const req = {
+    method,
+    body,
+    url,
+    headers: {
+      "user-agent": "node-test"
+    },
+    socket: {
+      remoteAddress: `127.0.0.${Math.floor(Math.random() * 200) + 1}`
+    }
+  };
+  const res = {
+    statusCode: 200,
+    body: null,
+    headers: {},
+    setHeader(key, value) {
+      this.headers[key] = value;
+    },
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload) {
+      this.body = payload;
+      return this;
+    }
+  };
+
+  await convertHandler(req, res);
+  return res;
+}
 
 async function withMockFetch(fetchImpl, run) {
   const originalFetch = globalThis.fetch;
@@ -546,5 +707,32 @@ function textResponse(body, { ok = true, status = 200 } = {}) {
     ok,
     status,
     text: async () => body
+  };
+}
+
+function buildDeezerTrack({
+  id,
+  title,
+  artist,
+  album = "",
+  duration = 320,
+  isrc = "",
+  readable = true,
+  rank = 500000
+}) {
+  return {
+    id,
+    title,
+    title_short: title,
+    link: `https://www.deezer.com/track/${id}`,
+    duration,
+    isrc,
+    readable,
+    rank,
+    artist: { name: artist },
+    album: {
+      title: album,
+      cover_medium: "https://e-cdns-images.dzcdn.net/images/cover/test/250x250-000000-80-0-0.jpg"
+    }
   };
 }

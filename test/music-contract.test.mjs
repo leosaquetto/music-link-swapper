@@ -23,7 +23,7 @@ test("filterDisplayLinks keeps only direct automatic platform links", () => {
 
   assert.deepEqual(
     links.map(item => item.type),
-    ["spotify", "appleMusic", "youtube", "youtubeMusic"]
+    ["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"]
   );
   assert.equal(links[0].url, "https://open.spotify.com/track/123");
   assert.equal(links.find(item => item.type === "youtubeMusic").url, "https://music.youtube.com/watch?v=abc123");
@@ -46,12 +46,14 @@ test("decorateResultForResponse adds cache metadata and missing platforms", () =
   assert.match(result.trackId, /^trk_[a-f0-9]{20}$/);
   assert.equal(result.cacheStatus, "partial");
   assert.deepEqual(result.links.map(item => item.type), ["spotify"]);
-  assert.deepEqual(result.missingPlatforms, ["appleMusic", "youtube", "youtubeMusic"]);
+  assert.deepEqual(result.missingPlatforms, ["appleMusic", "deezer", "youtube", "youtubeMusic"]);
 });
 
 test("validatePlatformUrl rejects search URLs and platform mismatches", () => {
   assert.equal(validatePlatformUrl("spotify", "https://open.spotify.com/track/abc").ok, true);
   assert.equal(validatePlatformUrl("spotify", "https://open.spotify.com/search/abc").ok, false);
+  assert.equal(validatePlatformUrl("deezer", "https://www.deezer.com/track/3135553").ok, true);
+  assert.equal(validatePlatformUrl("deezer", "https://www.deezer.com/search/daft%20punk").ok, false);
   assert.equal(validatePlatformUrl("youtubeMusic", "https://www.youtube.com/watch?v=abc").ok, false);
   assert.equal(validatePlatformUrl("appleMusic", "https://music.apple.com/br/album/a/1?i=2").ok, true);
 });
@@ -73,7 +75,7 @@ test("scoreSpotifyCandidate favors exact title and artist over live/remix drift"
   assert.ok(exact >= 80);
 });
 
-test("getMissingPlatforms only reports automatic v1 platforms", () => {
+test("getMissingPlatforms reports the current automatic platform set", () => {
   assert.deepEqual(
     getMissingPlatforms([
       { type: "spotify", url: "https://open.spotify.com/track/abc" },

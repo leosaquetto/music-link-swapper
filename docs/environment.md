@@ -53,6 +53,7 @@ STATSLC_BRIDGE_ENABLED="true"
 STATSLC_BRIDGE_URL="https://statslc.leosaquetto.com/api/catalog-link-bridge"
 STATSLC_BRIDGE_TOKEN=""
 YOUTUBE_MATCHING_ENABLED="true"
+DEEZER_MATCHING_ENABLED="true"
 MANUAL_LINK_TOKEN=""
 YOUTUBE_API_KEY=""
 ```
@@ -62,6 +63,7 @@ YOUTUBE_API_KEY=""
 - `STATSLC_BRIDGE_URL` points to the stats-lc API bridge used to enrich Spotify and Apple Music IDs before text-search fallbacks.
 - `STATSLC_BRIDGE_TOKEN` is optional locally, but should match `CATALOG_LINK_BRIDGE_TOKEN` on `stats-lc-api` in production.
 - `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
+- `DEEZER_MATCHING_ENABLED=false` disables Deezer public API lookup/search instantly, including `GET /api/deezer/search`.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
 - `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.
 
@@ -75,6 +77,7 @@ YOUTUBE_API_KEY=""
 - Use `MANUAL_LINK_TOKEN` only for trusted/internal correction flows.
 - Use the kill switches when provider cost or abuse is suspected:
   - `YOUTUBE_MATCHING_ENABLED=false`
+  - `DEEZER_MATCHING_ENABLED=false`
   - `SPOTIFY_WEB_MATCHING_ENABLED=false`
   - `STATSLC_BRIDGE_ENABLED=false`
 
