@@ -17,7 +17,7 @@ const SAMPLE_LINKS = [
   "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
   "https://music.apple.com/br/album/golden/1820264137?i=1820264150"
 ];
-const HERO_LOGO_GIF_URL = "https://i.imgur.com/T1uEx9T.gif?v=20260411";
+const HERO_LOGO_GIF_URL = "./assets/logo_gif.gif";
 
 const REQUESTED_ADAPTERS = [
   "appleMusic",
@@ -53,10 +53,11 @@ const LANGUAGE_OPTIONS = [
 ];
 const TRANSLATIONS = {
   "pt-br": {
-    loadingSwap: "swapando...",
-    loadingSearch: "pesquisando...",
-    loadingFindingLinks: "buscando links...",
-    loadingStillFinding: "ainda buscando...",
+    loadingSwap: "swappando...",
+    loadingSearch: "swappando...",
+    loadingFindingLinks: "buscando swaps...",
+    loadingCapturingSwaps: "capturando swaps...",
+    loadingFinishingSwap: "finalizando swap...",
     swap: "swap",
     search: "pesquisar",
     linkLabel: "link da música",
@@ -118,9 +119,10 @@ const TRANSLATIONS = {
   },
   en: {
     loadingSwap: "swapping...",
-    loadingSearch: "searching...",
-    loadingFindingLinks: "finding links...",
-    loadingStillFinding: "still searching...",
+    loadingSearch: "swapping...",
+    loadingFindingLinks: "finding swaps...",
+    loadingCapturingSwaps: "capturing swaps...",
+    loadingFinishingSwap: "finishing swap...",
     swap: "swap",
     search: "search",
     linkLabel: "song link",
@@ -182,9 +184,10 @@ const TRANSLATIONS = {
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
-    loadingSearch: "buscando...",
-    loadingFindingLinks: "buscando enlaces...",
-    loadingStillFinding: "aún buscando...",
+    loadingSearch: "convirtiendo...",
+    loadingFindingLinks: "buscando swaps...",
+    loadingCapturingSwaps: "capturando swaps...",
+    loadingFinishingSwap: "finalizando swap...",
     swap: "swap",
     search: "buscar",
     linkLabel: "enlace de la canción",
@@ -246,9 +249,10 @@ const TRANSLATIONS = {
   },
   "it-it": {
     loadingSwap: "conversione...",
-    loadingSearch: "ricerca...",
-    loadingFindingLinks: "ricerca link...",
-    loadingStillFinding: "ancora in ricerca...",
+    loadingSearch: "conversione...",
+    loadingFindingLinks: "ricerca swap...",
+    loadingCapturingSwaps: "cattura swap...",
+    loadingFinishingSwap: "finalizzazione swap...",
     swap: "swap",
     search: "cerca",
     linkLabel: "link della canzone",
@@ -310,9 +314,10 @@ const TRANSLATIONS = {
   },
   "fr-fr": {
     loadingSwap: "conversion...",
-    loadingSearch: "recherche...",
-    loadingFindingLinks: "recherche de liens...",
-    loadingStillFinding: "recherche encore...",
+    loadingSearch: "conversion...",
+    loadingFindingLinks: "recherche de swaps...",
+    loadingCapturingSwaps: "capture de swaps...",
+    loadingFinishingSwap: "finalisation du swap...",
     swap: "swap",
     search: "rechercher",
     linkLabel: "lien de la chanson",
@@ -534,11 +539,13 @@ const els = {
   platformGroups: document.getElementById("platformGroups"),
   correctionCard: document.getElementById("correctionCard"),
   resultLegend: document.getElementById("resultLegend"),
+  resultSheetHandle: document.getElementById("resultSheetHandle"),
   resultDismissButton: document.getElementById("resultDismissButton"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
   publicCardBar: document.getElementById("publicCardBar"),
+  publicCardIcon: document.getElementById("publicCardIcon"),
   publicCardLabel: document.getElementById("publicCardLabel"),
   publicCardHint: document.getElementById("publicCardHint"),
   publicTrackCopyButton: document.getElementById("publicTrackCopyButton"),
@@ -616,7 +623,8 @@ function bootstrap() {
 
 function forceHeroGifLogo() {
   if (!els.heroLogo) return;
-  if (els.heroLogo.src !== HERO_LOGO_GIF_URL) {
+  const expectedSrc = new URL(HERO_LOGO_GIF_URL, window.location.href).href;
+  if (els.heroLogo.currentSrc !== expectedSrc && els.heroLogo.src !== expectedSrc) {
     els.heroLogo.src = HERO_LOGO_GIF_URL;
   }
 }
@@ -874,6 +882,10 @@ function injectButtonIcons() {
     els.publicTrackOpenButton.innerHTML = `<span class="button-icon">${SVG_ICONS.open}</span>`;
   }
 
+  if (els.publicCardIcon) {
+    els.publicCardIcon.innerHTML = `<span class="button-icon">${SVG_ICONS.link}</span>`;
+  }
+
   if (els.copyOriginalButton) {
     els.copyOriginalButton.innerHTML = `<span class="button-icon">${SVG_ICONS.unlink}</span>`;
   }
@@ -920,6 +932,7 @@ function lockPageScroll(className) {
 
   if (state.modalScrollLockDepth === 0) {
     state.lockedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
   }
 
@@ -936,6 +949,7 @@ function unlockPageScroll(className) {
   if (state.modalScrollLockDepth > 0) return;
 
   document.body.style.overflow = "";
+  document.documentElement.style.overflow = "";
   const restoreY = state.lockedScrollY || 0;
   if (Math.abs(window.scrollY - restoreY) > 1) {
     window.scrollTo(0, restoreY);
@@ -1059,10 +1073,13 @@ function bindSheetDismissGesture(sheet, closeFn) {
   if (!sheet || typeof closeFn !== "function") return;
 
   sheet.addEventListener("pointerdown", event => {
+    const isResultCard = sheet === els.resultCard;
+    const resultHandle = isResultCard ? event.target?.closest?.(".result-sheet-handle") : null;
+
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    if (sheet === els.resultCard && !state.isResultSheetOpen) return;
-    if (sheet === els.resultCard && !event.target?.closest?.(".result-header")) return;
-    if (event.target?.closest?.("button, a, input, select, textarea, .recent-swaps-list, .legal-body")) return;
+    if (isResultCard && !state.isResultSheetOpen) return;
+    if (isResultCard && !resultHandle) return;
+    if (!resultHandle && event.target?.closest?.("button, a, input, select, textarea, .recent-swaps-list, .legal-body")) return;
 
     state.activeSheetDrag = {
       sheet,
@@ -1137,10 +1154,10 @@ function openResultSheetIfNeeded() {
 
 function dismissResultSheet() {
   if (!state.isResultSheetOpen) return;
-  closeResultSheet();
+  closeResultSheet({ preserveResult: false });
   setTimeout(() => {
     if (!state.isResultSheetOpen) resetForm();
-  }, 230);
+  }, 280);
 }
 
 function closeResultSheet({ immediate = false, preserveResult = true } = {}) {
@@ -1151,16 +1168,21 @@ function closeResultSheet({ immediate = false, preserveResult = true } = {}) {
   els.resultBackdrop.setAttribute("aria-hidden", "true");
   els.resultCard.classList.remove("is-sheet-open");
 
-  if (wasOpen) {
-    unlockPageScroll("result-sheet-open");
-  } else {
-    document.body.classList.remove("result-sheet-open");
-  }
-
   const finish = () => {
     els.resultBackdrop?.classList.add("hidden");
-    els.resultCard?.classList.remove("is-result-sheet");
-    if (!preserveResult) hideResult();
+    if (preserveResult) {
+      els.resultCard?.classList.remove("is-result-sheet");
+    } else {
+      clearResultSurface();
+      els.resultCard?.classList.remove("is-result-sheet", "is-sheet-open", "is-exiting", "result-card-live");
+      els.resultCard?.classList.add("hidden");
+    }
+
+    if (wasOpen) {
+      unlockPageScroll("result-sheet-open");
+    } else {
+      document.body.classList.remove("result-sheet-open");
+    }
   };
 
   if (state.resultSheetHideTimer) {
@@ -1701,9 +1723,9 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   }
 
   softlyDismissKeyboard();
+  hideStatus();
   setLoading(true);
   hideResult();
-  showStatus(modeAtSubmit ? t("loadingSearch") : t("loadingSwap"), "default");
   startCoverShimmer();
 
   try {
@@ -1951,20 +1973,9 @@ function renderResult(result, { skipSave = false } = {}) {
     hideCoverImage();
   }
 
-  const primaryText = buildPrimaryLinksText(result);
-  if (primaryText) {
-    els.copyPrimaryButton.classList.remove("hidden");
-    els.sharePrimaryButton.classList.remove("hidden");
-  } else {
-    els.copyPrimaryButton.classList.add("hidden");
-    els.sharePrimaryButton.classList.add("hidden");
-  }
-
-  if (state.currentOriginalUrl) {
-    els.copyOriginalButton.classList.remove("hidden");
-  } else {
-    els.copyOriginalButton.classList.add("hidden");
-  }
+  els.copyPrimaryButton?.classList.add("hidden");
+  els.sharePrimaryButton?.classList.add("hidden");
+  els.copyOriginalButton?.classList.add("hidden");
   els.resultDismissButton?.classList.remove("hidden");
   renderPublicCardBar(result);
 
@@ -2026,7 +2037,7 @@ function renderResult(result, { skipSave = false } = {}) {
       section.appendChild(controlsWrap);
     }
 
-    if (!(groupName === "others" && collapsed)) {
+    if (groupName !== "primary" && !(groupName === "others" && collapsed)) {
       const title = document.createElement("p");
       title.className = "group-title";
       title.textContent = groupName === "primary" ? t("primarySection") : t("othersSection");
@@ -2727,6 +2738,19 @@ function softlyDismissKeyboard() {
   } catch (_error) {}
 }
 
+function clearResultSurface() {
+  els.platformGroups.innerHTML = "";
+  els.copyPrimaryButton?.classList.add("hidden");
+  els.sharePrimaryButton?.classList.add("hidden");
+  els.copyOriginalButton?.classList.add("hidden");
+  els.resultDismissButton?.classList.add("hidden");
+  els.publicCardBar?.classList.add("hidden");
+  hideCorrectionPrompt();
+  els.resultLegend?.classList.add("hidden");
+  if (els.resultLegend) els.resultLegend.innerHTML = "";
+  hideCoverImage();
+}
+
 function hideResult() {
   clearTimeout(state.hideResultTimer);
   closeResultSheet({ immediate: true, preserveResult: true });
@@ -2735,32 +2759,14 @@ function hideResult() {
     els.resultCard.classList.remove("result-card-live");
     els.resultCard.classList.add("is-exiting");
     state.hideResultTimer = setTimeout(() => {
-      els.platformGroups.innerHTML = "";
-      els.copyPrimaryButton.classList.add("hidden");
-      els.sharePrimaryButton.classList.add("hidden");
-      els.copyOriginalButton.classList.add("hidden");
-      els.resultDismissButton?.classList.add("hidden");
-      els.publicCardBar?.classList.add("hidden");
-      hideCorrectionPrompt();
-      els.resultLegend?.classList.add("hidden");
-      if (els.resultLegend) els.resultLegend.innerHTML = "";
-      hideCoverImage();
+      clearResultSurface();
       els.resultCard.classList.remove("is-exiting");
       els.resultCard.classList.add("hidden");
     }, 220);
     return;
   }
 
-  els.platformGroups.innerHTML = "";
-  els.copyPrimaryButton.classList.add("hidden");
-  els.sharePrimaryButton.classList.add("hidden");
-  els.copyOriginalButton.classList.add("hidden");
-  els.resultDismissButton?.classList.add("hidden");
-  els.publicCardBar?.classList.add("hidden");
-  hideCorrectionPrompt();
-  els.resultLegend?.classList.add("hidden");
-  if (els.resultLegend) els.resultLegend.innerHTML = "";
-  hideCoverImage();
+  clearResultSurface();
 }
 
 function showStatus(message, tone = "default", { autoHide = false } = {}) {
@@ -2821,7 +2827,8 @@ function setLoading(loading, label = "") {
     if (!label) {
       state.loadingStageTimers.push(
         window.setTimeout(() => renderLoadingButton(t("loadingFindingLinks")), 2500),
-        window.setTimeout(() => renderLoadingButton(t("loadingStillFinding")), 7500)
+        window.setTimeout(() => renderLoadingButton(t("loadingCapturingSwaps")), 5500),
+        window.setTimeout(() => renderLoadingButton(t("loadingFinishingSwap")), 8500)
       );
     }
     return;
@@ -2849,10 +2856,6 @@ function renderLoadingButton(label) {
     <span class="loading-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
     <span class="loading-label">${escapeHtml(nextLabel)}</span>
   `;
-  if (els.statusCard && !els.statusCard.classList.contains("hidden")) {
-    const tone = els.statusCard.classList.contains("is-error") ? "error" : "default";
-    if (tone !== "error") showStatus(nextLabel, "default");
-  }
 }
 
 function updateConvertButtonLabel() {

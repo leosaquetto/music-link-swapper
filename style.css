@@ -12,8 +12,8 @@
   --line: rgba(18, 22, 35, 0.1);
   --line-soft: rgba(18, 22, 35, 0.08);
   --text: #121623;
-  --muted: #5f6778;
-  --soft: #7f8695;
+  --muted: #4f586a;
+  --soft: #6f7787;
   --accent: #2ebf59;
   --accent-soft: #71de90;
   --salmon: #f35f7f;
@@ -27,9 +27,9 @@
   --control-size: 46px;
   --control-radius: 16px;
   --byline: #ec8189;
-  --input-text: #606a7c;
+  --input-text: #293142;
   --page-background: var(--bg);
-  --footer-signature: #7a8091;
+  --footer-signature: #687083;
   --provider-apple-music: #ed474c;
   --provider-spotify: #25d05f;
   --provider-youtube: #fd0100;
@@ -43,8 +43,8 @@
   --line: rgba(255, 255, 255, 0.14);
   --line-soft: rgba(255, 255, 255, 0.10);
   --text: #ffffff;
-  --muted: #a4a7b0;
-  --soft: #7b8190;
+  --muted: #b7bac4;
+  --soft: #969ca8;
   --accent: #34c759;
   --accent-soft: #8ef0a7;
   --salmon: #f0706d;
@@ -52,9 +52,9 @@
   --found: #8e8e93;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
   --byline: #34c759;
-  --input-text: #c8ccd7;
+  --input-text: #eef1f7;
   --page-background: var(--bg);
-  --footer-signature: #8e8e93;
+  --footer-signature: #a0a4ad;
   --provider-apple-music: #ed474c;
   --provider-spotify: #25d05f;
   --provider-youtube: #fd0100;
@@ -87,6 +87,7 @@ html {
 
 body {
   font-family: Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 500;
   min-height: 100svh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
@@ -326,7 +327,7 @@ body.needs-viewport-fill .viewport-fill-spacer {
   background: transparent;
   color: var(--text);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   width: 100%;
@@ -395,6 +396,7 @@ h1 {
   font-size: 48px;
   line-height: 0.95;
   letter-spacing: 0;
+  font-weight: 800;
   
   /* Mantendo exatamente o efeito de brilho anterior */
   background: linear-gradient(
@@ -414,7 +416,8 @@ h1 {
 .hero-subtitle {
   color: var(--muted);
   margin-top: 2px;
-  font-size: 13px;
+  font-size: 13.5px;
+  font-weight: 600;
   line-height: 1.46;
   max-width: 34ch;
   text-align: center;
@@ -423,12 +426,12 @@ h1 {
 
 .hero-byline {
   margin-top: 7px;
-  font-size: 12px;
-  line-height: 1;
+  font-size: 12.5px;
+  line-height: 1.1;
   letter-spacing: 0;
   color: var(--byline);
   font-family: Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .form-card,
@@ -470,7 +473,7 @@ h1 {
   padding: 0 10px;
   background: transparent;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   line-height: 1;
   text-transform: lowercase;
@@ -489,9 +492,9 @@ h1 {
 
 .label {
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .tiny-button {
@@ -501,6 +504,8 @@ h1 {
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
   transition:
     transform 180ms ease,
     background 180ms ease,
@@ -587,12 +592,15 @@ h1 {
     box-shadow 180ms ease,
     background 220ms ease,
     color 220ms ease;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .text-input::placeholder {
   color: var(--soft);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .text-input:focus {
@@ -780,6 +788,7 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--muted);
   font-size: 12px;
+  font-weight: 700;
   flex: 0 0 auto;
 }
 
@@ -822,7 +831,8 @@ h1 {
 
 .status-card {
   font-size: 14px;
-  line-height: 1.45;
+  font-weight: 600;
+  line-height: 1.48;
   color: var(--muted);
   scroll-margin-top: 12px;
 }
@@ -850,7 +860,18 @@ h1 {
   --sheet-drag-y: 0px;
 }
 
+:root:not([data-theme="dark"]) .result-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(18, 22, 35, 0.11);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+}
+
 .result-backdrop {
+  display: none;
+}
+
+.result-sheet-handle {
   display: none;
 }
 
@@ -907,7 +928,7 @@ h1 {
 .result-description {
   color: #ed474c;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
   margin-bottom: 6px;
 }
@@ -936,6 +957,7 @@ h2 {
   color: var(--muted);
   margin-top: 6px;
   font-size: 13px;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -983,7 +1005,7 @@ h2 {
 .group-title {
   color: var(--muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
   margin-bottom: 0;
 }
@@ -1014,7 +1036,12 @@ h2 {
   justify-content: center;
   gap: 10px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.result-brand-signature {
+  display: none;
 }
 
 .public-card-bar {
@@ -1029,13 +1056,38 @@ h2 {
   gap: 12px;
 }
 
+.public-card-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.public-card-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  background: rgba(127, 134, 149, 0.12);
+  border: 1px solid var(--line-soft);
+}
+
+.public-card-icon .button-icon,
+.public-card-icon .button-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
 .public-card-copy {
   min-width: 0;
 }
 
 .public-card-label {
   color: var(--text);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: 0;
@@ -1043,8 +1095,9 @@ h2 {
 
 .public-card-hint {
   margin-top: 3px;
-  color: var(--muted);
-  font-size: 11px;
+  color: var(--soft);
+  font-size: 11.5px;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -1088,6 +1141,7 @@ h2 {
   margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
+  font-weight: 600;
   line-height: 1.45;
 }
 
@@ -1103,7 +1157,7 @@ h2 {
   gap: 5px;
   color: var(--muted);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
   min-width: 0;
 }
@@ -1117,7 +1171,8 @@ h2 {
   background: var(--panel-strong);
   color: var(--input-text);
   outline: none;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -1133,7 +1188,7 @@ h2 {
   color: var(--muted);
   font-size: 10px;
   line-height: 1.2;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .correction-platform-pills {
@@ -1153,7 +1208,7 @@ h2 {
   align-items: center;
   gap: 7px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   transition:
     background 160ms ease,
     border-color 160ms ease,
@@ -1232,7 +1287,8 @@ h2 {
 .correction-error {
   min-height: 16px;
   color: #a62435;
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 700;
   line-height: 1.35;
 }
 
@@ -1270,6 +1326,7 @@ h2 {
 .correction-state-message {
   color: var(--muted);
   font-size: 12px;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -1374,8 +1431,8 @@ h2 {
 }
 
 .platform-name {
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 800;
+  font-size: 13.5px;
   line-height: 1.15;
   min-width: 0;
   overflow: hidden;
@@ -1430,7 +1487,7 @@ h2 {
   background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
   line-height: 1;
-  font-weight: 700;
+  font-weight: 800;
   flex: 0 0 auto;
   transition:
     background 220ms ease,
@@ -1483,6 +1540,7 @@ h2 {
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #ffffff;
   font-size: 13px;
+  font-weight: 700;
   text-align: center;
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
   opacity: 0;
@@ -1523,7 +1581,9 @@ h2 {
 .footer {
   text-align: center;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.4;
   padding: 10px 0 8px;
   display: grid;
   gap: 4px;
@@ -1532,8 +1592,8 @@ h2 {
 
 .footer-made-by {
   color: var(--footer-signature);
-  font-weight: 400;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0;
   margin-top: 24px;
 }
 
@@ -1621,15 +1681,15 @@ body.needs-viewport-fill .footer {
 }
 
 .ios-badge-text small {
-  font-size: 8.5px;
+  font-size: 9px;
   color: #ed474c;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ios-badge-text strong {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #ed474c;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 :root[data-theme="dark"] .ios-badge {
@@ -1731,6 +1791,7 @@ body.needs-viewport-fill .footer {
   display: grid;
   gap: 8px;
   font-size: 14px;
+  font-weight: 600;
   line-height: 1.25;
 }
 
@@ -1756,7 +1817,7 @@ body.needs-viewport-fill .footer {
 
 .step-accent {
   color: #0a84ff;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .step-icon {
@@ -1846,7 +1907,7 @@ body.ios-install-modal-open {
   font-size: 14px;
   letter-spacing: 0.1em;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .recent-swaps-close {
@@ -1871,6 +1932,7 @@ body.ios-install-modal-open {
 .recent-empty {
   color: var(--muted);
   font-size: 13px;
+  font-weight: 600;
   text-align: center;
   padding: 24px 10px;
 }
@@ -1922,6 +1984,7 @@ body.ios-install-modal-open {
 .recent-swap-title {
   margin-top: 2px;
   font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
 }
 
@@ -1961,6 +2024,7 @@ body.ios-install-modal-open {
   background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
   font-size: 12px;
+  font-weight: 700;
 }
 
 body.recent-swaps-modal-open {
@@ -1972,7 +2036,7 @@ body.legal-modal-open {
 }
 
 .footer a {
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: underline;
   color: inherit;
 }
@@ -1982,12 +2046,20 @@ body.legal-modal-open {
 }
 
 .footer strong {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ios-badge {
   text-decoration: none !important;
-  font-weight: 500 !important;
+  font-weight: 700 !important;
+}
+
+.footer .ios-badge-text small {
+  font-weight: 700;
+}
+
+.footer .ios-badge-text strong {
+  font-weight: 800;
 }
 
 .hidden {
@@ -2282,14 +2354,28 @@ body.legal-modal-open {
       transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .result-card.is-result-sheet::before {
-    content: "";
+  .result-card.is-result-sheet .result-sheet-handle {
+    display: flex;
+    width: 72px;
+    height: 24px;
+    margin: -8px auto 6px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+    color: var(--soft);
+  }
+
+  .result-card.is-result-sheet .result-sheet-handle span {
     display: block;
     width: 38px;
     height: 4px;
-    margin: -6px auto 10px;
     border-radius: 999px;
-    background: rgba(127, 134, 149, 0.38);
+    background: currentColor;
+    opacity: 0.48;
   }
 
   .result-card.is-result-sheet.is-sheet-open {
@@ -2342,7 +2428,7 @@ body.legal-modal-open {
   }
 
   .platform-name {
-    font-size: 12.5px;
+    font-size: 13px;
   }
 
   .cover-image,
@@ -2357,8 +2443,8 @@ body.legal-modal-open {
     padding-bottom: 12px;
   }
 
-  .result-card.is-result-sheet .result-header {
-    cursor: grab;
+  .result-card.is-result-sheet.is-dragging .result-sheet-handle {
+    cursor: grabbing;
   }
 
   .platform-groups {
@@ -2368,6 +2454,55 @@ body.legal-modal-open {
 
   .public-card-bar {
     margin-top: 10px;
+  }
+
+  .public-card-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 11px;
+  }
+
+  .result-card.is-result-sheet .result-brand-signature {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    margin-top: 14px;
+    padding: 2px 0 0;
+    opacity: 0.92;
+  }
+
+  .result-brand-logo {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 9px;
+    object-fit: cover;
+    background: #ffffff;
+    box-shadow: 0 6px 14px rgba(18, 22, 35, 0.12);
+  }
+
+  .result-brand-title {
+    min-width: 0;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0;
+    white-space: nowrap;
+    background: linear-gradient(
+      135deg,
+      #ed474c 20%,
+      #ff8a8e 40%,
+      #fbb5b8 60%,
+      #ed474c 80%
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: textShine 5s linear infinite;
   }
 
   .app-logo {
@@ -2434,7 +2569,7 @@ body.legal-modal-open {
   }
 
   .platform-name {
-    font-size: 12px;
+    font-size: 12.5px;
   }
 
   .correction-fields {
@@ -2460,7 +2595,18 @@ body.legal-modal-open {
   }
 
   .hero-subtitle {
-    font-size: 13px;
+    font-size: 13.5px;
+  }
+
+  .result-brand-logo {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    border-radius: 8px;
+  }
+
+  .result-brand-title {
+    font-size: 14px;
   }
 
   .chip.icon-chip {
@@ -2494,6 +2640,24 @@ body.legal-modal-open {
     #00d752 45%,   /* Verde neon (brilho rápido) */
     #ed474c 50%,   /* Rosa (transição rápida) */
     #ffffff 65%    /* Volta para o branco rápido */
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:root[data-theme="dark"] .result-brand-logo {
+  background: #101113;
+}
+
+:root[data-theme="dark"] .result-brand-title {
+  background: linear-gradient(
+    135deg,
+    #ffffff 35%,
+    #00d752 45%,
+    #ed474c 50%,
+    #ffffff 65%
   );
   background-size: 200% auto;
   color: transparent;
@@ -2669,7 +2833,7 @@ body.legal-modal-open {
 }
 
 :root[data-theme="dark"] .footer {
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.56);
 }
 
 .footer-legal-links {
@@ -2753,6 +2917,7 @@ body.legal-modal-open {
 
 .legal-title {
   font-size: 16px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 4px 30px 10px 2px;
@@ -2763,6 +2928,7 @@ body.legal-modal-open {
   min-height: 0;
   overflow-y: auto;
   font-size: 13px;
+  font-weight: 600;
   line-height: 1.5;
   color: var(--muted);
   padding-right: 2px;

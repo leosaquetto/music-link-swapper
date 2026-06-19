@@ -53,7 +53,7 @@
         </div>
 
           <div class="hero-left">
-            <img class="app-logo" src="https://i.imgur.com/T1uEx9T.gif?v=20260411" alt="logo do app" />
+            <img class="app-logo" src="./assets/logo_gif.gif" alt="logo do app" />
             <div class="hero-copy">
               <h1 id="heroTitle">music link<br />swapper</h1>
               <p id="heroByline" class="hero-byline">por leo saquetto</p>
@@ -123,6 +123,16 @@
         <div id="resultBackdrop" class="result-backdrop hidden" aria-hidden="true"></div>
 
         <section id="resultCard" class="card result-card hidden reveal reveal-delay-2">
+          <button
+            id="resultSheetHandle"
+            class="result-sheet-handle"
+            type="button"
+            aria-label="puxar para fechar o card"
+            title="puxar para fechar"
+          >
+            <span aria-hidden="true"></span>
+          </button>
+
           <div class="result-header">
             <div id="coverWrap" class="cover-wrap hidden">
               <div id="coverShimmer" class="cover-shimmer hidden" aria-hidden="true"></div>
@@ -146,39 +156,20 @@
                     aria-label="limpar resultado"
                     title="limpar resultado"
                   ></button>
-
-                  <button
-                    id="copyOriginalButton"
-                    class="mini-head-action hidden"
-                    type="button"
-                    aria-label="copiar original"
-                    title="copiar original"
-                  ></button>
-
-                  <button
-                    id="copyPrimaryButton"
-                    class="mini-head-action hidden"
-                    type="button"
-                    aria-label="copiar principais"
-                    title="copiar principais"
-                  ></button>
-
-                  <button
-                    id="sharePrimaryButton"
-                    class="mini-head-action hidden"
-                    type="button"
-                    aria-label="compartilhar principais"
-                    title="compartilhar principais"
-                  ></button>
                 </div>
               </div>
             </div>
           </div>
 
           <section id="publicCardBar" class="public-card-bar hidden" aria-live="polite">
-            <div class="public-card-copy">
-              <p id="publicCardLabel" class="public-card-label">card público</p>
-              <p id="publicCardHint" class="public-card-hint">link compartilhável deste resultado</p>
+            <div class="public-card-main">
+              <div id="publicCardIcon" class="public-card-icon" aria-hidden="true">
+                <span class="button-icon"></span>
+              </div>
+              <div class="public-card-copy">
+                <p id="publicCardLabel" class="public-card-label">card público</p>
+                <p id="publicCardHint" class="public-card-hint">link compartilhável deste resultado</p>
+              </div>
             </div>
             <div class="public-card-actions">
               <button id="publicTrackCopyButton" class="mini-action copy" type="button" aria-label="copiar card público" title="copiar card público">
@@ -196,6 +187,10 @@
           <div id="platformGroups" class="platform-groups"></div>
           <section id="correctionCard" class="correction-card hidden" aria-live="polite"></section>
           <div id="resultLegend" class="result-legend hidden" aria-live="polite"></div>
+          <div class="result-brand-signature" aria-hidden="true">
+            <img class="result-brand-logo" src="./assets/logo_gif.gif" alt="" />
+            <span class="result-brand-title">music link swapper</span>
+          </div>
         </section>
       </main>
 
