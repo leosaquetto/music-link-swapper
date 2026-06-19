@@ -12,6 +12,7 @@ import {
   decorateResultForResponse,
   filterDisplayLinks,
   getMissingPlatforms,
+  isAutomaticPlatform,
   normalizePlatformKey as normalizeContractPlatformKey,
   withYoutubePlatformPairs
 } from "./lib/music-contract.js";
@@ -22,7 +23,7 @@ import {
 } from "./lib/statslc-bridge.js";
 import {
   isYoutubeDataMatchingConfigured,
-  searchYoutubeVideoForTrack
+  searchYoutubeVideoForTrackWithDiagnostics
 } from "./lib/youtube-data.js";
 
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
@@ -1713,7 +1714,12 @@ async function enrichWithSpotifyFallback(data) {
   if (!spotifyEntry) return { ...data, links };
 
   try {
-    const spotifyMeta = await fetchSpotifyMetadata(spotifyEntry.url);
+    let spotifyMeta = {};
+    try {
+      spotifyMeta = await fetchSpotifyMetadata(spotifyEntry.url);
+    } catch (_error) {
+      spotifyMeta = {};
+    }
     const spotifyQuery = buildSpotifyQueryFromMetadata(spotifyMeta);
     const shouldUseSpotifyText =
       !data?.description || isNoisyMetadataText(String(data.description || "").toLowerCase());
@@ -1737,25 +1743,51 @@ async function enrichWithSpotifyFallback(data) {
       nextImage = spotifyMeta.image;
     }
 
+    const fallbackAppleTitle =
+      spotifyQuery.title ||
+      (!isNoisyMetadataText(String(nextTitle || "").toLowerCase()) && !isLikelyNonTrackTitle(nextTitle)
+        ? String(nextTitle || "").trim()
+        : "");
+    const fallbackAppleArtist = spotifyQuery.artist || extractArtistFromPayload({ ...data, description: nextDescription });
+    const appleQuery = {
+      title: fallbackAppleTitle,
+      artist: fallbackAppleArtist,
+      query: [fallbackAppleTitle, fallbackAppleArtist].filter(Boolean).join(" ").trim()
+    };
+
     const hasWeakAppleMusicLinkIndex = links.findIndex(item => {
-      const type = String(item?.type || "").toLowerCase();
-      if (type !== "applemusic" && type !== "itunes") return false;
+      const type = normalizeContractPlatformKey(item?.type || "");
+      if (type !== "appleMusic") return false;
       const url = String(item?.url || "");
       return /\/artist\//.test(url) || url.includes("geo.music.apple.com");
     });
+    const hasDirectAppleMusicLink = links.some(item => {
+      const type = normalizeContractPlatformKey(item?.type || "");
+      if (type !== "appleMusic") return false;
+      const url = String(item?.url || "");
+      if (!url || isSearchLikeUrl(url, "appleMusic")) return false;
+      return !/\/artist\//.test(url) && !url.includes("geo.music.apple.com");
+    });
 
-    const queryForApple = spotifyQuery.query || [spotifyQuery.title, spotifyQuery.artist].filter(Boolean).join(" ");
+    const queryForApple = spotifyQuery.query || appleQuery.query;
+    const hasReliableAppleQuery = Boolean(appleQuery.title && appleQuery.artist);
     let appleMusicFallbackMetadata = null;
-    if (queryForApple && hasWeakAppleMusicLinkIndex !== -1) {
-      const appleMusicResult = await fetchAppleMusicLinkFromItunes(queryForApple, spotifyQuery);
+    if (queryForApple && hasReliableAppleQuery && (!hasDirectAppleMusicLink || hasWeakAppleMusicLinkIndex !== -1)) {
+      const appleMusicResult = await fetchAppleMusicLinkFromItunes(queryForApple, appleQuery);
       appleMusicFallbackMetadata = appleMusicResult;
-      if (appleMusicResult?.url) {
-        links[hasWeakAppleMusicLinkIndex] = {
-          ...links[hasWeakAppleMusicLinkIndex],
+      if (appleMusicResult?.url && appleMusicResult.isVerified) {
+        const appleMusicLink = {
+          ...(hasWeakAppleMusicLinkIndex !== -1 ? links[hasWeakAppleMusicLinkIndex] : {}),
           type: "appleMusic",
           url: canonicalizeMediaUrl(appleMusicResult.url),
-          isVerified: Boolean(appleMusicResult.isVerified)
+          isVerified: true,
+          source: "itunes"
         };
+        if (hasWeakAppleMusicLinkIndex !== -1) {
+          links[hasWeakAppleMusicLinkIndex] = appleMusicLink;
+        } else {
+          links.push(appleMusicLink);
+        }
       }
     }
 
@@ -2034,18 +2066,19 @@ async function enrichWithYoutubeDataMatch(data) {
   const startedAt = Date.now();
   const trackKey = buildCanonicalTrackKey({ title, artist });
   try {
-    const match = await searchYoutubeVideoForTrack(query, {
+    const youtubeResult = await searchYoutubeVideoForTrackWithDiagnostics(query, {
       title,
       artist,
       durationMs: Number(next.durationMs || next.duration || 0) || 0
     });
+    const match = youtubeResult?.match || null;
 
     await recordProviderAttempt({
       trackKey,
       provider: "youtube_api",
       status: match?.videoId ? "hit" : "miss",
       latencyMs: Date.now() - startedAt,
-      message: match?.url || "no_match"
+      message: formatYoutubeProviderMessage(match, youtubeResult?.diagnostics)
     });
 
     if (!match?.videoId) return { ...next, links };
@@ -2070,6 +2103,15 @@ async function enrichWithYoutubeDataMatch(data) {
     });
     return { ...next, links };
   }
+}
+
+function formatYoutubeProviderMessage(match, diagnostics = {}) {
+  const pass = match?.pass || diagnostics?.lastPass || "strict";
+  const passDiagnostics = diagnostics?.[pass] || {};
+  const candidateCount = Number(passDiagnostics.candidateCount || match?.candidateCount || 0) || 0;
+  const bestScore = Number(passDiagnostics.bestScore || match?.score || 0) || 0;
+  const prefix = match?.url || "no_match";
+  return `${prefix} pass=${pass} candidates=${candidateCount} best=${bestScore}`;
 }
 
 async function fetchDeezerMetadata(url) {
@@ -2465,9 +2507,11 @@ function normalizeSongLinkPayload(data, { markVerified = false } = {}) {
     .map(([platform, payload]) => {
       const url = payload?.url;
       if (!url) return null;
+      const type = normalizeContractPlatformKey(mapSongLinkPlatform(platform));
+      if (!isAutomaticPlatform(type)) return null;
 
       return {
-        type: mapSongLinkPlatform(platform),
+        type,
         url,
         isVerified: markVerified,
         source: "songlink"
@@ -2626,3 +2670,8 @@ function isSearchLikeUrl(url, type = "") {
 
   return /[?&](q|query|search_query|term)=/.test(lower) && lower.includes("search");
 }
+
+export const __testHooks = {
+  enrichWithSpotifyFallback,
+  normalizeSongLinkPayload
+};

@@ -55,6 +55,8 @@ const TRANSLATIONS = {
   "pt-br": {
     loadingSwap: "swapando...",
     loadingSearch: "pesquisando...",
+    loadingFindingLinks: "buscando links...",
+    loadingStillFinding: "ainda buscando...",
     swap: "swap",
     search: "pesquisar",
     linkLabel: "link da música",
@@ -117,6 +119,8 @@ const TRANSLATIONS = {
   en: {
     loadingSwap: "swapping...",
     loadingSearch: "searching...",
+    loadingFindingLinks: "finding links...",
+    loadingStillFinding: "still searching...",
     swap: "swap",
     search: "search",
     linkLabel: "song link",
@@ -179,6 +183,8 @@ const TRANSLATIONS = {
   "es-es": {
     loadingSwap: "convirtiendo...",
     loadingSearch: "buscando...",
+    loadingFindingLinks: "buscando enlaces...",
+    loadingStillFinding: "aún buscando...",
     swap: "swap",
     search: "buscar",
     linkLabel: "enlace de la canción",
@@ -241,6 +247,8 @@ const TRANSLATIONS = {
   "it-it": {
     loadingSwap: "conversione...",
     loadingSearch: "ricerca...",
+    loadingFindingLinks: "ricerca link...",
+    loadingStillFinding: "ancora in ricerca...",
     swap: "swap",
     search: "cerca",
     linkLabel: "link della canzone",
@@ -303,6 +311,8 @@ const TRANSLATIONS = {
   "fr-fr": {
     loadingSwap: "conversion...",
     loadingSearch: "recherche...",
+    loadingFindingLinks: "recherche de liens...",
+    loadingStillFinding: "recherche encore...",
     swap: "swap",
     search: "rechercher",
     linkLabel: "lien de la chanson",
@@ -494,6 +504,8 @@ const state = {
     trackId: "",
     status: "idle"
   },
+  loadingStageTimers: [],
+  loadingStatusLabel: "",
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -2768,12 +2780,49 @@ function showFloatingToast(message, tone = "default") {
 }
 
 function setLoading(loading, label = "") {
+  clearLoadingStageTimers();
   els.convertButton.disabled = loading;
   if (loading) {
-    els.convertButton.textContent = label || (state.isSearchMode ? t("loadingSearch") : t("loadingSwap"));
+    els.convertButton.classList.add("is-loading");
+    els.convertButton.setAttribute("aria-busy", "true");
+    els.convertButton.setAttribute("aria-live", "polite");
+    const initialLabel = label || (state.isSearchMode ? t("loadingSearch") : t("loadingSwap"));
+    renderLoadingButton(initialLabel);
+    if (!label) {
+      state.loadingStageTimers.push(
+        window.setTimeout(() => renderLoadingButton(t("loadingFindingLinks")), 2500),
+        window.setTimeout(() => renderLoadingButton(t("loadingStillFinding")), 7500)
+      );
+    }
     return;
   }
+  state.loadingStatusLabel = "";
+  els.convertButton.classList.remove("is-loading");
+  els.convertButton.removeAttribute("aria-busy");
+  els.convertButton.removeAttribute("aria-live");
+  els.convertButton.removeAttribute("aria-label");
   updateConvertButtonLabel();
+}
+
+function clearLoadingStageTimers() {
+  for (const timer of state.loadingStageTimers) {
+    window.clearTimeout(timer);
+  }
+  state.loadingStageTimers = [];
+}
+
+function renderLoadingButton(label) {
+  const nextLabel = cleanText(label);
+  state.loadingStatusLabel = nextLabel;
+  els.convertButton.setAttribute("aria-label", nextLabel);
+  els.convertButton.innerHTML = `
+    <span class="loading-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="loading-label">${escapeHtml(nextLabel)}</span>
+  `;
+  if (els.statusCard && !els.statusCard.classList.contains("hidden")) {
+    const tone = els.statusCard.classList.contains("is-error") ? "error" : "default";
+    if (tone !== "error") showStatus(nextLabel, "default");
+  }
 }
 
 function updateConvertButtonLabel() {

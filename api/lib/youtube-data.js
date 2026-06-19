@@ -9,7 +9,9 @@ const YOUTUBE_SEARCH_API_URL = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_API_URL = "https://www.googleapis.com/youtube/v3/videos";
 const REQUEST_TIMEOUT_MS = 10_000;
 const MUSIC_CATEGORY_ID = "10";
-const MIN_ACCEPTED_SCORE = 72;
+const STRICT_MIN_ACCEPTED_SCORE = 72;
+const BROAD_MIN_ACCEPTED_SCORE = 84;
+const BROAD_MAX_DURATION_DIFF_MS = 12_000;
 
 export function isYoutubeDataMatchingConfigured() {
   return (
@@ -19,18 +21,72 @@ export function isYoutubeDataMatchingConfigured() {
 }
 
 export async function searchYoutubeVideoForTrack(query, target = {}) {
+  const result = await searchYoutubeVideoForTrackWithDiagnostics(query, target);
+  return result?.match || null;
+}
+
+export async function searchYoutubeVideoForTrackWithDiagnostics(query, target = {}) {
   if (!isYoutubeDataMatchingConfigured()) return null;
 
   const apiKey = getYoutubeApiKey();
-  const searchTerm = buildYoutubeSearchTerm(query, target);
-  if (!searchTerm) return null;
+  const diagnostics = {};
+
+  const strict = await runYoutubeSearchPass(apiKey, query, target, {
+    pass: "strict",
+    maxResults: 5,
+    includeMusicCategory: true,
+    includeOfficialAudioSuffix: true,
+    minAcceptedScore: STRICT_MIN_ACCEPTED_SCORE
+  });
+  diagnostics.strict = strict.diagnostics;
+  diagnostics.lastPass = "strict";
+  if (strict.match) {
+    return { match: strict.match, diagnostics };
+  }
+
+  const broad = await runYoutubeSearchPass(apiKey, query, target, {
+    pass: "broad",
+    maxResults: 10,
+    includeMusicCategory: false,
+    includeOfficialAudioSuffix: false,
+    minAcceptedScore: BROAD_MIN_ACCEPTED_SCORE,
+    maxDurationDiffMs: BROAD_MAX_DURATION_DIFF_MS
+  });
+  diagnostics.broad = broad.diagnostics;
+  diagnostics.lastPass = "broad";
+
+  return {
+    match: broad.match,
+    diagnostics
+  };
+}
+
+function getYoutubeApiKey() {
+  return String(process.env.YOUTUBE_API_KEY || "").trim();
+}
+
+async function runYoutubeSearchPass(apiKey, query, target, options) {
+  const searchTerm = buildYoutubeSearchTerm(query, target, options);
+  if (!searchTerm) {
+    return {
+      match: null,
+      diagnostics: {
+        pass: options.pass,
+        searchTerm: "",
+        candidateCount: 0,
+        bestScore: 0
+      }
+    };
+  }
 
   const searchUrl = new URL(YOUTUBE_SEARCH_API_URL);
   searchUrl.searchParams.set("key", apiKey);
   searchUrl.searchParams.set("part", "snippet");
   searchUrl.searchParams.set("type", "video");
-  searchUrl.searchParams.set("maxResults", "5");
-  searchUrl.searchParams.set("videoCategoryId", MUSIC_CATEGORY_ID);
+  searchUrl.searchParams.set("maxResults", String(options.maxResults));
+  if (options.includeMusicCategory) {
+    searchUrl.searchParams.set("videoCategoryId", MUSIC_CATEGORY_ID);
+  }
   searchUrl.searchParams.set("q", searchTerm);
 
   const searchResponse = await fetchWithTimeout(searchUrl.toString());
@@ -43,9 +99,19 @@ export async function searchYoutubeVideoForTrack(query, target = {}) {
   const videoIds = searchItems
     .map(item => item?.id?.videoId)
     .filter(Boolean)
-    .slice(0, 5);
+    .slice(0, options.maxResults);
 
-  if (!videoIds.length) return null;
+  if (!videoIds.length) {
+    return {
+      match: null,
+      diagnostics: {
+        pass: options.pass,
+        searchTerm,
+        candidateCount: 0,
+        bestScore: 0
+      }
+    };
+  }
 
   const details = await fetchYoutubeVideoDetails(videoIds, apiKey);
   const detailById = new Map(details.map(item => [item.id, item]));
@@ -58,28 +124,51 @@ export async function searchYoutubeVideoForTrack(query, target = {}) {
     }))
     .sort((left, right) => right.score - left.score);
 
-  const best = scored[0];
-  if (!best || best.score < MIN_ACCEPTED_SCORE) return null;
+  const best = scored[0] || null;
+  const accepted = scored.find(candidate => (
+    candidate.score >= options.minAcceptedScore &&
+    isDurationAcceptableForPass(target, candidate, options)
+  ));
 
   return {
+    match: accepted ? buildYoutubeMatch(accepted, options.pass) : null,
+    diagnostics: {
+      pass: options.pass,
+      searchTerm,
+      candidateCount: scored.length,
+      bestScore: best?.score || 0
+    }
+  };
+}
+
+function buildYoutubeMatch(candidate, pass) {
+  return {
     type: "youtube",
-    videoId: best.videoId,
-    url: `https://www.youtube.com/watch?v=${best.videoId}`,
-    isVerified: best.score >= 84,
+    videoId: candidate.videoId,
+    url: `https://www.youtube.com/watch?v=${candidate.videoId}`,
+    isVerified: candidate.score >= 84,
     source: "youtube_api",
-    title: best.title,
-    channelTitle: best.channelTitle,
-    durationMs: best.durationMs,
-    score: best.score,
-    links: buildYoutubePlatformLinks(best.videoId, {
+    title: candidate.title,
+    channelTitle: candidate.channelTitle,
+    durationMs: candidate.durationMs,
+    score: candidate.score,
+    pass,
+    links: buildYoutubePlatformLinks(candidate.videoId, {
       source: "youtube_api",
-      isVerified: best.score >= 84
+      isVerified: candidate.score >= 84
     })
   };
 }
 
-function getYoutubeApiKey() {
-  return String(process.env.YOUTUBE_API_KEY || "").trim();
+function isDurationAcceptableForPass(target, candidate, options) {
+  const maxDiff = Number(options?.maxDurationDiffMs || 0) || 0;
+  if (!maxDiff) return true;
+
+  const targetDurationMs = Number(target?.durationMs || target?.duration || 0) || 0;
+  const candidateDurationMs = Number(candidate?.durationMs || 0) || 0;
+  if (!targetDurationMs || !candidateDurationMs) return true;
+
+  return Math.abs(targetDurationMs - candidateDurationMs) <= maxDiff;
 }
 
 export function scoreYoutubeCandidate(target, candidate) {
@@ -140,13 +229,13 @@ export function scoreYoutubeCandidate(target, candidate) {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-function buildYoutubeSearchTerm(query, target) {
+function buildYoutubeSearchTerm(query, target, options = {}) {
   const title = String(target?.title || "").trim();
   const artist = String(target?.artist || target?.description || "").trim();
   const fallback = String(query || "").trim();
   const base = [artist, title].filter(Boolean).join(" ").trim() || fallback;
   if (!base) return "";
-  return `${base} official audio`;
+  return options.includeOfficialAudioSuffix ? `${base} official audio` : base;
 }
 
 async function fetchYoutubeVideoDetails(videoIds, apiKey) {
