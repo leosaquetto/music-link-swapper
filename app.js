@@ -2433,11 +2433,41 @@ async function validatePublicTrackAvailability(trackId) {
   setPublicTrackActionsBusy(false);
 
   if (refreshed) {
-    state.currentResult = {
-      ...state.currentResult,
-      ...refreshed
-    };
+    state.currentResult = mergeCurrentResultWithPublicRefresh(state.currentResult, refreshed);
   }
+}
+
+function mergeCurrentResultWithPublicRefresh(current, refreshed) {
+  if (!current) return refreshed;
+  if (!refreshed) return current;
+
+  const linksByKey = new Map();
+  for (const link of Array.isArray(current.links) ? current.links : []) {
+    if (link?.key) linksByKey.set(link.key, link);
+  }
+  for (const link of Array.isArray(refreshed.links) ? refreshed.links : []) {
+    if (link?.key && !linksByKey.has(link.key)) linksByKey.set(link.key, link);
+  }
+
+  const links = sortNormalizedLinks(Array.from(linksByKey.values()));
+  const missingPlatforms = normalizeMissingPlatforms([
+    ...(Array.isArray(refreshed.missingPlatforms) ? refreshed.missingPlatforms : []),
+    ...(Array.isArray(current.missingPlatforms) ? current.missingPlatforms : [])
+  ], links);
+
+  return {
+    ...current,
+    trackId: current.trackId || refreshed.trackId || "",
+    cacheStatus: current.cacheStatus || refreshed.cacheStatus || "",
+    title: current.title || refreshed.title || "",
+    artist: current.artist || refreshed.artist || "",
+    album: current.album || refreshed.album || "",
+    image: current.image || refreshed.image || null,
+    universalLink: current.universalLink || refreshed.universalLink || null,
+    originalUrl: current.originalUrl || refreshed.originalUrl || "",
+    links,
+    missingPlatforms
+  };
 }
 
 function setPublicTrackActionsBusy(busy) {
@@ -2958,14 +2988,16 @@ function normalizeLinks(links, sourceLink = "", _searchQuery = "") {
     });
   }
 
-  normalized.sort((a, b) => {
+  return sortNormalizedLinks(normalized);
+}
+
+function sortNormalizedLinks(links) {
+  return [...(Array.isArray(links) ? links : [])].sort((a, b) => {
     if (a.order !== b.order) return a.order - b.order;
     if (a.isVerified && !b.isVerified) return -1;
     if (!a.isVerified && b.isVerified) return 1;
     return a.name.localeCompare(b.name);
   });
-
-  return normalized;
 }
 
 function isSearchUrlForPlatform(type, url) {
