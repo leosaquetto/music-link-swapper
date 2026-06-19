@@ -4,7 +4,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 
 ## Product contract
 
-- The automatic promise is only Spotify, Apple Music, Deezer, YouTube, and YouTube Music.
+- The automatic promise is only Spotify, Apple Music, Deezer, TIDAL, YouTube, and YouTube Music.
 - Result cards must render only direct, openable links.
 - Never show generated search URLs as result links.
 - Never render missing platforms as failed rows.
@@ -26,6 +26,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Preserve the Spotify Web matching kill switch: `SPOTIFY_WEB_MATCHING_ENABLED=false`.
 - Preserve the YouTube matching kill switch: `YOUTUBE_MATCHING_ENABLED=false`.
 - Preserve the Deezer matching/search kill switch: `DEEZER_MATCHING_ENABLED=false`.
+- Preserve the TIDAL matching/search kill switch: `TIDAL_MATCHING_ENABLED=false`.
 - Preserve the stats-lc bridge kill switch: `STATSLC_BRIDGE_ENABLED=false`.
 
 ## Known regression patterns
@@ -35,6 +36,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Do not treat generic metadata such as `musica encontrada`, `track found`, or `resultado por busca` as reliable title/artist truth.
 - Do not build canonical keys from stale generic cache metadata when the input platform can provide cleaner metadata.
 - Do not expose Deezer search URLs as result links; only direct `deezer.com/track/{id}` links are valid.
+- Do not expose TIDAL search, album, artist, video, or playlist URLs as result links; only direct `tidal.com/browse/track/{id}` or `tidal.com/track/{id}` links are valid.
 - Do not remove YouTube/YouTube Music pairing when a trusted video ID exists.
 - Do not add UI rows for `notAvailable`, "nao localizado", or search fallback links.
 - Do not broaden Apple/iTunes matching so much that a different artist can win just because the title is similar.
@@ -65,7 +67,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 ## Security rules for agents
 
 - Never print or commit raw secrets from `.env.local`.
-- Do not expose `YOUTUBE_API_KEY`, `DATABASE_URL`, `STATSLC_BRIDGE_TOKEN`, or `MANUAL_LINK_TOKEN` in frontend code.
+- Do not expose `YOUTUBE_API_KEY`, `TIDAL_CLIENT_SECRET`, `DATABASE_URL`, `STATSLC_BRIDGE_TOKEN`, or `MANUAL_LINK_TOKEN` in frontend code.
 - Do not add unauthenticated write endpoints without a pending/review state or a trusted token path.
 - Keep manual corrections hidden unless confidence is high or a trusted token is supplied.
 - If adding expensive provider calls, document the quota impact in `docs/security.md` and keep a kill switch.

@@ -81,7 +81,7 @@ A superficie inicial atual inclui:
 
 - splash claro/escuro com `assets/logo.svg`;
 - subtitulo `crossover entre plataformas`;
-- icones das cinco plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
+- icones das seis plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
 - fundo com orbs rosa e verde animados somente no eixo horizontal;
 - marca `LEO SAQUETTO` no rodape com o simbolo oficial do repositorio `leosaquettoapp`.
 
@@ -138,6 +138,10 @@ Resposta de erro esperada:
 
 `GET /api/deezer/search?q=<texto>&limit=<1-20>&index=<0+>` pesquisa tracks no catalogo publico da Deezer e retorna candidatos normalizados. O endpoint e somente leitura, respeita `DEEZER_MATCHING_ENABLED=false`, valida consulta/paginacao e nao grava cache.
 
+## API `/api/tidal/search`
+
+`GET /api/tidal/search?q=<texto>&limit=<1-20>&cursor=<opcional>` pesquisa tracks no catalogo TIDAL via Web API e retorna candidatos normalizados. O endpoint e somente leitura, respeita `TIDAL_MATCHING_ENABLED=false`, exige `TIDAL_CLIENT_ID`/`TIDAL_CLIENT_SECRET`, usa `TIDAL_COUNTRY_CODE` com padrao `BR`, valida consulta/paginacao e nao grava cache.
+
 Regras e limites observados:
 
 - Metodo diferente de `POST` retorna 405.
@@ -176,10 +180,10 @@ Cada item de plataforma renderizado pelo frontend pode conter:
 - `name`: nome amigavel.
 - `url`: URL direta final.
 - `isVerified`: sinal de link verificado.
-- `source`: origem do link, como `input`, `cache`, `spotify_web`, `itunes`, `deezer_api`, `songlink`, `idhs`, `youtube_api`, `statslc_bridge` ou `manual`.
+- `source`: origem do link, como `input`, `cache`, `spotify_web`, `itunes`, `deezer_api`, `tidal_api`, `songlink`, `idhs`, `youtube_api`, `statslc_bridge` ou `manual`.
 - `icon`: SVG inline escolhido pelo frontend.
 
-As plataformas automaticas sao Spotify, Apple Music, Deezer, YouTube e YouTube Music. Plataformas ausentes nao sao renderizadas como linhas de erro ou links de busca.
+As plataformas automaticas sao Spotify, Apple Music, Deezer, TIDAL, YouTube e YouTube Music. Plataformas ausentes nao sao renderizadas como linhas de erro ou links de busca.
 
 ## Integracoes externas
 
@@ -191,6 +195,7 @@ Integracoes usadas pela API:
 - `https://statslc.leosaquetto.com/api/catalog-link-bridge`: bridge interno stats-lc/stats.fm para enriquecer Spotify e Apple Music.
 - Spotify Web Player partner API: matching Spotify quando habilitado.
 - Deezer Simple API: lookup por track id, busca por track e endpoint interno `/api/deezer/search`, todos sem OAuth nesta etapa.
+- TIDAL Web API: OAuth client credentials server-side, lookup por track id, filtro por ISRC, busca por searchResults e endpoint interno `/api/tidal/search`, sem OAuth de usuario, playback, streaming, preview ou audio armazenado.
 - YouTube Data API: matching opcional para YouTube e YouTube Music quando ainda nao ha link direto confiavel.
 - YouTube oEmbed, noembed e YouTube Data API `videos.list`: fallback de metadados para inputs YouTube/YouTube Music oficiais.
 - `https://itunes.apple.com/search`: busca Apple/iTunes para fallback por query.
@@ -206,6 +211,7 @@ Prioridade especial:
 - Para Spotify, quando as fontes principais falham, a API tenta obter metadados via Spotify, montar query, buscar Apple Music via iTunes e enriquecer via Song.link/IDHS.
 - Para Apple Music/iTunes, a API tenta usar o track id do link de entrada como fonte de verdade para titulo, artista, album e capa.
 - Para Deezer, a API usa `/track/{id}` como fonte de verdade em inputs diretos e `/search/track` para matching por titulo/artista, aceitando somente URLs diretas `deezer.com/track/{id}`.
+- Para TIDAL, a API usa `/tracks/{id}` como fonte de verdade em inputs diretos, `filter[isrc]` antes da busca textual e `/searchResults/{query}/relationships/tracks` para matching, aceitando somente URLs diretas `tidal.com/browse/track/{id}` ou `tidal.com/track/{id}`.
 - YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API ou correcao aceita.
 - Cache parcial pode ser reidratado com metadados confiaveis do input antes de rodar provedores. Isso evita que registros antigos como `musica encontrada` bloqueiem um match 4/4.
 
@@ -223,6 +229,7 @@ Rodada de 2026-06-19:
 - Tratado artista fraco como `resultado por busca` para permitir que Apple/iTunes corrija metadados antes do matching YouTube.
 - Validado em producao que faixas oficiais de YouTube Music, Apple Music e Spotify podem retornar Spotify, Apple Music, YouTube e YouTube Music com links diretos, sem search URLs.
 - Adicionado Deezer como quinta plataforma automatica, incluindo cliente `deezer_api`, endpoint `/api/deezer/search`, validacao de link direto e kill switch `DEEZER_MATCHING_ENABLED=false`.
+- Adicionado TIDAL como sexta plataforma automatica, incluindo cliente `tidal_api`, endpoint `/api/tidal/search`, OAuth client credentials server-side, validacao de link direto e kill switch `TIDAL_MATCHING_ENABLED=false`.
 
 Essas regras sao regressao critica. Antes de alterar matching ou UI de resultados, leia [`docs/agent-rules.md`](./docs/agent-rules.md).
 
@@ -311,7 +318,7 @@ Pontos mapeados:
 - A camada de borda ainda depende principalmente do padrao da Vercel; faltam regras explicitas de WAF/rate limit/headers conforme [`docs/security.md`](./docs/security.md).
 - A API depende fortemente de provedores externos que podem mudar, bloquear scraping, alterar payloads ou sair do ar.
 - A API primaria `idonthavespotify.sjdonado.com` e externa ao repositorio; seu contrato real pode mudar sem controle local.
-- Song.link/Odesli, iTunes, Spotify Web/oEmbed/Open Graph, stats-lc bridge, YouTube Data API e Deezer oEmbed sao pontos externos de falha ou latencia.
+- Song.link/Odesli, iTunes, Spotify Web/oEmbed/Open Graph, stats-lc bridge, YouTube Data API, Deezer API e TIDAL API sao pontos externos de falha ou latencia.
 - Rate limit e caches curtos em memoria nao sobrevivem a cold starts e nao sao compartilhados entre instancias.
 - O cache persistente depende de `DATABASE_URL`; sem ele a conversao funciona, mas a biblioteca compartilhada nao aprende.
 - A lista de exemplos e fixa e focada em links Apple Music.

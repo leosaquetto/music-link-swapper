@@ -2,6 +2,7 @@
 import { performance } from "node:perf_hooks";
 
 import { findBestDeezerTrack } from "../api/lib/deezer.js";
+import { findBestTidalTrack, isTidalConfigured, isTidalMatchingEnabled } from "../api/lib/tidal.js";
 import { searchSpotifyWebTrack } from "../api/lib/spotify-web.js";
 import { searchYoutubeVideoForTrack } from "../api/lib/youtube-data.js";
 
@@ -45,6 +46,7 @@ const providers = [
   ["spotify_web", probeSpotifyWeb],
   ["itunes", probeItunes],
   ["deezer_api", probeDeezerApi],
+  ["tidal_api", probeTidalApi],
   ["songlink", probeSonglink],
   ["idhs", probeIdhs],
   ["youtube_api", probeYoutubeApi]
@@ -114,6 +116,22 @@ async function probeItunes(fixture, query) {
 
 async function probeDeezerApi(fixture, query) {
   const match = await findBestDeezerTrack({
+    query,
+    title: fixture.title,
+    artist: fixture.artist
+  });
+  return {
+    hit: Boolean(match?.url),
+    url: match?.url || "",
+    error: match?.url ? "" : "no_match"
+  };
+}
+
+async function probeTidalApi(fixture, query) {
+  if (!isTidalMatchingEnabled()) return { hit: false, url: "", error: "tidal_matching_disabled" };
+  if (!isTidalConfigured()) return { hit: false, url: "", error: "missing_tidal_credentials" };
+
+  const match = await findBestTidalTrack({
     query,
     title: fixture.title,
     artist: fixture.artist

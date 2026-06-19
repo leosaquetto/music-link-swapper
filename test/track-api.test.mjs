@@ -23,7 +23,7 @@ test("GET /api/track returns a cached public card by trackId", async () => {
     assert.equal(response.body.data.title, "One More Time");
     assert.deepEqual(
       response.body.data.links.map(link => link.type),
-      ["spotify", "appleMusic", "deezer"]
+      ["spotify", "appleMusic", "deezer", "tidal"]
     );
   } finally {
     await __resetMusicLibraryForTests();
@@ -103,7 +103,7 @@ test("GET /api/track excludes pending manual links from public cards", async () 
 
     assert.equal(response.statusCode, 200);
     assert.deepEqual(response.body.data.links.map(link => link.type), ["spotify"]);
-    assert.deepEqual(response.body.data.missingPlatforms, ["appleMusic", "deezer", "youtube", "youtubeMusic"]);
+    assert.deepEqual(response.body.data.missingPlatforms, ["appleMusic", "deezer", "tidal", "youtube", "youtubeMusic"]);
   } finally {
     await __resetMusicLibraryForTests();
   }
@@ -143,6 +143,12 @@ async function seedPublicTrack(overrides = {}) {
         url: "https://www.deezer.com/track/3135553",
         isVerified: true,
         source: "deezer_api"
+      },
+      {
+        type: "tidal",
+        url: "https://tidal.com/browse/track/75413016",
+        isVerified: true,
+        source: "tidal_api"
       }
     ]
   }, { defaultSource: "test" });

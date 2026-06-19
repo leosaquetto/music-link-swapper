@@ -2,9 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import convertHandler, { __testHooks } from "../api/convert.js";
+import { __resetTidalTokenCacheForTests } from "../api/lib/tidal.js";
 
 const SPOTIFY_TRACK_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT";
 process.env.DEEZER_MATCHING_ENABLED = "false";
+process.env.TIDAL_MATCHING_ENABLED = "false";
 
 test("Spotify fallback adds a verified Apple Music match when Apple is missing", async () => {
   await withMockFetch(async input => {
@@ -603,6 +605,163 @@ test("POST /api/convert preserves Deezer input link with Deezer metadata", async
   });
 });
 
+test("TIDAL input context reads track metadata and canonical key from TIDAL API", async () => {
+  const previousTidal = process.env.TIDAL_MATCHING_ENABLED;
+  const previousClientId = process.env.TIDAL_CLIENT_ID;
+  const previousClientSecret = process.env.TIDAL_CLIENT_SECRET;
+  process.env.TIDAL_MATCHING_ENABLED = "true";
+  process.env.TIDAL_CLIENT_ID = "test-client";
+  process.env.TIDAL_CLIENT_SECRET = "test-secret";
+  __resetTidalTokenCacheForTests();
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url === "https://auth.tidal.com/v1/oauth2/token") {
+      return jsonResponse({ access_token: "test-token", expires_in: 3600 });
+    }
+    if (url.startsWith("https://openapi.tidal.com/v2/tracks/75413016")) {
+      return jsonResponse(buildTidalTrackDocument({
+        id: "75413016",
+        title: "One More Time",
+        artist: "Daft Punk",
+        album: "Discovery",
+        isrc: "GBDUW0000053"
+      }));
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const context = await __testHooks.buildInputCacheContext(
+        "https://tidal.com/track/75413016?utm_source=test",
+        "tidal"
+      );
+
+      assert.equal(context.title, "One More Time");
+      assert.equal(context.artist, "Daft Punk");
+      assert.equal(context.album, "Discovery");
+      assert.equal(context.isrc, "GBDUW0000053");
+      assert.equal(context.alias, "https://tidal.com/browse/track/75413016");
+      assert.equal(context.canonicalKey, "isrc:gbduw0000053");
+    } finally {
+      restoreEnv("TIDAL_MATCHING_ENABLED", previousTidal);
+      restoreEnv("TIDAL_CLIENT_ID", previousClientId);
+      restoreEnv("TIDAL_CLIENT_SECRET", previousClientSecret);
+      __resetTidalTokenCacheForTests();
+    }
+  });
+});
+
+test("TIDAL matching adds a verified direct TIDAL track link", async () => {
+  const previousTidal = process.env.TIDAL_MATCHING_ENABLED;
+  const previousClientId = process.env.TIDAL_CLIENT_ID;
+  const previousClientSecret = process.env.TIDAL_CLIENT_SECRET;
+  process.env.TIDAL_MATCHING_ENABLED = "true";
+  process.env.TIDAL_CLIENT_ID = "test-client";
+  process.env.TIDAL_CLIENT_SECRET = "test-secret";
+  __resetTidalTokenCacheForTests();
+
+  await withMockFetch(async input => {
+    const url = new URL(String(input));
+    if (url.href === "https://auth.tidal.com/v1/oauth2/token") {
+      return jsonResponse({ access_token: "test-token", expires_in: 3600 });
+    }
+    if (url.pathname.endsWith("/searchResults/One%20More%20Time%20Daft%20Punk/relationships/tracks")) {
+      return jsonResponse({ data: [{ type: "tracks", id: "75413016" }], included: [] });
+    }
+    if (url.pathname.endsWith("/tracks/75413016")) {
+      return jsonResponse(buildTidalTrackDocument({
+        id: "75413016",
+        title: "One More Time",
+        artist: "Daft Punk",
+        album: "Discovery",
+        isrc: "GBDUW0000053"
+      }));
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const result = await __testHooks.enrichWithTidalMatch({
+        title: "One More Time",
+        description: "Daft Punk",
+        links: [
+          {
+            type: "spotify",
+            url: "https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV",
+            isVerified: true,
+            source: "input"
+          }
+        ]
+      });
+
+      const tidal = result.links.find(link => link.type === "tidal");
+      assert.ok(tidal);
+      assert.equal(tidal.url, "https://tidal.com/browse/track/75413016");
+      assert.equal(tidal.source, "tidal_api");
+      assert.equal(tidal.isVerified, true);
+    } finally {
+      restoreEnv("TIDAL_MATCHING_ENABLED", previousTidal);
+      restoreEnv("TIDAL_CLIENT_ID", previousClientId);
+      restoreEnv("TIDAL_CLIENT_SECRET", previousClientSecret);
+      __resetTidalTokenCacheForTests();
+    }
+  });
+});
+
+test("POST /api/convert preserves TIDAL input link with TIDAL metadata", async () => {
+  const previousTidal = process.env.TIDAL_MATCHING_ENABLED;
+  const previousClientId = process.env.TIDAL_CLIENT_ID;
+  const previousClientSecret = process.env.TIDAL_CLIENT_SECRET;
+  process.env.TIDAL_MATCHING_ENABLED = "true";
+  process.env.TIDAL_CLIENT_ID = "test-client";
+  process.env.TIDAL_CLIENT_SECRET = "test-secret";
+  __resetTidalTokenCacheForTests();
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url === "https://auth.tidal.com/v1/oauth2/token") {
+      return jsonResponse({ access_token: "test-token", expires_in: 3600 });
+    }
+    if (url.startsWith("https://openapi.tidal.com/v2/tracks/75413016")) {
+      return jsonResponse(buildTidalTrackDocument({
+        id: "75413016",
+        title: "One More Time",
+        artist: "Daft Punk",
+        album: "Discovery",
+        isrc: "GBDUW0000053"
+      }));
+    }
+    if (url === "https://idonthavespotify.sjdonado.com/api/search?v=1") {
+      return textResponse(JSON.stringify({ error: "upstream unavailable" }), { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://api.song.link/v1-alpha.1/links")) {
+      return jsonResponse({ error: "songlink unavailable" }, { ok: false, status: 502 });
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const response = await callConvertApi({
+        body: {
+          link: "https://tidal.com/track/75413016?utm_source=test",
+          adapters: ["tidal"]
+        }
+      });
+
+      assert.equal(response.statusCode, 200);
+      assert.equal(response.body.ok, true);
+      assert.equal(response.body.data.title, "One More Time");
+      assert.equal(response.body.data.description, "Daft Punk");
+      assert.equal(response.body.data.links[0].type, "tidal");
+      assert.equal(response.body.data.links[0].url, "https://tidal.com/browse/track/75413016");
+      assert.equal(response.body.data.links[0].source, "input");
+    } finally {
+      restoreEnv("TIDAL_MATCHING_ENABLED", previousTidal);
+      restoreEnv("TIDAL_CLIENT_ID", previousClientId);
+      restoreEnv("TIDAL_CLIENT_SECRET", previousClientSecret);
+      __resetTidalTokenCacheForTests();
+    }
+  });
+});
+
 test("Songlink normalization excludes non-automatic platforms", () => {
   const normalized = __testHooks.normalizeSongLinkPayload({
     entityUniqueId: "song::123",
@@ -621,13 +780,13 @@ test("Songlink normalization excludes non-automatic platforms", () => {
       youtubeMusic: { url: "https://music.youtube.com/watch?v=FGBhQbmPwH8" },
       amazonMusic: { url: "https://music.amazon.com/albums/example" },
       pandora: { url: "https://www.pandora.com/song/example" },
-      tidal: { url: "https://tidal.com/browse/track/example" }
+      tidal: { url: "https://tidal.com/browse/track/75413016" }
     }
   }, { markVerified: true });
 
   assert.deepEqual(
     normalized.links.map(link => link.type).sort(),
-    ["appleMusic", "deezer", "spotify", "youtube", "youtubeMusic"].sort()
+    ["appleMusic", "deezer", "spotify", "tidal", "youtube", "youtubeMusic"].sort()
   );
 });
 
@@ -734,5 +893,53 @@ function buildDeezerTrack({
       title: album,
       cover_medium: "https://e-cdns-images.dzcdn.net/images/cover/test/250x250-000000-80-0-0.jpg"
     }
+  };
+}
+
+function buildTidalTrackDocument({
+  id,
+  title,
+  artist,
+  album,
+  duration = "PT5M20S",
+  isrc = "",
+  explicit = false,
+  popularity = 0.9
+}) {
+  return {
+    data: {
+      id: String(id),
+      type: "tracks",
+      attributes: {
+        title,
+        duration,
+        explicit,
+        isrc,
+        popularity
+      },
+      relationships: {
+        artists: { data: [{ type: "artists", id: "artist-1" }] },
+        albums: { data: [{ type: "albums", id: "album-1" }] }
+      }
+    },
+    included: [
+      {
+        id: "artist-1",
+        type: "artists",
+        attributes: {
+          name: artist,
+          popularity: 0.9
+        }
+      },
+      {
+        id: "album-1",
+        type: "albums",
+        attributes: {
+          title: album,
+          popularity: 0.9
+        }
+      }
+    ],
+    links: {}
   };
 }

@@ -2,9 +2,9 @@
 import { existsSync, readFileSync } from "node:fs";
 
 const ENV_FILES = [".env.local", ".env"];
-const OPTIONAL_KEYS = ["MANUAL_LINK_TOKEN", "STATSLC_BRIDGE_TOKEN", "YOUTUBE_API_KEY"];
+const OPTIONAL_KEYS = ["MANUAL_LINK_TOKEN", "STATSLC_BRIDGE_TOKEN", "TIDAL_CLIENT_ID", "TIDAL_CLIENT_SECRET", "YOUTUBE_API_KEY"];
 const OPTIONAL_URL_KEYS = ["STATSLC_BRIDGE_URL"];
-const BOOLEAN_KEYS = ["SPOTIFY_WEB_MATCHING_ENABLED", "STATSLC_BRIDGE_ENABLED", "YOUTUBE_MATCHING_ENABLED"];
+const BOOLEAN_KEYS = ["SPOTIFY_WEB_MATCHING_ENABLED", "STATSLC_BRIDGE_ENABLED", "TIDAL_MATCHING_ENABLED", "YOUTUBE_MATCHING_ENABLED"];
 
 const fileEnv = loadEnvFiles(ENV_FILES);
 const env = {
@@ -29,6 +29,7 @@ for (const key of OPTIONAL_KEYS) {
 for (const key of OPTIONAL_URL_KEYS) {
   validateOptionalUrl(key, env[key], { issues });
 }
+validateCountryCode("TIDAL_COUNTRY_CODE", env.TIDAL_COUNTRY_CODE, { issues });
 
 if (issues.length) {
   console.error(["Environment check failed:", ...issues.map(item => `- ${item}`)].join("\n"));
@@ -94,6 +95,14 @@ function validateOptionalUrl(key, value, { issues }) {
     new URL(raw);
   } catch (_error) {
     issues.push(`${key} must be a valid URL when set.`);
+  }
+}
+
+function validateCountryCode(key, value, { issues }) {
+  const raw = String(value || "").trim();
+  if (!raw) return;
+  if (!/^[A-Za-z]{2}$/.test(raw)) {
+    issues.push(`${key} must be an ISO 3166-1 alpha-2 country code when set.`);
   }
 }
 
