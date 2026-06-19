@@ -1,6 +1,6 @@
 # Music Link Swapper - especificacao do estado atual
 
-Documento de mapeamento do projeto como ele esta hoje. Ele descreve a superficie existente, as integracoes e os pontos frageis observados no codigo atual. As regras atuais de matching, cache persistente e provedores ficam em [`docs/link-matching.md`](./docs/link-matching.md); variaveis de ambiente ficam em [`docs/environment.md`](./docs/environment.md).
+Documento de mapeamento do projeto como ele esta hoje. Ele descreve a superficie existente, as integracoes e os pontos frageis observados no codigo atual. As regras atuais de matching, cache persistente e provedores ficam em [`docs/link-matching.md`](./docs/link-matching.md); variaveis de ambiente ficam em [`docs/environment.md`](./docs/environment.md); seguranca e abuso ficam em [`docs/security.md`](./docs/security.md); cuidados para agentes ficam em [`docs/agent-rules.md`](./docs/agent-rules.md).
 
 ## Visao geral
 
@@ -20,6 +20,10 @@ O repositorio possui `package.json` com scripts de validacao e testes. A pasta `
 - `api/lib/music-contract.js`: contrato de links diretos, plataformas automaticas e campos de resposta.
 - `api/lib/statslc-bridge.js`: cliente do bridge interno stats-lc/stats.fm para Spotify e Apple Music.
 - `api/lib/youtube-data.js`: matching opcional por YouTube Data API.
+- `docs/link-matching.md`: contrato Tapelink-style, ordem de providers, cache e checklist de regressao.
+- `docs/environment.md`: setup local/producao e variaveis de ambiente.
+- `docs/security.md`: plano de seguranca, abuso, WAF, rate limit de borda, headers e resposta a incidente.
+- `docs/agent-rules.md`: regras para futuros agentes preservarem matching, UI, cache e seguranca.
 - `manifest.json`: manifesto PWA com nome, icones, display standalone, protocol handler `web+swapper` e launch handler.
 - `telegram.js`: helper para Telegram WebApp, mas nao esta importado por `index.html` no estado atual.
 - `vercel.json`: somente declara o schema da Vercel, sem rotas, rewrites, headers ou configuracoes adicionais.
@@ -137,6 +141,7 @@ Regras e limites observados:
 - Cache persistente opcional em Postgres/Neon/PGlite para `tracks`, `track_links`, `track_aliases` e `provider_attempts`.
 - Rate limits e caches curtos em memoria continuam volateis por instancia serverless.
 - `data.links` deve conter somente links diretos e abríveis. URLs de busca geradas nao sao links de resultado validos.
+- Para protecoes adicionais de borda, WAF, headers e resposta a abuso, consultar [`docs/security.md`](./docs/security.md).
 
 ## Modelo de dados esperado pelo frontend
 
@@ -174,6 +179,7 @@ Integracoes usadas pela API:
 - `https://statslc.leosaquetto.com/api/catalog-link-bridge`: bridge interno stats-lc/stats.fm para enriquecer Spotify e Apple Music.
 - Spotify Web Player partner API: matching Spotify quando habilitado.
 - YouTube Data API: matching opcional para YouTube e YouTube Music quando ainda nao ha link direto confiavel.
+- YouTube oEmbed, noembed e YouTube Data API `videos.list`: fallback de metadados para inputs YouTube/YouTube Music oficiais.
 - `https://itunes.apple.com/search`: busca Apple/iTunes para fallback por query.
 - `https://itunes.apple.com/lookup`: lookup por track id quando o link de entrada e Apple Music/iTunes.
 - `https://open.spotify.com/oembed`: fallback de metadados Spotify.
@@ -188,8 +194,23 @@ Prioridade especial:
 - Para Spotify, quando as fontes principais falham, a API tenta obter metadados via Spotify, montar query, buscar Apple Music via iTunes e enriquecer via Song.link/IDHS.
 - Para Apple Music/iTunes, a API tenta usar o track id do link de entrada como fonte de verdade para titulo, artista, album e capa.
 - YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API ou correcao aceita.
+- Cache parcial pode ser reidratado com metadados confiaveis do input antes de rodar provedores. Isso evita que registros antigos como `musica encontrada` bloqueiem um match 4/4.
 
 O resultado nao exibe mais assinatura visual de provedores externos. Dependencias como IDHS/Song.link seguem como integracoes internas de matching/enriquecimento, documentadas em [`docs/link-matching.md`](./docs/link-matching.md).
+
+## Hardening recente de matching
+
+Rodada de 2026-06-19:
+
+- Corrigido fluxo em que Spotify encontrado tarde via Spotify Web nao disparava Apple/iTunes no primeiro request.
+- Corrigido upgrade de cache parcial para aplicar contexto limpo de input antes de rodar novos provedores.
+- Corrigida normalizacao de `youtube music` para `youtubeMusic`.
+- Adicionada cadeia de metadados YouTube: YouTube oEmbed, noembed e YouTube Data API `videos.list`.
+- Adicionada busca Apple/iTunes alternativa para titulos live com local/data quando a busca exata e estreita demais.
+- Tratado artista fraco como `resultado por busca` para permitir que Apple/iTunes corrija metadados antes do matching YouTube.
+- Validado em producao que faixas oficiais de YouTube Music, Apple Music e Spotify podem retornar Spotify, Apple Music, YouTube e YouTube Music com links diretos, sem search URLs.
+
+Essas regras sao regressao critica. Antes de alterar matching ou UI de resultados, leia [`docs/agent-rules.md`](./docs/agent-rules.md).
 
 ## UX do resultado e correcao manual
 
@@ -248,6 +269,8 @@ O repositorio esta estruturado para Vercel por usar `api/convert.js` como funcao
 
 Nao ha configuracao explicita de build, headers, redirects, rewrites, regioes ou variaveis de ambiente no arquivo.
 
+Protecoes de borda tambem nao estao declaradas no arquivo. A Vercel fornece DDoS automatico, mas Bot Protection, rate limit de borda, WAF customizado e headers de seguranca devem ser configurados conforme [`docs/security.md`](./docs/security.md).
+
 O workflow `.github/workflows/blank.yml` e o exemplo basico do GitHub Actions, com `echo Hello, world!` e textos placeholder. Ele nao instala dependencias, nao roda lint, nao roda testes e nao valida deploy.
 
 ## Referencia `idonthavespotify`
@@ -269,6 +292,7 @@ Pontos mapeados:
 - `telegram.js` existe, mas `index.html` importa somente `app.js`.
 - `assets/faveicon.png` existe, mas o HTML usa `assets/logo.svg`, `assets/logo.png`, `assets/logo.png` como apple touch icon e imagens remotas.
 - `vercel.json` nao configura nada alem do schema.
+- A camada de borda ainda depende principalmente do padrao da Vercel; faltam regras explicitas de WAF/rate limit/headers conforme [`docs/security.md`](./docs/security.md).
 - A API depende fortemente de provedores externos que podem mudar, bloquear scraping, alterar payloads ou sair do ar.
 - A API primaria `idonthavespotify.sjdonado.com` e externa ao repositorio; seu contrato real pode mudar sem controle local.
 - Song.link/Odesli, iTunes, Spotify Web/oEmbed/Open Graph, stats-lc bridge, YouTube Data API e Deezer oEmbed sao pontos externos de falha ou latencia.
@@ -289,6 +313,8 @@ Antes de corrigir ou evoluir o projeto, validar:
 - Se a API externa IDHS ainda aceita o contrato `{ link, adapters }`.
 - Se o bridge stats-lc responde `401` sem token e `200` com token.
 - Se YouTube Data API ainda retorna candidatos precisos sem gastar quota desnecessaria quando Song.link/Odesli ja resolveu.
+- Se as regras em [`docs/agent-rules.md`](./docs/agent-rules.md) ainda estao sendo respeitadas por mudancas no frontend/backend.
+- Se Bot Protection, rate limit de borda e alertas de quota citados em [`docs/security.md`](./docs/security.md) estao ativos no projeto Vercel.
 - Se o frontend lida bem com erro 400, 429, 500, 502 e 503.
 - Se a experiencia mobile/PWA abre, cola, compartilha e limpa resultado corretamente.
 - Se os icones e a imagem remota do logo carregam em rede real.

@@ -7,21 +7,26 @@ The product follows a Tapelink-style regular link promise for v1:
 - Generated search URLs are never valid display links.
 - Missing platforms are exposed only as `missingPlatforms` for correction prompts, not as failed rows.
 
+Agent-facing rules for preserving this behavior live in [`agent-rules.md`](./agent-rules.md).
+
 ## Provider order
 
 `POST /api/convert` checks cheap and trusted sources before expensive or fragile lookups:
 
 1. Postgres/Neon cache by normalized input URL.
 2. Postgres/Neon cache by canonical track key.
-3. Direct input link preservation when the submitted URL is already a valid platform link.
-4. stats-lc bridge for Spotify and Apple Music enrichment from stats.fm catalog IDs.
-5. Spotify Web Player matching when enabled.
-6. Apple Music/iTunes lookup and search.
-7. Songlink/Odesli enrichment for direct links returned by that provider.
-8. YouTube Data API matching only when still missing YouTube or YouTube Music.
-9. Manual correction, hidden unless a primary platform is missing.
+3. Input metadata context for Spotify, Apple Music, YouTube, and YouTube Music.
+4. Direct input link preservation when the submitted URL is already a valid platform link.
+5. stats-lc bridge for Spotify and Apple Music enrichment from stats.fm catalog IDs.
+6. Spotify Web Player matching when enabled.
+7. Apple Music/iTunes lookup and search.
+8. Songlink/Odesli enrichment for direct links returned by that provider.
+9. YouTube Data API matching only when still missing YouTube or YouTube Music.
+10. Manual correction, hidden unless a primary platform is missing.
 
 Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, or Spotify link, the app can persist that result without spending YouTube API quota. If it returns only unrelated platforms or the same input platform, the app skips those links.
+
+Cache hits that are missing platforms can be upgraded. Before upgrade, the API must apply reliable input metadata so stale partial rows such as `musica encontrada` or `resultado por busca` do not become canonical truth.
 
 ## Persistent library
 
@@ -97,6 +102,36 @@ When one trusted YouTube video ID exists, the app mirrors it across both YouTube
 
 The API key is optional. Set `YOUTUBE_MATCHING_ENABLED=false` to disable the YouTube Data API path instantly.
 
+For YouTube and YouTube Music input metadata, preserve this fallback order:
+
+1. YouTube oEmbed.
+2. noembed.
+3. YouTube Data API `videos.list`, only when the key is configured.
+
+This metadata path is separate from search matching. It exists so official YouTube Music inputs can produce a reliable title/artist before Spotify, Apple Music, and YouTube matching run.
+
+## Recent hardening notes
+
+2026-06-19 matching fixes:
+
+- Spotify found late through Spotify Web now triggers a second Apple/iTunes fallback before the response is persisted.
+- Cache upgrade now applies input context before provider matching and before canonical-key decisions.
+- Platform labels are normalized before comparison, including `youtube music` to `youtubeMusic`.
+- Generic metadata such as `musica encontrada`, `track found`, and `resultado por busca` is treated as weak and can be replaced by trusted input/provider metadata.
+- Apple/iTunes search has an alternate simplified query for live titles with venue/date suffixes.
+- YouTube metadata can fall back from public embed endpoints to YouTube Data API `videos.list`.
+- Production validation covered official YouTube Music, Apple Music, and Spotify examples returning all four automatic platforms with direct URLs.
+
+Known fixtures that should keep working:
+
+- `https://music.youtube.com/watch?v=qHqEcMqqGAA`
+- `https://music.youtube.com/watch?v=mQh-ja7CgqM`
+- `https://music.youtube.com/watch?v=fRF4mD5_xes`
+- `https://music.apple.com/br/album/rel%C3%B3gio/1804102954?i=1804102956`
+- `https://open.spotify.com/track/3ziJR4EpMEzjvdli8YIV6X`
+
+Do not turn these into hardcoded matches. They are regression fixtures for provider behavior, metadata cleaning, and cache-upgrade logic.
+
 ## stats-lc bridge
 
 The swapper can call `stats-lc-api` at `/api/catalog-link-bridge` to enrich Spotify and Apple Music IDs from stats.fm catalog data. Production should set:
@@ -133,7 +168,11 @@ Before deploying matching changes:
 - Run `npm run check:env`.
 - Confirm `POST /api/convert` returns no `/search` URLs.
 - Confirm `data.links` has no `notAvailable` display rows.
+- Confirm `missingPlatforms` is used only for correction prompts, not dead platform rows.
 - Confirm a cached `?track=trk_...` card loads and an unknown id shows the public-card error state.
+- Confirm public-card refresh does not drop fresher links already present in the current result.
 - Confirm pending manual links do not appear in `GET /api/track`.
 - Test at least one Spotify input, one Apple Music input, and one YouTube input.
+- Test at least one YouTube Music official art-track input that starts from cache miss.
+- Test at least one partial-cache upgrade when a platform is missing.
 - Check Vercel runtime logs for error/fatal logs after production smoke tests.

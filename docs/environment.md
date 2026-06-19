@@ -5,6 +5,9 @@ This app works without paid services. Persistent cache needs a Postgres-compatib
 For the current provider order, direct-link-only contract, and cache rules, see
 [`docs/link-matching.md`](./link-matching.md).
 
+For security, abuse controls, quota monitoring, and secret handling, see
+[`docs/security.md`](./security.md).
+
 ## Local zero-cost cache
 
 For local development, use PGlite:
@@ -61,6 +64,19 @@ YOUTUBE_API_KEY=""
 - `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
 - `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.
+
+## Production key care
+
+- Keep `.env.local` out of commits.
+- Restrict `YOUTUBE_API_KEY` to YouTube Data API v3.
+- Monitor YouTube quota after deploys that touch matching.
+- Rotate any key that is pasted into chat, logs, screenshots, or git by mistake.
+- Keep `STATSLC_BRIDGE_TOKEN` synchronized with the matching token on `stats-lc-api`.
+- Use `MANUAL_LINK_TOKEN` only for trusted/internal correction flows.
+- Use the kill switches when provider cost or abuse is suspected:
+  - `YOUTUBE_MATCHING_ENABLED=false`
+  - `SPOTIFY_WEB_MATCHING_ENABLED=false`
+  - `STATSLC_BRIDGE_ENABLED=false`
 
 ## Tests
 
