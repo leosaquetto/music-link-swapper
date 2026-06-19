@@ -70,10 +70,6 @@
           <div class="label-row">
             <label id="inputLabel" class="label" for="linkInput">link da música</label>
             <div class="label-actions">
-              <div class="mode-segmented" role="group" aria-label="modo de entrada">
-                <button id="linkModeButton" class="mode-segment is-active" type="button" aria-pressed="true">link</button>
-                <button id="searchModeButton" class="mode-segment" type="button" aria-pressed="false">nome</button>
-              </div>
               <button id="recentSwapsButton" class="tiny-button tiny-icon-button" type="button" aria-label="swaps recentes" title="swaps recentes"></button>
               <button id="useSampleButton" class="tiny-button tiny-icon-button" type="button" aria-label="sortear exemplo" title="sortear exemplo"></button>
             </div>
@@ -148,15 +144,6 @@
                   <p id="resultMeta" class="result-meta"></p>
                 </div>
 
-                <div class="result-head-actions">
-                  <button
-                    id="resultDismissButton"
-                    class="mini-head-action hidden"
-                    type="button"
-                    aria-label="limpar resultado"
-                    title="limpar resultado"
-                  ></button>
-                </div>
               </div>
             </div>
           </div>
@@ -172,13 +159,13 @@
               </div>
             </div>
             <div class="public-card-actions">
-              <button id="publicTrackCopyButton" class="mini-action copy" type="button" aria-label="copiar card público" title="copiar card público">
+              <button id="publicTrackCopyButton" class="mini-action copy" type="button" aria-label="copiar card público">
                 <span class="button-icon"></span>
               </button>
-              <button id="publicTrackShareButton" class="mini-action share" type="button" aria-label="compartilhar card público" title="compartilhar card público">
+              <button id="publicTrackShareButton" class="mini-action share" type="button" aria-label="compartilhar card público">
                 <span class="button-icon"></span>
               </button>
-              <button id="publicTrackOpenButton" class="mini-action open" type="button" aria-label="abrir card público" title="abrir card público">
+              <button id="publicTrackOpenButton" class="mini-action open" type="button" aria-label="abrir card público">
                 <span class="button-icon"></span>
               </button>
             </div>
@@ -188,7 +175,7 @@
           <section id="correctionCard" class="correction-card hidden" aria-live="polite"></section>
           <div id="resultLegend" class="result-legend hidden" aria-live="polite"></div>
           <div class="result-brand-signature" aria-hidden="true">
-            <img class="result-brand-logo" src="./assets/logo_gif.gif" alt="" />
+            <span class="result-brand-logo"></span>
             <span class="result-brand-title">music link swapper</span>
           </div>
         </section>

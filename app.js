@@ -54,18 +54,12 @@ const LANGUAGE_OPTIONS = [
 const TRANSLATIONS = {
   "pt-br": {
     loadingSwap: "swappando...",
-    loadingSearch: "swappando...",
     loadingFindingLinks: "buscando swaps...",
     loadingCapturingSwaps: "capturando swaps...",
     loadingFinishingSwap: "finalizando swap...",
     swap: "swap",
-    search: "pesquisar",
     linkLabel: "link da música",
-    searchLabel: "pesquisa por nome",
-    linkMode: "link",
-    nameMode: "nome",
     linkPlaceholder: "cole o link da música aqui",
-    searchPlaceholder: "digite o nome do artista + música",
     byline: "por leo saquetto",
     subtitle: "qualquer streaming por um só link",
     availableAs: "Disponível como",
@@ -111,6 +105,9 @@ const TRANSLATIONS = {
     completeLinkError: "não consegui salvar esse link agora.",
     publicCard: "card público",
     publicCardHint: "link compartilhável deste resultado",
+    publicCardCopyAction: "copiar card público",
+    publicCardShareAction: "compartilhar card público",
+    publicCardOpenAction: "abrir card público",
     publicCardCopied: "card público copiado.",
     publicCardShared: "card público compartilhado.",
     publicCardUnavailable: "card público indisponível.",
@@ -119,18 +116,12 @@ const TRANSLATIONS = {
   },
   en: {
     loadingSwap: "swapping...",
-    loadingSearch: "swapping...",
     loadingFindingLinks: "finding swaps...",
     loadingCapturingSwaps: "capturing swaps...",
     loadingFinishingSwap: "finishing swap...",
     swap: "swap",
-    search: "search",
     linkLabel: "song link",
-    searchLabel: "search by name",
-    linkMode: "link",
-    nameMode: "name",
     linkPlaceholder: "paste the song link here",
-    searchPlaceholder: "type artist + song name",
     byline: "by leo saquetto",
     subtitle: "any streaming into one link",
     availableAs: "Available as",
@@ -176,6 +167,9 @@ const TRANSLATIONS = {
     completeLinkError: "could not save this link now.",
     publicCard: "public card",
     publicCardHint: "shareable link for this result",
+    publicCardCopyAction: "copy public card",
+    publicCardShareAction: "share public card",
+    publicCardOpenAction: "open public card",
     publicCardCopied: "public card copied.",
     publicCardShared: "public card shared.",
     publicCardUnavailable: "public card unavailable.",
@@ -184,18 +178,12 @@ const TRANSLATIONS = {
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
-    loadingSearch: "convirtiendo...",
     loadingFindingLinks: "buscando swaps...",
     loadingCapturingSwaps: "capturando swaps...",
     loadingFinishingSwap: "finalizando swap...",
     swap: "swap",
-    search: "buscar",
     linkLabel: "enlace de la canción",
-    searchLabel: "búsqueda por nombre",
-    linkMode: "enlace",
-    nameMode: "nombre",
     linkPlaceholder: "pega aquí el enlace de la canción",
-    searchPlaceholder: "escribe artista + canción",
     byline: "por leo saquetto",
     subtitle: "cualquier streaming en un solo enlace",
     availableAs: "Disponible como",
@@ -241,6 +229,9 @@ const TRANSLATIONS = {
     completeLinkError: "no pude guardar este enlace ahora.",
     publicCard: "card público",
     publicCardHint: "enlace compartible de este resultado",
+    publicCardCopyAction: "copiar card público",
+    publicCardShareAction: "compartir card público",
+    publicCardOpenAction: "abrir card público",
     publicCardCopied: "card público copiado.",
     publicCardShared: "card público compartido.",
     publicCardUnavailable: "card público no disponible.",
@@ -249,18 +240,12 @@ const TRANSLATIONS = {
   },
   "it-it": {
     loadingSwap: "conversione...",
-    loadingSearch: "conversione...",
     loadingFindingLinks: "ricerca swap...",
     loadingCapturingSwaps: "cattura swap...",
     loadingFinishingSwap: "finalizzazione swap...",
     swap: "swap",
-    search: "cerca",
     linkLabel: "link della canzone",
-    searchLabel: "ricerca per nome",
-    linkMode: "link",
-    nameMode: "nome",
     linkPlaceholder: "incolla qui il link della canzone",
-    searchPlaceholder: "digita artista + canzone",
     byline: "di leo saquetto",
     subtitle: "qualsiasi streaming in un solo link",
     availableAs: "Disponibile come",
@@ -306,6 +291,9 @@ const TRANSLATIONS = {
     completeLinkError: "non ho potuto salvare questo link ora.",
     publicCard: "card pubblico",
     publicCardHint: "link condivisibile di questo risultato",
+    publicCardCopyAction: "copia card pubblico",
+    publicCardShareAction: "condividi card pubblico",
+    publicCardOpenAction: "apri card pubblico",
     publicCardCopied: "card pubblico copiato.",
     publicCardShared: "card pubblico condiviso.",
     publicCardUnavailable: "card pubblico non disponibile.",
@@ -314,18 +302,12 @@ const TRANSLATIONS = {
   },
   "fr-fr": {
     loadingSwap: "conversion...",
-    loadingSearch: "conversion...",
     loadingFindingLinks: "recherche de swaps...",
     loadingCapturingSwaps: "capture de swaps...",
     loadingFinishingSwap: "finalisation du swap...",
     swap: "swap",
-    search: "rechercher",
     linkLabel: "lien de la chanson",
-    searchLabel: "recherche par nom",
-    linkMode: "lien",
-    nameMode: "nom",
     linkPlaceholder: "collez le lien de la chanson ici",
-    searchPlaceholder: "tapez artiste + chanson",
     byline: "par leo saquetto",
     subtitle: "n’importe quel streaming en un seul lien",
     availableAs: "Disponible en",
@@ -371,6 +353,9 @@ const TRANSLATIONS = {
     completeLinkError: "impossible d’enregistrer ce lien maintenant.",
     publicCard: "carte publique",
     publicCardHint: "lien partageable de ce résultat",
+    publicCardCopyAction: "copier la carte publique",
+    publicCardShareAction: "partager la carte publique",
+    publicCardOpenAction: "ouvrir la carte publique",
     publicCardCopied: "carte publique copiée.",
     publicCardShared: "carte publique partagée.",
     publicCardUnavailable: "carte publique indisponible.",
@@ -417,6 +402,7 @@ const IGNORED_PLATFORM_KEYS = new Set(["audius", "audios", "boomplay", "napster"
 const SVG_ICONS = {
   history: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>`,
   link: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 2 20 20" aria-hidden="true"><path fill="currentColor" d="M9.47 14.53a1 1 0 0 1 0-1.41l4.24-4.24a1 1 0 0 1 1.41 1.41l-4.24 4.24a1 1 0 0 1-1.41 0Zm-3.54 3.54a4 4 0 0 1 0-5.66l2.12-2.12a1 1 0 1 1 1.41 1.41L7.34 13.8a2 2 0 0 0 2.83 2.83l2.12-2.12a1 1 0 0 1 1.41 1.41l-2.12 2.12a4 4 0 0 1-5.66 0ZM10.3 8.7a1 1 0 0 1 0-1.4l2.12-2.13a4 4 0 0 1 5.66 5.66l-2.12 2.12a1 1 0 1 1-1.41-1.41l2.12-2.12a2 2 0 0 0-2.83-2.83L11.71 8.7a1 1 0 0 1-1.41 0Z"/></svg>`,
+  cardRect: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true"><path fill="currentColor" d="M645.4 462.2l-16.2-5.5-43.6-14.4c-15.2-5-30.6-3.1-42.3 5.2-11.5 8.6-18.3 22.5-18.3 38.7v125.2c-10.5-5.7-22.2-9.4-35-9.4-40.2 0-72.9 32.9-72.9 73.2s1 13.3 2.6 19.6c8.6 31.1 36.8 53.6 70.3 53.6s72.4-31.9 73.2-71.6V556.3c.5 0 .8.3 1.3.5l59.6 19.9c1 .3 2.4.8 3.4.8 4.7 1.3 8.9 1.8 13.3 1.8 9.4 0 18.3-2.6 25.6-8.1 11.8-8.4 18.3-22.2 18.3-38.4v-15.7c0-23.8-16.7-47.3-39.2-54.9ZM489.9 710.1c-12 0-22.5-6-28.7-15.4-3.9-5.5-6-12.3-6-19.6 0-19.1 15.7-34.8 34.8-34.8s35 15.7 35 34.8-1.6 11.5-4.2 16.2c-5.7 11.2-17.5 18.8-30.8 18.8Z"/><path fill="currentColor" d="M684.6 517v15.7c0 16.2-6.5 30.1-18.3 38.4-7.3 5.5-16.2 8.1-25.6 8.1s-8.6-.5-13.3-1.8c-1 0-2.4-.5-3.4-.8l-59.6-19.9c-.5-.3-.8-.5-1.3-.5v120.5c-.8 39.7-33.2 71.6-73.2 71.6s-61.7-22.5-70.3-53.6c-1.6-6.3-2.6-12.8-2.6-19.6 0-40.2 32.7-73.2 72.9-73.2s24.6 3.7 35 9.4V486.1c0-16.2 6.8-30.1 18.3-38.7 11.8-8.4 27.2-10.2 42.3-5.2l43.6 14.4 16.2 5.5c22.5 7.6 39.2 31.1 39.2 54.9Z"/><path fill="currentColor" d="M485 88.2H277c-90.2 0-144.2 53.8-144.2 144.2v318c0 90.4 54.1 144.2 144.2 144.2h86.8c8.4 0 14.4-7.6 14.1-15.7V675c0-56.2 41.6-103 95.4-111.1 7.1-1 12.5-6.8 12.5-13.9v-64c0-28.2 12.3-53.8 34-70 22.7-16.2 50.7-19.9 78.1-11.2l14.1 4.7c8.6 2.9 17.2-3.4 17.2-12.3v-74.9c0-4.1-.1-8.2-.3-12.2.2-.9.3-1.9.3-2.9v-74.9c0-90.4-54.1-144.2-144.2-144.2Z"/></svg>`,
   shuffle: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3,8H5.28a6,6,0,0,1,4.51,2.05L13.21,14a6,6,0,0,0,4.51,2H21"/><polyline points="19 14 21 16 19 18"/><path d="M21,8H17.72a6,6,0,0,0-4.51,2.05L9.79,14a6,6,0,0,1-4.51,2H3"/><polyline points="19 6 21 8 19 10"/></g></svg>`,
   swap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410.489 410.489" aria-hidden="true"><path fill="currentColor" d="M370.446,256.623l36.079-81.654c2.257-5.125,3.328-10.356,3.356-15.262c1.167-5.059,0.708-10.519-1.854-15.482c-3.356-6.55-9.477-10.643-16.209-11.876c-2.696-1.252-5.604-2.247-8.759-2.897l-87.459-17.939c-16.715-3.452-32.397,4.102-35.008,16.839c-2.611,12.747,8.807,25.848,25.531,29.261l33.211,6.837L186.99,232.726c-11.15,5.709-15.51,19.422-9.773,30.553c5.767,11.131,19.44,15.481,30.561,9.744l134.631-69.396l-15.022,34.004c-6.885,15.616-2.84,32.513,9.056,37.782C348.338,280.654,363.562,272.239,370.446,256.623z"/><path fill="currentColor" d="M74.067,135.093c-11.905-5.26-27.129,3.146-34.023,18.762l-36.08,81.654c-2.256,5.125-3.328,10.355-3.356,15.28c-1.167,5.049-0.708,10.5,1.855,15.463c3.366,6.55,9.476,10.643,16.208,11.877c2.696,1.252,5.613,2.247,8.769,2.897l87.458,17.958c16.706,3.433,32.388-4.121,34.999-16.858c2.61-12.729-8.807-25.848-25.532-29.262l-33.211-6.827l132.344-68.267c11.15-5.728,15.521-19.44,9.773-30.571c-5.767-11.131-19.431-15.482-30.561-9.744L68.081,206.87l15.023-34.014C90.007,157.259,85.972,140.343,74.067,135.093z"/></svg>`,
   telegram: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="M256 0C114.62 0 0 114.62 0 256s114.62 256 256 256s256-114.62 256-256S397.38 0 256 0Zm118.77 174.93l-41.37 195.03c-3.12 13.86-11.28 17.28-22.84 10.77l-63.11-46.52l-30.44 29.3c-3.37 3.37-6.19 6.19-12.68 6.19l4.54-64.33l117.12-105.84c5.09-4.54-1.12-7.09-7.87-2.55L173.4 288.22l-62.29-19.46c-13.56-4.25-13.86-13.56 2.82-20.08l243.5-93.85c11.28-4.25 21.14 2.55 17.34 20.1Z"/></svg>`,
@@ -492,7 +478,6 @@ const state = {
   languageSwitchTimer: null,
   currentLanguage: "pt-br",
   isLanguageMenuOpen: false,
-  isSearchMode: false,
   isIOSInstallModalOpen: false,
   iosInstallModalHideTimer: null,
   isRecentSwapsModalOpen: false,
@@ -522,9 +507,6 @@ const els = {
   clearButton: document.getElementById("clearButton"),
   pasteButton: document.getElementById("pasteButton"),
   useSampleButton: document.getElementById("useSampleButton"),
-  modeSegmented: document.querySelector(".mode-segmented"),
-  linkModeButton: document.getElementById("linkModeButton"),
-  searchModeButton: document.getElementById("searchModeButton"),
   recentSwapsButton: document.getElementById("recentSwapsButton"),
   supportedChips: document.getElementById("supportedChips"),
   statusCard: document.getElementById("statusCard"),
@@ -540,7 +522,6 @@ const els = {
   correctionCard: document.getElementById("correctionCard"),
   resultLegend: document.getElementById("resultLegend"),
   resultSheetHandle: document.getElementById("resultSheetHandle"),
-  resultDismissButton: document.getElementById("resultDismissButton"),
   copyPrimaryButton: document.getElementById("copyPrimaryButton"),
   copyOriginalButton: document.getElementById("copyOriginalButton"),
   sharePrimaryButton: document.getElementById("sharePrimaryButton"),
@@ -595,7 +576,7 @@ if (document.readyState === "loading") {
 window.addEventListener("pageshow", event => {
   if (!event.persisted) return;
   forceHeroGifLogo();
-  syncSearchModeUI();
+  syncLinkInputUI();
   updateConvertButtonLabel();
   window.requestAnimationFrame(() => {
     window.dispatchEvent(new Event("resize"));
@@ -699,7 +680,7 @@ function applyLanguage({ lang = state.currentLanguage, announce = false, withTra
   if (els.footerMadeByText) els.footerMadeByText.textContent = t("madeBy");
   updateLocalizedStaticCopy();
   refreshLocalizedDynamicContent();
-  syncSearchModeUI();
+  syncLinkInputUI();
   updateConvertButtonLabel();
   syncThemeToggleIcon();
   if (announce) showFloatingToast(t("languageSelected"));
@@ -716,16 +697,16 @@ function updateLocalizedStaticCopy() {
   if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
   if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
   if (els.publicTrackCopyButton) {
-    els.publicTrackCopyButton.setAttribute("aria-label", t("publicCardCopied").replace(/\.$/, ""));
-    els.publicTrackCopyButton.setAttribute("title", t("publicCardCopied").replace(/\.$/, ""));
+    els.publicTrackCopyButton.setAttribute("aria-label", t("publicCardCopyAction"));
+    els.publicTrackCopyButton.removeAttribute("title");
   }
   if (els.publicTrackShareButton) {
-    els.publicTrackShareButton.setAttribute("aria-label", t("publicCardShared").replace(/\.$/, ""));
-    els.publicTrackShareButton.setAttribute("title", t("publicCardShared").replace(/\.$/, ""));
+    els.publicTrackShareButton.setAttribute("aria-label", t("publicCardShareAction"));
+    els.publicTrackShareButton.removeAttribute("title");
   }
   if (els.publicTrackOpenButton) {
-    els.publicTrackOpenButton.setAttribute("aria-label", t("publicCardLoading").replace(/\.\.\.$/, ""));
-    els.publicTrackOpenButton.setAttribute("title", t("publicCardLoading").replace(/\.\.\.$/, ""));
+    els.publicTrackOpenButton.setAttribute("aria-label", t("publicCardOpenAction"));
+    els.publicTrackOpenButton.removeAttribute("title");
   }
 }
 
@@ -883,7 +864,7 @@ function injectButtonIcons() {
   }
 
   if (els.publicCardIcon) {
-    els.publicCardIcon.innerHTML = `<span class="button-icon">${SVG_ICONS.link}</span>`;
+    els.publicCardIcon.innerHTML = `<span class="button-icon">${SVG_ICONS.cardRect}</span>`;
   }
 
   if (els.copyOriginalButton) {
@@ -894,10 +875,6 @@ function injectButtonIcons() {
     syncThemeToggleIcon();
   }
 
-  if (els.resultDismissButton) {
-    els.resultDismissButton.innerHTML = `<span class="button-icon">${SVG_ICONS.clear}</span>`;
-  }
-
   if (els.recentSwapsButton) {
     els.recentSwapsButton.innerHTML = `<span class="button-icon">${SVG_ICONS.history}</span>`;
   }
@@ -906,7 +883,7 @@ function injectButtonIcons() {
     els.useSampleButton.innerHTML = `<span class="button-icon">${SVG_ICONS.shuffle}</span>`;
   }
 
-  syncSearchModeUI();
+  syncLinkInputUI();
 }
 
 function isIosDevice() {
@@ -1098,8 +1075,9 @@ function bindSheetDismissGesture(sheet, closeFn) {
     if (!drag || drag.sheet !== sheet || drag.pointerId !== event.pointerId) return;
 
     const deltaY = Math.max(0, event.clientY - drag.startY);
+    const dragLimit = sheet === els.resultCard ? getSheetDismissDistance(sheet) : 180;
     drag.lastY = event.clientY;
-    sheet.style.setProperty("--sheet-drag-y", `${Math.min(deltaY, 180)}px`);
+    sheet.style.setProperty("--sheet-drag-y", `${Math.min(deltaY, dragLimit)}px`);
     if (deltaY > 4) event.preventDefault();
   });
 
@@ -1110,11 +1088,18 @@ function bindSheetDismissGesture(sheet, closeFn) {
     const deltaY = Math.max(0, drag.lastY - drag.startY);
     const elapsed = Math.max(1, performance.now() - drag.startedAt);
     const velocity = deltaY / elapsed;
+    const shouldDismiss = deltaY > 82 || velocity > 0.55;
     state.activeSheetDrag = null;
     sheet.classList.remove("is-dragging");
+
+    if (shouldDismiss && sheet === els.resultCard) {
+      drag.closeFn();
+      return;
+    }
+
     sheet.style.setProperty("--sheet-drag-y", "0px");
 
-    if (deltaY > 82 || velocity > 0.55) {
+    if (shouldDismiss) {
       drag.closeFn();
     }
   };
@@ -1125,6 +1110,12 @@ function bindSheetDismissGesture(sheet, closeFn) {
 
 function isMobileResultSheet() {
   return window.matchMedia?.("(max-width: 640px)")?.matches === true;
+}
+
+function getSheetDismissDistance(sheet) {
+  if (!sheet) return window.innerHeight || 720;
+  const rect = sheet.getBoundingClientRect();
+  return Math.ceil(rect.height + 64);
 }
 
 function openResultSheetIfNeeded() {
@@ -1142,6 +1133,9 @@ function openResultSheetIfNeeded() {
 
   state.isResultSheetOpen = true;
   document.body.classList.add("result-sheet-open");
+  els.resultCard.classList.remove("is-sheet-closing");
+  els.resultCard.style.setProperty("--sheet-drag-y", "0px");
+  els.resultCard.style.removeProperty("--sheet-dismiss-y");
   els.resultCard.classList.add("is-result-sheet");
   els.resultBackdrop.classList.remove("hidden");
   requestAnimationFrame(() => {
@@ -1166,17 +1160,28 @@ function closeResultSheet({ immediate = false, preserveResult = true } = {}) {
   state.isResultSheetOpen = false;
   els.resultBackdrop.classList.remove("is-open");
   els.resultBackdrop.setAttribute("aria-hidden", "true");
-  els.resultCard.classList.remove("is-sheet-open");
+
+  if (immediate) {
+    els.resultCard.classList.remove("is-sheet-open", "is-sheet-closing");
+    els.resultCard.style.setProperty("--sheet-drag-y", "0px");
+    els.resultCard.style.removeProperty("--sheet-dismiss-y");
+  } else {
+    els.resultCard.style.setProperty("--sheet-dismiss-y", `${getSheetDismissDistance(els.resultCard)}px`);
+    els.resultCard.classList.add("is-sheet-closing");
+    els.resultCard.classList.remove("is-sheet-open");
+  }
 
   const finish = () => {
     els.resultBackdrop?.classList.add("hidden");
     if (preserveResult) {
-      els.resultCard?.classList.remove("is-result-sheet");
+      els.resultCard?.classList.remove("is-result-sheet", "is-sheet-closing");
     } else {
       clearResultSurface();
-      els.resultCard?.classList.remove("is-result-sheet", "is-sheet-open", "is-exiting", "result-card-live");
+      els.resultCard?.classList.remove("is-result-sheet", "is-sheet-open", "is-sheet-closing", "is-exiting", "result-card-live");
       els.resultCard?.classList.add("hidden");
     }
+    els.resultCard?.style.setProperty("--sheet-drag-y", "0px");
+    els.resultCard?.style.removeProperty("--sheet-dismiss-y");
 
     if (wasOpen) {
       unlockPageScroll("result-sheet-open");
@@ -1311,25 +1316,9 @@ function bindEvents() {
     onConvert({ shouldScrollToStatus: true });
   });
 
-  els.linkModeButton?.addEventListener("click", event => {
-    pulseActionButton(event.currentTarget, "toggle");
-    setSearchMode(false);
-  });
-
-  els.searchModeButton?.addEventListener("click", event => {
-    pulseActionButton(event.currentTarget, "toggle");
-    setSearchMode(true, { announce: true, focus: true });
-  });
-
   els.clearButton?.addEventListener("click", event => {
     pulseActionButton(event.currentTarget);
     resetForm({ announce: true });
-  });
-
-  els.resultDismissButton?.addEventListener("click", event => {
-    pulseActionButton(event.currentTarget);
-    if (state.isResultSheetOpen) dismissResultSheet();
-    else resetForm();
   });
 
   els.pasteButton?.addEventListener("click", async () => {
@@ -1697,29 +1686,17 @@ async function smartPasteIntoInput({ announce = false, autoConvert = false } = {
 async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromShuffle = false } = {}) {
   const rawInput = els.input.value.trim();
   const link = forcedLink || extractUrl(rawInput);
-  const shouldFallbackToLinkSwap = state.isSearchMode && !!link;
-  const modeAtSubmit = state.isSearchMode && !shouldFallbackToLinkSwap;
 
-  if (shouldFallbackToLinkSwap) {
-    setSearchMode(false);
-  }
   state.scrollAfterConvert = shouldScrollToStatus;
 
-  if (modeAtSubmit) {
-    if (!rawInput || rawInput.length < 3) {
-      showStatus("digite artista + música para pesquisar.", "error");
-      return;
-    }
-  } else {
-    if (!link) {
-      showStatus("cole um link válido para continuar.", "error");
-      return;
-    }
+  if (!link) {
+    showStatus("cole um link válido para continuar.", "error");
+    return;
+  }
 
-    if (!isSupportedStreamingUrl(link)) {
-      showStatus("isso não parece um link de streaming suportado.", "error");
-      return;
-    }
+  if (!isSupportedStreamingUrl(link)) {
+    showStatus("isso não parece um link de streaming suportado.", "error");
+    return;
   }
 
   softlyDismissKeyboard();
@@ -1736,9 +1713,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       },
       body: JSON.stringify({
         link,
-        adapters: REQUESTED_ADAPTERS,
-        queryMode: modeAtSubmit,
-        query: modeAtSubmit ? rawInput : undefined
+        adapters: REQUESTED_ADAPTERS
       })
     });
 
@@ -1753,14 +1728,14 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       return;
     }
 
-    const result = normalizeApiPayload(payload.data, modeAtSubmit ? "" : link, modeAtSubmit);
+    const result = normalizeApiPayload(payload.data, link, false);
     if (!result) {
       stopCoverShimmer();
       showStatus("não encontrei plataformas para esse link.", "error");
       return;
     }
 
-    state.currentOriginalUrl = modeAtSubmit ? null : link;
+    state.currentOriginalUrl = link;
     state.currentResult = result;
     renderResult(result);
     const directCount = result.links.length;
@@ -1788,9 +1763,6 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     setLoading(false);
     state.autoConvertedFromQuery = false;
     state.scrollAfterConvert = false;
-    if (modeAtSubmit) {
-      setSearchMode(false);
-    }
   }
 }
 
@@ -1798,7 +1770,8 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
   const rawTitle = cleanText(data.title || "música encontrada");
   const rawDescription = cleanText(data.description || "");
   const preview = parsePreview(rawTitle, rawDescription);
-  const searchQuery = [preview.title, preview.artist].filter(Boolean).join(" ").trim();
+  const displayInfo = normalizeArtistAlbumForDisplay(preview.artist, preview.album, data.album);
+  const searchQuery = [preview.title, displayInfo.artist].filter(Boolean).join(" ").trim();
   const links = normalizeLinks(data.links, sourceLink, searchQuery);
   if (!links.length) return null;
   const image = normalizeArtworkUrl(data.image || null);
@@ -1807,8 +1780,8 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
     trackId: cleanText(data.trackId || ""),
     cacheStatus: cleanText(data.cacheStatus || ""),
     title: preview.title,
-    artist: preview.artist,
-    album: preview.album || cleanText(data.album || ""),
+    artist: displayInfo.artist,
+    album: displayInfo.album,
     image,
     universalLink: data.universalLink || null,
     originalUrl: sourceLink || "",
@@ -1816,6 +1789,67 @@ function normalizeApiPayload(data, sourceLink = "", fromSearchMode = false) {
     missingPlatforms: normalizeMissingPlatforms(data.missingPlatforms, links),
     links
   };
+}
+
+function normalizeArtistAlbumForDisplay(artist, previewAlbum = "", apiAlbum = "") {
+  const cleanArtistValue = cleanText(artist);
+  const cleanPreviewAlbum = cleanText(previewAlbum);
+  const cleanApiAlbum = cleanText(apiAlbum);
+  const composite = splitCompositeArtistText(cleanArtistValue);
+  const previewAlbumIsSingle = isSingleAlbumLabel(cleanPreviewAlbum);
+  const singleLabel = isSingleAlbumLabel(cleanApiAlbum)
+    ? cleanApiAlbum
+    : (previewAlbumIsSingle ? cleanPreviewAlbum : "");
+  const albumCandidate = previewAlbumIsSingle
+    ? (composite?.detail || "")
+    : (cleanPreviewAlbum || composite?.detail || "");
+
+  let displayArtist = cleanArtistValue;
+  let displayAlbum = cleanPreviewAlbum || cleanApiAlbum;
+
+  if (composite && singleLabel) {
+    displayArtist = composite.artist;
+  }
+
+  if (singleLabel && albumCandidate && !albumHasSingleSuffix(albumCandidate)) {
+    displayAlbum = `${albumCandidate} - ${singleLabel}`;
+  } else if (composite && !displayAlbum) {
+    displayAlbum = composite.detail;
+  }
+
+  return {
+    artist: displayArtist,
+    album: displayAlbum
+  };
+}
+
+function splitCompositeArtistText(value) {
+  const cleanValue = cleanText(value);
+  if (!cleanValue) return null;
+
+  const separators = [" • ", " | ", " – ", " - "];
+
+  for (const separator of separators) {
+    if (!cleanValue.includes(separator)) continue;
+    const parts = cleanValue.split(separator).map(cleanText).filter(Boolean);
+    if (parts.length < 2) continue;
+
+    return {
+      artist: parts[0],
+      detail: parts.slice(1).join(" • ")
+    };
+  }
+
+  return null;
+}
+
+function isSingleAlbumLabel(value) {
+  return normalizeComparisonText(value) === "single";
+}
+
+function albumHasSingleSuffix(value) {
+  const normalized = normalizeComparisonText(value);
+  return normalized === "single" || normalized.endsWith(" single");
 }
 
 function normalizeMissingPlatforms(missingPlatforms, links = []) {
@@ -1976,7 +2010,6 @@ function renderResult(result, { skipSave = false } = {}) {
   els.copyPrimaryButton?.classList.add("hidden");
   els.sharePrimaryButton?.classList.add("hidden");
   els.copyOriginalButton?.classList.add("hidden");
-  els.resultDismissButton?.classList.remove("hidden");
   renderPublicCardBar(result);
 
   const groups = ["primary", "others"];
@@ -2612,7 +2645,6 @@ function saveRecentSwap(result) {
     image: cleanText(result.image || ""),
     originalUrl,
     isManualSearch: !!result.fromSearchMode,
-    queryText: cleanText([result.artist, result.title].filter(Boolean).join(" ")),
     sourceKey: sourceKey || "",
     sourceName: sourceMeta?.name || "fonte",
     savedAt: Date.now()
@@ -2680,6 +2712,7 @@ function renderRecentSwaps() {
     const sourceName = escapeHtml(item.sourceName || "fonte");
     const shouldShowSource = !item.isManualSearch && !!sourceIcon;
     const shouldShowCopy = !item.isManualSearch && !!item.originalUrl;
+    const shouldShowSwap = !!item.originalUrl;
 
     card.innerHTML = `
       <div class="recent-swap-cover-wrap">
@@ -2694,7 +2727,7 @@ function renderRecentSwaps() {
         <button class="mini-action copy ${shouldShowCopy ? "" : "hidden"}" type="button" data-action="copy" aria-label="copiar link" title="copiar link">
           <span class="button-icon">${SVG_ICONS.link}</span>
         </button>
-        <button class="mini-action open" type="button" data-action="swap" aria-label="refazer swap" title="refazer swap">
+        <button class="mini-action open ${shouldShowSwap ? "" : "hidden"}" type="button" data-action="swap" aria-label="refazer swap" title="refazer swap">
           <span class="button-icon">${SVG_ICONS.search}</span>
         </button>
       </div>
@@ -2720,11 +2753,6 @@ function renderRecentSwaps() {
         return;
       }
 
-      if (item.queryText) {
-        setSearchMode(true);
-        els.input.value = item.queryText;
-        onConvert({ shouldScrollToStatus: true });
-      }
     });
 
     els.recentSwapsList.appendChild(card);
@@ -2743,7 +2771,6 @@ function clearResultSurface() {
   els.copyPrimaryButton?.classList.add("hidden");
   els.sharePrimaryButton?.classList.add("hidden");
   els.copyOriginalButton?.classList.add("hidden");
-  els.resultDismissButton?.classList.add("hidden");
   els.publicCardBar?.classList.add("hidden");
   hideCorrectionPrompt();
   els.resultLegend?.classList.add("hidden");
@@ -2822,7 +2849,7 @@ function setLoading(loading, label = "") {
     els.convertButton.classList.add("is-loading");
     els.convertButton.setAttribute("aria-busy", "true");
     els.convertButton.setAttribute("aria-live", "polite");
-    const initialLabel = label || (state.isSearchMode ? t("loadingSearch") : t("loadingSwap"));
+    const initialLabel = label || t("loadingSwap");
     renderLoadingButton(initialLabel);
     if (!label) {
       state.loadingStageTimers.push(
@@ -2860,11 +2887,6 @@ function renderLoadingButton(label) {
 
 function updateConvertButtonLabel() {
   if (!els.convertButton) return;
-  if (state.isSearchMode) {
-    els.convertButton.textContent = t("search");
-    return;
-  }
-
   els.convertButton.innerHTML = `<span>${escapeHtml(t("swap"))}</span><span class="button-icon swap-button-icon">${SVG_ICONS.swap}</span>`;
 }
 
@@ -2883,60 +2905,21 @@ function resetForm({ announce = false } = {}) {
   state.currentOriginalUrl = null;
   state.autoConvertedFromQuery = false;
   state.lastAutoUrl = "";
-  state.isSearchMode = false;
-  syncSearchModeUI();
+  syncLinkInputUI();
 
   if (announce) {
     showFloatingToast("campo de busca apagado.");
   }
 }
 
-function setSearchMode(enabled, { announce = false, focus = false } = {}) {
-  const nextMode = !!enabled;
-  const changed = state.isSearchMode !== nextMode;
-  state.isSearchMode = nextMode;
-  syncSearchModeUI();
-
-  if (nextMode && focus && els.input) {
-    els.input.focus({ preventScroll: true });
-    const valueLength = els.input.value?.length || 0;
-    els.input.setSelectionRange(valueLength, valueLength);
-  }
-
-  if (!nextMode && changed) {
-    softlyDismissKeyboard();
-  }
-
-  if (announce && nextMode) {
-    showFloatingToast("modo pesquisa ativado.");
-  }
-}
-
-function syncSearchModeUI() {
-  els.modeSegmented?.setAttribute("aria-label", `${t("linkLabel")} / ${t("searchLabel")}`);
-  if (els.linkModeButton) {
-    els.linkModeButton.textContent = t("linkMode");
-    els.linkModeButton.classList.toggle("is-active", !state.isSearchMode);
-    els.linkModeButton.setAttribute("aria-pressed", state.isSearchMode ? "false" : "true");
-    els.linkModeButton.setAttribute("aria-label", t("linkLabel"));
-    els.linkModeButton.setAttribute("title", t("linkLabel"));
-  }
-  if (els.searchModeButton) {
-    els.searchModeButton.textContent = t("nameMode");
-    els.searchModeButton.classList.toggle("is-active", state.isSearchMode);
-    els.searchModeButton.setAttribute("aria-pressed", state.isSearchMode ? "true" : "false");
-    els.searchModeButton.setAttribute("aria-label", t("searchLabel"));
-    els.searchModeButton.setAttribute("title", t("searchLabel"));
-  }
+function syncLinkInputUI() {
   if (els.inputLabel) {
-    els.inputLabel.textContent = state.isSearchMode ? t("searchLabel") : t("linkLabel");
+    els.inputLabel.textContent = t("linkLabel");
   }
   if (els.input) {
-    els.input.type = state.isSearchMode ? "text" : "url";
-    els.input.setAttribute("inputmode", state.isSearchMode ? "search" : "url");
-    els.input.placeholder = state.isSearchMode
-      ? t("searchPlaceholder")
-      : t("linkPlaceholder");
+    els.input.type = "url";
+    els.input.setAttribute("inputmode", "url");
+    els.input.placeholder = t("linkPlaceholder");
   }
   setLoading(false);
 }
