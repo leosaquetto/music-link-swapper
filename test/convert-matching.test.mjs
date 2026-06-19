@@ -8,6 +8,38 @@ const SPOTIFY_TRACK_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
 process.env.DEEZER_MATCHING_ENABLED = "false";
 process.env.TIDAL_MATCHING_ENABLED = "false";
 
+test("Apple input metadata preserves duration for cached provider upgrades", async () => {
+  const appleUrl = "https://music.apple.com/us/album/golden/1820264137?i=1820264150&uo=4";
+  await withMockFetch(async input => {
+    const url = new URL(String(input));
+    assert.equal(url.pathname, "/lookup");
+    assert.equal(url.searchParams.get("id"), "1820264150");
+    return jsonResponse({
+      results: [
+        {
+          kind: "song",
+          trackName: "Golden",
+          artistName: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast",
+          collectionName: "KPop Demon Hunters (Soundtrack from the Netflix Film)",
+          trackTimeMillis: 194608,
+          trackViewUrl: appleUrl
+        }
+      ]
+    });
+  }, async () => {
+    const inputContext = await __testHooks.buildInputCacheContext(appleUrl, "appleMusic");
+    const prepared = __testHooks.prepareCachedResultForUpgrade({
+      title: "Golden",
+      description: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast",
+      links: [],
+      missingPlatforms: ["deezer", "tidal"]
+    }, inputContext);
+
+    assert.equal(inputContext.durationMs, 194608);
+    assert.equal(prepared.durationMs, 194608);
+  });
+});
+
 test("Spotify fallback adds a verified Apple Music match when Apple is missing", async () => {
   await withMockFetch(async input => {
     const url = String(input);
@@ -788,6 +820,45 @@ test("Songlink normalization excludes non-automatic platforms", () => {
     normalized.links.map(link => link.type).sort(),
     ["appleMusic", "deezer", "spotify", "tidal", "youtube", "youtubeMusic"].sort()
   );
+});
+
+test("Songlink enrichment fills Deezer and TIDAL when they are the only missing platforms", async () => {
+  const appleUrl = "https://music.apple.com/us/album/golden/1820264137?i=1820264150&uo=4";
+  await withMockFetch(async input => {
+    const url = String(input);
+    assert.ok(url.startsWith("https://api.song.link/v1-alpha.1/links?url="));
+    return jsonResponse({
+      entityUniqueId: "ITUNES_SONG::1820264150",
+      entitiesByUniqueId: {
+        "ITUNES_SONG::1820264150": {
+          title: "Golden",
+          artistName: "HUNTR/X",
+          albumName: "KPop Demon Hunters (Soundtrack from the Netflix Film)"
+        }
+      },
+      linksByPlatform: {
+        appleMusic: { url: appleUrl },
+        deezer: { url: "https://www.deezer.com/track/3412534581" },
+        tidal: { url: "https://listen.tidal.com/track/441821360" }
+      }
+    });
+  }, async () => {
+    const result = await __testHooks.enrichWithSongLinkDirectLinks({
+      title: "Golden",
+      description: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast",
+      links: [
+        {
+          type: "appleMusic",
+          url: appleUrl,
+          isVerified: true,
+          source: "input"
+        }
+      ]
+    });
+
+    assert.equal(result.links.find(link => link.type === "deezer")?.url, "https://www.deezer.com/track/3412534581");
+    assert.equal(result.links.find(link => link.type === "tidal")?.url, "https://tidal.com/browse/track/441821360");
+  });
 });
 
 async function callConvertApi({ method = "POST", body = {}, url = "/api/convert" } = {}) {

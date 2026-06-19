@@ -119,6 +119,42 @@ export function tokenize(value) {
     .filter(token => !new Set(["a", "as", "o", "os", "the", "of", "de", "da", "do", "and", "feat", "featuring", "ft"]).has(token));
 }
 
+export function splitArtistCredits(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  const normalizedFull = normalizeSearchText(raw);
+  const credits = raw
+    .split(/\s*(?:,|&|;|\bfeat(?:uring)?\.?\b|\bft\.?\b)\s*/i)
+    .map(normalizeSearchText)
+    .filter(Boolean);
+
+  return Array.from(new Set([normalizedFull, ...credits].filter(Boolean)));
+}
+
+export function isArtistCreditMatch(targetArtist, candidateArtist) {
+  const target = normalizeSearchText(targetArtist);
+  const candidate = normalizeSearchText(candidateArtist);
+  if (!target || !candidate) return false;
+  if (target === candidate) return true;
+
+  const targetCredits = new Set(splitArtistCredits(targetArtist));
+  const candidateCredits = splitArtistCredits(candidateArtist)
+    .filter(credit => credit !== candidate);
+
+  if (targetCredits.has(candidate)) return true;
+  return candidateCredits.length > 0 && candidateCredits.every(credit => targetCredits.has(credit));
+}
+
+export function getPrimaryArtistCredit(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return raw
+    .split(/\s*(?:,|&|;|\bfeat(?:uring)?\.?\b|\bft\.?\b)\s*/i)
+    .map(credit => credit.trim())
+    .find(Boolean) || raw;
+}
+
 export function buildCanonicalTrackKey(data) {
   const title = normalizeSearchText(data?.title || data?.trackName || "");
   const artist = normalizeSearchText(data?.artist || data?.artistName || data?.description || "").split(" ").slice(0, 8).join(" ");

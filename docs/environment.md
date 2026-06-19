@@ -69,7 +69,8 @@ YOUTUBE_API_KEY=""
 - `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
 - `DEEZER_MATCHING_ENABLED=false` disables Deezer public API lookup/search instantly, including `GET /api/deezer/search`.
 - `TIDAL_MATCHING_ENABLED=false` disables TIDAL lookup/search instantly, including `GET /api/tidal/search`.
-- `TIDAL_CLIENT_ID` and `TIDAL_CLIENT_SECRET` enable server-side TIDAL OAuth client-credentials access. Keep both server-side only.
+- `TIDAL_CLIENT_ID` and `TIDAL_CLIENT_SECRET` enable server-side TIDAL OAuth client-credentials access only when the TIDAL app is approved/configured for that grant. Keep both server-side only.
+- If TIDAL returns `Grant type client_credentials is not allowed for this client`, keep `TIDAL_MATCHING_ENABLED=false` until the grant is enabled. Conversion can still receive direct TIDAL links from Songlink/Odesli.
 - `TIDAL_COUNTRY_CODE` controls TIDAL catalog market lookup/search and defaults to `BR`.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
 - `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.

@@ -521,6 +521,7 @@ async function buildInputCacheContext(link, platform) {
     album: "",
     image: "",
     isrc: "",
+    durationMs: 0,
     canonicalKey: ""
   };
 
@@ -544,6 +545,7 @@ async function buildInputCacheContext(link, platform) {
       context.album = metadata?.album || "";
       context.image = metadata?.image || "";
       context.isrc = metadata?.isrc || "";
+      context.durationMs = Number(metadata?.duration || 0) * 1000;
     } else if (platformKey === "tidal") {
       const trackId = extractTidalTrackId(link);
       const metadata = trackId ? await fetchTidalTrackById(trackId) : null;
@@ -552,6 +554,7 @@ async function buildInputCacheContext(link, platform) {
       context.album = metadata?.album || "";
       context.image = metadata?.image || "";
       context.isrc = metadata?.isrc || "";
+      context.durationMs = Number(metadata?.duration || 0) * 1000;
     } else {
       const appleTrack = extractAppleTrackInputContext(link);
       if (appleTrack.trackId) {
@@ -560,6 +563,7 @@ async function buildInputCacheContext(link, platform) {
         context.artist = appleMetadata?.artist || "";
         context.album = appleMetadata?.album || "";
         context.image = appleMetadata?.image || "";
+        context.durationMs = Number(appleMetadata?.durationMs || 0) || 0;
       }
     }
   } catch (_error) {
@@ -588,6 +592,7 @@ function buildDirectInputFallback(link, inputContext = {}) {
       description: inputContext?.artist || "",
       album: inputContext?.album || "",
       image: inputContext?.image || "",
+      durationMs: Number(inputContext?.durationMs || 0) || 0,
       links: [
         {
           type: platform,
@@ -695,6 +700,7 @@ function applyInputContextToResult(data, inputContext) {
     album: data?.album || inputContext.album || "",
     image: data?.image || inputContext.image || "",
     isrc: data?.isrc || inputContext.isrc || "",
+    durationMs: Number(data?.durationMs || inputContext.durationMs || 0) || 0,
     links: Array.isArray(data?.links) ? data.links : []
   };
 }
@@ -1262,6 +1268,7 @@ async function fetchAppleMusicLinkFromItunes(query, normalizedQuery) {
       artist: target?.candidate?.artistName || "",
       title: target?.candidate?.trackName || "",
       album: target?.candidate?.collectionName || "",
+      durationMs: Number(target?.candidate?.trackTimeMillis || 0) || 0,
       source: "itunes"
     };
   } catch (_error) {
@@ -1480,6 +1487,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
     album: enriched.album || base.album || fallback.album || "",
     image: enriched.image || base.image || fallback.image || "",
     isrc: enriched.isrc || base.isrc || fallback.isrc || "",
+    durationMs: Number(enriched.durationMs || base.durationMs || fallback.durationMs || 0) || 0,
     universalLink: enriched.universalLink || base.universalLink || fallback.universalLink || ""
   };
 }
@@ -1896,10 +1904,7 @@ async function enrichWithSongLinkDirectLinks(data) {
 
 function pickSongLinkEnrichmentCandidate(links, missing) {
   const missingSet = new Set((Array.isArray(missing) ? missing : []).map(item => normalizeContractPlatformKey(item)));
-  const canEnrichFromNonSpotify =
-    missingSet.has("youtube") ||
-    missingSet.has("youtubeMusic") ||
-    missingSet.has("appleMusic");
+  const canEnrichFromNonSpotify = missingSet.size > 0;
 
   const candidates = (Array.isArray(links) ? links : [])
     .map(item => ({
@@ -1909,7 +1914,7 @@ function pickSongLinkEnrichmentCandidate(links, missing) {
     .filter(item => {
       if (!item?.url || isSearchLikeUrl(item.url, item.type)) return false;
       if (String(item.source || "").toLowerCase() === "songlink") return false;
-      if (item.type === "spotify") return missingSet.has("appleMusic") || missingSet.has("youtube") || missingSet.has("youtubeMusic");
+      if (item.type === "spotify") return missingSet.size > 0;
       if (!canEnrichFromNonSpotify) return false;
       return item.type === "appleMusic" || item.type === "youtube" || item.type === "youtubeMusic";
     })
@@ -1927,6 +1932,7 @@ function songLinkEnrichmentPriority(item, missingSet) {
   if (type === "youtube") score += 30;
   if (type === "spotify" && missingSet.has("appleMusic")) score += 20;
   if (type === "spotify" && (missingSet.has("youtube") || missingSet.has("youtubeMusic"))) score += 18;
+  if (type === "spotify" && (missingSet.has("deezer") || missingSet.has("tidal"))) score += 14;
   if (item?.isVerified) score += 10;
   if (item?.source === "input" || item?.source === "cache") score += 8;
   return score;
@@ -2182,6 +2188,7 @@ async function enrichWithDeezerMatch(data) {
       query,
       title,
       artist,
+      album: next.album || "",
       durationMs: Number(next.durationMs || next.duration || 0) || 0,
       isrc: next.isrc
     });
@@ -2203,6 +2210,7 @@ async function enrichWithDeezerMatch(data) {
       album: next.album || match.album || "",
       image: next.image || match.image || "",
       isrc: next.isrc || match.isrc || "",
+      durationMs: Number(next.durationMs || 0) || Number(match.duration || 0) * 1000,
       links: dedupeAndNormalizeLinks([
         ...links,
         {
@@ -2247,6 +2255,7 @@ async function enrichWithTidalMatch(data) {
       query,
       title,
       artist,
+      album: next.album || "",
       durationMs: Number(next.durationMs || next.duration || 0) || 0,
       isrc: next.isrc
     });
@@ -2268,6 +2277,7 @@ async function enrichWithTidalMatch(data) {
       album: next.album || match.album || "",
       image: next.image || match.image || "",
       isrc: next.isrc || match.isrc || "",
+      durationMs: Number(next.durationMs || 0) || Number(match.duration || 0) * 1000,
       links: dedupeAndNormalizeLinks([
         ...links,
         {
@@ -2684,6 +2694,7 @@ async function enforceInputTrackGroundTruth(data, sourceLink) {
     description: mergedDescription || data?.description || "",
     album: appleTrackMetadata?.album || data?.album || "",
     image: appleTrackMetadata?.image || data?.image || "",
+    durationMs: Number(appleTrackMetadata?.durationMs || data?.durationMs || 0) || 0,
     links: dedupeAndNormalizeLinks([
       {
         type: "appleMusic",
@@ -2743,7 +2754,8 @@ async function fetchAppleTrackMetadataById(trackId) {
       title: String(firstSong?.trackName || "").trim(),
       artist: String(firstSong?.artistName || "").trim(),
       album: String(firstSong?.collectionName || "").trim(),
-      image: String(firstSong?.artworkUrl100 || firstSong?.artworkUrl60 || "").trim()
+      image: String(firstSong?.artworkUrl100 || firstSong?.artworkUrl60 || "").trim(),
+      durationMs: Number(firstSong?.trackTimeMillis || 0) || 0
     };
   } catch (_error) {
     return null;
@@ -3109,6 +3121,7 @@ export const __testHooks = {
   finalizeResultData,
   enrichWithDeezerMatch,
   enrichWithTidalMatch,
+  enrichWithSongLinkDirectLinks,
   enrichWithSpotifyFallback,
   normalizeSongLinkPayload
 };

@@ -1,4 +1,6 @@
 import {
+  getPrimaryArtistCredit,
+  isArtistCreditMatch,
   normalizeSearchText,
   scoreTextAlignment,
   tokenize
@@ -97,6 +99,7 @@ export async function findBestDeezerTrack(target = {}) {
 
   const title = String(target.title || target.trackName || "").trim();
   const artist = String(target.artist || target.artistName || target.description || "").trim();
+  const album = String(target.album || target.albumName || "").trim();
   const query = String(target.query || [title, artist].filter(Boolean).join(" ")).trim();
   const isrc = normalizeIsrc(target.isrc);
   const duration = Number(target.duration || target.durationSeconds || 0) || Math.round((Number(target.durationMs || 0) || 0) / 1000);
@@ -105,7 +108,7 @@ export async function findBestDeezerTrack(target = {}) {
     try {
       const isrcMatch = await fetchDeezerTrackByIsrc(isrc);
       if (isrcMatch) {
-        const score = scoreDeezerCandidate({ title, artist, query, isrc, duration }, isrcMatch);
+        const score = scoreDeezerCandidate({ title, artist, album, query, isrc, duration }, isrcMatch);
         if (score >= MIN_MATCH_SCORE || normalizeIsrc(isrcMatch.isrc) === isrc) {
           return {
             ...isrcMatch,
@@ -121,15 +124,17 @@ export async function findBestDeezerTrack(target = {}) {
 
   if (!query) return null;
 
-  const search = await searchDeezerTracks({ q: query, limit: 8, index: 0 });
   let best = null;
   let bestScore = -1;
 
-  for (const candidate of search.results) {
-    const score = scoreDeezerCandidate({ title, artist, query, isrc, duration }, candidate);
-    if (score > bestScore) {
-      best = candidate;
-      bestScore = score;
+  for (const searchQuery of buildSearchQueries({ query, title, artist })) {
+    const search = await searchDeezerTracks({ q: searchQuery, limit: 8, index: 0 });
+    for (const candidate of search.results) {
+      const score = scoreDeezerCandidate({ title, artist, album, query, isrc, duration }, candidate);
+      if (score > bestScore) {
+        best = candidate;
+        bestScore = score;
+      }
     }
   }
 
@@ -181,11 +186,16 @@ export function scoreDeezerCandidate(target = {}, candidate = {}) {
   const candidateTitle = normalizeSearchText(candidate.title || "");
   const targetArtist = normalizeSearchText(target.artist || "");
   const candidateArtist = normalizeSearchText(candidate.artist || "");
+  const targetAlbum = normalizeSearchText(target.album || "");
+  const candidateAlbum = normalizeSearchText(candidate.album || "");
 
   if (targetTitle && candidateTitle === targetTitle) score += 28;
   else if (targetTitle && candidateTitle.startsWith(targetTitle)) score += 8;
 
   if (targetArtist && candidateArtist === targetArtist) score += 24;
+  else if (isArtistCreditMatch(target.artist, candidate.artist)) score += 22;
+  if (targetAlbum && candidateAlbum === targetAlbum) score += 12;
+  else if (targetAlbum && candidateAlbum && candidateAlbum.includes(targetAlbum)) score += 6;
 
   const targetIsrc = normalizeIsrc(target.isrc);
   const candidateIsrc = normalizeIsrc(candidate.isrc);
@@ -217,6 +227,21 @@ export function scoreDeezerCandidate(target = {}, candidate = {}) {
 function canonicalDeezerTrackUrl(value) {
   const id = extractDeezerTrackId(value);
   return id ? `https://www.deezer.com/track/${id}` : "";
+}
+
+function buildSearchQueries({ query, title, artist }) {
+  const primaryArtist = getPrimaryArtistCredit(artist);
+  const values = [
+    query,
+    [title, primaryArtist].filter(Boolean).join(" ")
+  ];
+  const seen = new Set();
+  return values.filter(value => {
+    const normalized = normalizeSearchText(value);
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
 }
 
 function normalizeIsrc(value) {

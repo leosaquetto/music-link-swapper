@@ -7,6 +7,7 @@ import {
   extractTidalTrackId,
   fetchTidalTrackById,
   findBestTidalTrack,
+  scoreTidalCandidate,
   searchTidalTracks
 } from "../api/lib/tidal.js";
 
@@ -19,7 +20,11 @@ test("TIDAL helpers parse direct track URLs and normalize hydrated search result
   await withMockTidalFetch(async (input, options = {}) => {
     const url = new URL(String(input));
     if (url.href === "https://auth.tidal.com/v1/oauth2/token") {
-      assert.match(String(options.headers?.Authorization || ""), /^Basic /);
+      assert.equal(options.headers?.Authorization, undefined);
+      const body = new URLSearchParams(String(options.body || ""));
+      assert.equal(body.get("client_id"), "test-client");
+      assert.equal(body.get("client_secret"), "test-secret");
+      assert.equal(body.get("grant_type"), "client_credentials");
       return jsonResponse({ access_token: "test-token", expires_in: 3600, token_type: "Bearer" });
     }
 
@@ -143,7 +148,10 @@ test("TIDAL matching accepts a strong candidate and rejects wrong artists", asyn
     if (url.href === "https://auth.tidal.com/v1/oauth2/token") {
       return jsonResponse({ access_token: "test-token", expires_in: 3600 });
     }
-    if (url.pathname.endsWith("/searchResults/Daft%20Punk%20One%20More%20Time/relationships/tracks")) {
+    if (
+      url.pathname.endsWith("/searchResults/Daft%20Punk%20One%20More%20Time/relationships/tracks") ||
+      url.pathname.endsWith("/searchResults/One%20More%20Time%20Daft%20Punk/relationships/tracks")
+    ) {
       return jsonResponse({ data: [{ type: "tracks", id: "1" }], included: [] });
     }
     if (url.pathname.endsWith("/tracks/1")) {
@@ -162,6 +170,80 @@ test("TIDAL matching accepts a strong candidate and rejects wrong artists", asyn
       query: "Daft Punk One More Time"
     });
     assert.equal(match, null);
+  });
+});
+
+test("TIDAL matching accepts a primary credited artist without accepting partial artist names", () => {
+  const goldenTarget = {
+    title: "Golden",
+    artist: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast"
+  };
+  const zombieTarget = {
+    title: "Zombie",
+    artist: "YUNGBLUD & The Smashing Pumpkins"
+  };
+
+  assert.ok(scoreTidalCandidate(goldenTarget, {
+    title: "Golden",
+    artist: "HUNTR/X",
+    popularity: 0.9
+  }) >= 72);
+  assert.ok(scoreTidalCandidate(zombieTarget, {
+    title: "Zombie",
+    artist: "YUNGBLUD",
+    popularity: 0.9
+  }) >= 72);
+  assert.ok(scoreTidalCandidate(zombieTarget, {
+    title: "Zombie",
+    artist: "YUNGBLUD Tribute Band",
+    popularity: 0.9
+  }) < 72);
+});
+
+test("TIDAL matching retries with the primary credited artist", async () => {
+  const requests = [];
+  await withMockTidalFetch(async input => {
+    const url = new URL(String(input));
+    if (url.href === "https://auth.tidal.com/v1/oauth2/token") {
+      return jsonResponse({ access_token: "test-token", expires_in: 3600 });
+    }
+
+    if (url.pathname.includes("/searchResults/")) {
+      const query = decodeURIComponent(url.pathname.split("/searchResults/")[1].split("/relationships/")[0]);
+      requests.push(query);
+      if (query === "Golden HUNTR/X") {
+        return jsonResponse({
+          data: [{ type: "tracks", id: "123456" }],
+          included: []
+        });
+      }
+      return jsonResponse({ data: [], included: [] });
+    }
+
+    if (url.pathname.endsWith("/tracks/123456")) {
+      return jsonResponse(buildTidalTrackDocument({
+        id: "123456",
+        title: "Golden",
+        artist: "HUNTR/X",
+        album: "KPop Demon Hunters (Soundtrack from the Netflix Film)",
+        duration: "PT3M12S"
+      }));
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    const match = await findBestTidalTrack({
+      title: "Golden",
+      artist: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast",
+      album: "KPop Demon Hunters (Soundtrack from the Netflix Film)",
+      query: "Golden HUNTR/X EJAE AUDREY NUNA REI AMI KPop Demon Hunters Cast"
+    });
+
+    assert.equal(match?.url, "https://tidal.com/browse/track/123456");
+    assert.deepEqual(requests, [
+      "Golden HUNTR/X EJAE AUDREY NUNA REI AMI KPop Demon Hunters Cast",
+      "Golden HUNTR/X"
+    ]);
   });
 });
 

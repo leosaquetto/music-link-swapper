@@ -26,7 +26,7 @@ Agent-facing rules for preserving this behavior live in [`agent-rules.md`](./age
 11. YouTube Data API matching only when still missing YouTube or YouTube Music.
 12. Manual correction, hidden unless a primary platform is missing.
 
-Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, Deezer, TIDAL, or Spotify link, the app can persist that result without spending YouTube API quota. If it returns only unrelated platforms or the same input platform, the app skips those links.
+Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, Deezer, TIDAL, or Spotify link, the app can persist that result without spending YouTube API quota. This enrichment also runs when Deezer or TIDAL are the only missing automatic platforms. If it returns only unrelated platforms or the same input platform, the app skips those links.
 
 Cache hits that are missing platforms can be upgraded. Before upgrade, the API must apply reliable input metadata so stale partial rows such as `musica encontrada` or `resultado por busca` do not become canonical truth.
 
@@ -95,7 +95,7 @@ TIDAL is a first-class automatic platform when the app has a trusted direct trac
 - Songlink/Odesli or another trusted provider;
 - accepted manual correction.
 
-The app uses TIDAL's Web API with OAuth client credentials on the server only. It uses catalog lookup/search endpoints, does not request user OAuth, does not use playback/streaming/preview endpoints, and never stores audio. Set `TIDAL_MATCHING_ENABLED=false` to disable TIDAL lookup/search instantly. The default market is `BR`, configurable with `TIDAL_COUNTRY_CODE`.
+The app uses TIDAL's Web API with OAuth client credentials on the server only when that grant is enabled for the registered TIDAL app. It uses catalog lookup/search endpoints, does not request user OAuth, does not use playback/streaming/preview endpoints, and never stores audio. Set `TIDAL_MATCHING_ENABLED=false` to disable TIDAL lookup/search instantly; direct TIDAL links may still be filled by Songlink/Odesli. The default market is `BR`, configurable with `TIDAL_COUNTRY_CODE`.
 
 Accepted display links are direct tracks only:
 

@@ -195,7 +195,7 @@ Integracoes usadas pela API:
 - `https://statslc.leosaquetto.com/api/catalog-link-bridge`: bridge interno stats-lc/stats.fm para enriquecer Spotify e Apple Music.
 - Spotify Web Player partner API: matching Spotify quando habilitado.
 - Deezer Simple API: lookup por track id, busca por track e endpoint interno `/api/deezer/search`, todos sem OAuth nesta etapa.
-- TIDAL Web API: OAuth client credentials server-side, lookup por track id, filtro por ISRC, busca por searchResults e endpoint interno `/api/tidal/search`, sem OAuth de usuario, playback, streaming, preview ou audio armazenado.
+- TIDAL Web API: OAuth client credentials server-side quando o grant estiver habilitado para o app, lookup por track id, filtro por ISRC, busca por searchResults e endpoint interno `/api/tidal/search`, sem OAuth de usuario, playback, streaming, preview ou audio armazenado. Songlink/Odesli continua como fallback de link direto quando a API TIDAL estiver desabilitada ou indisponivel.
 - YouTube Data API: matching opcional para YouTube e YouTube Music quando ainda nao ha link direto confiavel.
 - YouTube oEmbed, noembed e YouTube Data API `videos.list`: fallback de metadados para inputs YouTube/YouTube Music oficiais.
 - `https://itunes.apple.com/search`: busca Apple/iTunes para fallback por query.

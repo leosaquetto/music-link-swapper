@@ -6,6 +6,7 @@ import {
   extractDeezerTrackId,
   fetchDeezerTrackById,
   findBestDeezerTrack,
+  scoreDeezerCandidate,
   searchDeezerTracks
 } from "../api/lib/deezer.js";
 
@@ -138,6 +139,74 @@ test("Deezer matching accepts a strong candidate and rejects wrong artists", asy
       artist: "Daft Punk"
     });
     assert.equal(match, null);
+  });
+});
+
+test("Deezer matching accepts a primary credited artist without accepting partial artist names", () => {
+  const goldenTarget = {
+    title: "Golden",
+    artist: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast"
+  };
+  const zombieTarget = {
+    title: "Zombie",
+    artist: "YUNGBLUD & The Smashing Pumpkins"
+  };
+
+  assert.ok(scoreDeezerCandidate(goldenTarget, {
+    title: "Golden",
+    artist: "HUNTR/X",
+    readable: true,
+    rank: 900000
+  }) >= 72);
+  assert.ok(scoreDeezerCandidate(zombieTarget, {
+    title: "Zombie",
+    artist: "YUNGBLUD",
+    readable: true,
+    rank: 900000
+  }) >= 72);
+  assert.ok(scoreDeezerCandidate(zombieTarget, {
+    title: "Zombie",
+    artist: "YUNGBLUD Tribute Band",
+    readable: true,
+    rank: 900000
+  }) < 72);
+});
+
+test("Deezer matching retries with the primary credited artist", async () => {
+  const requests = [];
+  await withMockFetch(async input => {
+    const url = new URL(String(input));
+    const query = url.searchParams.get("q");
+    requests.push(query);
+    if (query === "Golden HUNTR/X") {
+      return jsonResponse({
+        total: 1,
+        data: [
+          buildDeezerTrack({
+            id: 3412534581,
+            title: "Golden",
+            artist: "HUNTR/X",
+            album: "KPop Demon Hunters (Soundtrack from the Netflix Film)",
+            duration: 192,
+            rank: 900000
+          })
+        ]
+      });
+    }
+    return jsonResponse({ total: 0, data: [] });
+  }, async () => {
+    const match = await findBestDeezerTrack({
+      title: "Golden",
+      artist: "HUNTR/X, EJAE, AUDREY NUNA, REI AMI & KPop Demon Hunters Cast",
+      album: "KPop Demon Hunters (Soundtrack from the Netflix Film)",
+      query: "Golden HUNTR/X EJAE AUDREY NUNA REI AMI KPop Demon Hunters Cast"
+    });
+
+    assert.equal(match?.url, "https://www.deezer.com/track/3412534581");
+    assert.deepEqual(requests, [
+      "Golden HUNTR/X EJAE AUDREY NUNA REI AMI KPop Demon Hunters Cast",
+      "Golden HUNTR/X"
+    ]);
   });
 });
 

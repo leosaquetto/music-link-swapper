@@ -1,4 +1,6 @@
 import {
+  getPrimaryArtistCredit,
+  isArtistCreditMatch,
   normalizeSearchText,
   scoreTextAlignment,
   tokenize
@@ -159,6 +161,7 @@ export async function findBestTidalTrack(target = {}) {
 
   const title = String(target.title || target.trackName || "").trim();
   const artist = String(target.artist || target.artistName || target.description || "").trim();
+  const album = String(target.album || target.albumName || "").trim();
   const query = String(target.query || [title, artist].filter(Boolean).join(" ")).trim();
   const isrc = normalizeIsrc(target.isrc);
   const duration = Number(target.duration || target.durationSeconds || 0) || Math.round((Number(target.durationMs || 0) || 0) / 1000);
@@ -166,7 +169,7 @@ export async function findBestTidalTrack(target = {}) {
   if (isrc) {
     try {
       const isrcMatches = await fetchTidalTracksByIsrc(isrc);
-      const bestIsrcMatch = pickBestTidalCandidate({ title, artist, query, isrc, duration }, isrcMatches);
+      const bestIsrcMatch = pickBestTidalCandidate({ title, artist, album, query, isrc, duration }, isrcMatches);
       if (bestIsrcMatch && (bestIsrcMatch.score >= MIN_MATCH_SCORE || normalizeIsrc(bestIsrcMatch.isrc) === isrc)) {
         return {
           ...bestIsrcMatch,
@@ -181,8 +184,14 @@ export async function findBestTidalTrack(target = {}) {
 
   if (!query) return null;
 
-  const search = await searchTidalTracks({ q: query, limit: 8 });
-  const best = pickBestTidalCandidate({ title, artist, query, isrc, duration }, search.results);
+  let best = null;
+  for (const searchQuery of buildSearchQueries({ query, title, artist })) {
+    const search = await searchTidalTracks({ q: searchQuery, limit: 8 });
+    const candidate = pickBestTidalCandidate({ title, artist, album, query, isrc, duration }, search.results);
+    if (!best || Number(candidate?.score || 0) > Number(best?.score || 0)) {
+      best = candidate;
+    }
+  }
   if (!best || best.score < MIN_MATCH_SCORE) return null;
 
   return {
@@ -234,11 +243,16 @@ export function scoreTidalCandidate(target = {}, candidate = {}) {
   const candidateTitle = normalizeSearchText(candidate.title || "");
   const targetArtist = normalizeSearchText(target.artist || "");
   const candidateArtist = normalizeSearchText(candidate.artist || "");
+  const targetAlbum = normalizeSearchText(target.album || "");
+  const candidateAlbum = normalizeSearchText(candidate.album || "");
 
   if (targetTitle && candidateTitle === targetTitle) score += 28;
   else if (targetTitle && candidateTitle.startsWith(targetTitle)) score += 8;
 
   if (targetArtist && candidateArtist === targetArtist) score += 24;
+  else if (isArtistCreditMatch(target.artist, candidate.artist)) score += 22;
+  if (targetAlbum && candidateAlbum === targetAlbum) score += 12;
+  else if (targetAlbum && candidateAlbum && candidateAlbum.includes(targetAlbum)) score += 6;
 
   const targetIsrc = normalizeIsrc(target.isrc);
   const candidateIsrc = normalizeIsrc(candidate.isrc);
@@ -337,6 +351,21 @@ function normalizeIsrc(value) {
     .toUpperCase();
 }
 
+function buildSearchQueries({ query, title, artist }) {
+  const primaryArtist = getPrimaryArtistCredit(artist);
+  const values = [
+    query,
+    [title, primaryArtist].filter(Boolean).join(" ")
+  ];
+  const seen = new Set();
+  return values.filter(value => {
+    const normalized = normalizeSearchText(value);
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
 function clampNumber(value, min, max, fallback) {
   const number = Number.parseInt(value, 10);
   if (!Number.isFinite(number)) return fallback;
@@ -390,16 +419,18 @@ async function fetchTidalAccessToken() {
 
   const clientId = String(process.env.TIDAL_CLIENT_ID || "").trim();
   const clientSecret = String(process.env.TIDAL_CLIENT_SECRET || "").trim();
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const response = await fetchWithTimeout(TIDAL_TOKEN_URL, {
     method: "POST",
     headers: {
       Accept: "application/json",
-      Authorization: `Basic ${credentials}`,
       "Content-Type": "application/x-www-form-urlencoded",
       "User-Agent": "music-link-swapper/1.0"
     },
-    body: "grant_type=client_credentials"
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "client_credentials"
+    }).toString()
   });
   const payload = await readJson(response);
 
