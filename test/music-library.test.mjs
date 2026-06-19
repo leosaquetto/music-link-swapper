@@ -49,12 +49,6 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
           url: "https://www.deezer.com/track/3135556",
           isVerified: true,
           source: "idhs"
-        },
-        {
-          type: "tidal",
-          url: "https://tidal.com/track/75413016",
-          isVerified: true,
-          source: "tidal_api"
         }
       ]
     };
@@ -75,7 +69,7 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
     assert.equal(cachedByAlias.title, "One More Time");
     assert.deepEqual(
       cachedByAlias.links.map(link => link.type),
-      ["spotify", "appleMusic", "deezer", "tidal"]
+      ["spotify", "appleMusic", "deezer"]
     );
     assert.equal(cachedByAlias.links.some(link => link.url.includes("/search")), false);
 
@@ -93,7 +87,7 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
     });
     assert.deepEqual(
       afterManual.links.map(link => link.type),
-      ["spotify", "appleMusic", "deezer", "tidal", "youtube", "youtubeMusic"]
+      ["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"]
     );
 
     const rows = sql.raw("select platform, count(*)::int as count from track_links where status = 'published' group by platform order by platform");
@@ -101,7 +95,6 @@ test("music library schema supports cached links, aliases, idempotent upserts, a
       { platform: "appleMusic", count: 1 },
       { platform: "deezer", count: 1 },
       { platform: "spotify", count: 1 },
-      { platform: "tidal", count: 1 },
       { platform: "youtube", count: 1 }
     ]);
 

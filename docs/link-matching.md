@@ -2,7 +2,7 @@
 
 The product follows a Tapelink-style regular link promise:
 
-- Automatic links are limited to Spotify, Apple Music, Deezer, TIDAL, YouTube, and YouTube Music.
+- Automatic links are limited to Spotify, Apple Music, Deezer, YouTube, and YouTube Music.
 - Result cards render only direct, openable links.
 - Generated search URLs are never valid display links.
 - Missing platforms are exposed only as `missingPlatforms` for correction prompts, not as failed rows.
@@ -15,18 +15,17 @@ Agent-facing rules for preserving this behavior live in [`agent-rules.md`](./age
 
 1. Postgres/Neon cache by normalized input URL.
 2. Postgres/Neon cache by canonical track key.
-3. Input metadata context for Spotify, Apple Music, Deezer, TIDAL, YouTube, and YouTube Music.
+3. Input metadata context for Spotify, Apple Music, Deezer, YouTube, and YouTube Music.
 4. Direct input link preservation when the submitted URL is already a valid platform link.
 5. stats-lc bridge for Spotify and Apple Music enrichment from stats.fm catalog IDs.
 6. Spotify Web Player matching when enabled.
 7. Apple Music/iTunes lookup and search.
 8. Deezer public API lookup/search when enabled.
-9. TIDAL Web API lookup/search when enabled and server-side credentials are configured.
-10. Songlink/Odesli enrichment for direct links returned by that provider.
-11. YouTube Data API matching only when still missing YouTube or YouTube Music.
-12. Manual correction, hidden unless a primary platform is missing.
+9. Songlink/Odesli enrichment for direct links returned by that provider.
+10. YouTube Data API matching only when still missing YouTube or YouTube Music.
+11. Manual correction, hidden unless a primary platform is missing.
 
-Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, Deezer, TIDAL, or Spotify link, the app can persist that result without spending YouTube API quota. This enrichment also runs when Deezer or TIDAL are the only missing automatic platforms. If it returns only unrelated platforms or the same input platform, the app skips those links.
+Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, Deezer, or Spotify link, the app can persist that result without spending YouTube API quota. This enrichment also runs when Deezer is the only missing automatic platform. If it returns only unrelated platforms or the same input platform, the app skips those links.
 
 Cache hits that are missing platforms can be upgraded. Before upgrade, the API must apply reliable input metadata so stale partial rows such as `musica encontrada` or `resultado por busca` do not become canonical truth.
 
@@ -50,7 +49,6 @@ When `DATABASE_URL` is absent, conversion still works, but durable cache and pro
 - `spotify_web`
 - `itunes`
 - `deezer_api`
-- `tidal_api`
 - `songlink`
 - `idhs`
 - `youtube_api`
@@ -63,7 +61,7 @@ The API also returns:
 - `data.cacheStatus`: `hit`, `miss`, or `partial`.
 - `data.missingPlatforms`: supported automatic platforms that are still missing, for correction UI only.
 
-Search URLs such as `open.spotify.com/search/...`, `deezer.com/search/...`, `tidal.com/search...`, or `music.youtube.com/search?...` must not be returned as result links.
+Search URLs such as `open.spotify.com/search/...`, `deezer.com/search/...`, or `music.youtube.com/search?...` must not be returned as result links.
 
 ## Deezer
 
@@ -85,32 +83,9 @@ GET /api/deezer/search?q=<text>&limit=<1-20>&index=<0+>
 
 It returns normalized Deezer track candidates for app/API use. Display cards still use only direct `/track/{id}` links; the search endpoint itself is not a display-link source unless a candidate has been selected and normalized to a direct track URL.
 
-## TIDAL
+## TIDAL pause
 
-TIDAL is a first-class automatic platform when the app has a trusted direct track id:
-
-- input URL;
-- cache;
-- TIDAL Web API lookup/search;
-- Songlink/Odesli or another trusted provider;
-- accepted manual correction.
-
-The app uses TIDAL's Web API with OAuth client credentials on the server only when that grant is enabled for the registered TIDAL app. It uses catalog lookup/search endpoints, does not request user OAuth, does not use playback/streaming/preview endpoints, and never stores audio. Set `TIDAL_MATCHING_ENABLED=false` to disable TIDAL lookup/search instantly; direct TIDAL links may still be filled by Songlink/Odesli. The default market is `BR`, configurable with `TIDAL_COUNTRY_CODE`.
-
-Accepted display links are direct tracks only:
-
-- `https://tidal.com/browse/track/{id}`
-- `https://tidal.com/track/{id}`
-
-They are canonicalized to `https://tidal.com/browse/track/{id}`. Search, album, artist, video, and playlist URLs are not valid display links.
-
-The read-only search endpoint is:
-
-```text
-GET /api/tidal/search?q=<text>&limit=<1-20>&cursor=<cursor>
-```
-
-It returns normalized TIDAL track candidates for app/API use. Display cards still use only direct track links; the search endpoint itself is not a display-link source unless a candidate has been selected and normalized to a direct track URL.
+TIDAL support is temporarily removed from the automatic platform promise while the registered app cannot use the `client_credentials` grant. There is no active TIDAL endpoint, no TIDAL provider probe, no TIDAL env contract, and TIDAL links returned by Songlink/Odesli are filtered out by the shared music contract.
 
 ## Public result cards
 
@@ -171,7 +146,7 @@ This metadata path is separate from search matching. It exists so official YouTu
 - Generic metadata such as `musica encontrada`, `track found`, and `resultado por busca` is treated as weak and can be replaced by trusted input/provider metadata.
 - Apple/iTunes search has an alternate simplified query for live titles with venue/date suffixes.
 - YouTube metadata can fall back from public embed endpoints to YouTube Data API `videos.list`.
-- Production validation covered official YouTube Music, Apple Music, and Spotify examples returning the previous four automatic platforms with direct URLs. Deezer and TIDAL were added afterward and should be smoke-tested separately after deploy.
+- Production validation covered official YouTube Music, Apple Music, and Spotify examples returning the previous four automatic platforms with direct URLs. Deezer was added afterward and should be smoke-tested separately after deploy.
 
 Known fixtures that should keep working:
 
@@ -207,7 +182,7 @@ The API validates the host/platform and stores low-confidence corrections as hid
 Validation has two layers:
 
 - Frontend and backend reject invalid URLs, search URLs, and platform mismatches before a correction can be accepted.
-- Backend semantic confidence is available only when metadata can be fetched for the submitted platform. Apple Music uses iTunes Lookup, Spotify uses Spotify oEmbed, Deezer uses Deezer track lookup, and TIDAL uses TIDAL track lookup when credentials are configured. Corrections with weak or unavailable metadata remain pending unless a trusted correction token is provided.
+- Backend semantic confidence is available only when metadata can be fetched for the submitted platform. Apple Music uses iTunes Lookup, Spotify uses Spotify oEmbed, and Deezer uses Deezer track lookup. Corrections with weak or unavailable metadata remain pending unless a trusted correction token is provided.
 
 YouTube and YouTube Music manual corrections currently do not fetch metadata in `POST /api/manual-link`; they should be treated as review-first unless submitted with a trusted token. This protects the shared cache from wrong-song submissions while still allowing useful user corrections to be collected.
 
@@ -223,9 +198,8 @@ Before deploying matching changes:
 - Confirm a cached `?track=trk_...` card loads and an unknown id shows the public-card error state.
 - Confirm public-card refresh does not drop fresher links already present in the current result.
 - Confirm pending manual links do not appear in `GET /api/track`.
-- Test at least one Spotify input, one Apple Music input, one Deezer input, one TIDAL input, and one YouTube input.
+- Test at least one Spotify input, one Apple Music input, one Deezer input, and one YouTube input.
 - Test `/api/deezer/search?q=Daft%20Punk%20One%20More%20Time`.
-- Test `/api/tidal/search?q=Daft%20Punk%20One%20More%20Time`.
 - Test at least one YouTube Music official art-track input that starts from cache miss.
 - Test at least one partial-cache upgrade when a platform is missing.
 - Check Vercel runtime logs for error/fatal logs after production smoke tests.

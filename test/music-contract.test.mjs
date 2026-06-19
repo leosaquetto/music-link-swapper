@@ -25,10 +25,10 @@ test("filterDisplayLinks keeps only direct automatic platform links", () => {
 
   assert.deepEqual(
     links.map(item => item.type),
-    ["spotify", "appleMusic", "deezer", "tidal", "youtube", "youtubeMusic"]
+    ["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"]
   );
   assert.equal(links[0].url, "https://open.spotify.com/track/123");
-  assert.equal(links.find(item => item.type === "tidal").url, "https://tidal.com/browse/track/75413016");
+  assert.equal(links.some(item => item.type === "tidal"), false);
   assert.equal(links.find(item => item.type === "youtubeMusic").url, "https://music.youtube.com/watch?v=abc123");
   assert.equal(links.some(item => item.url.includes("/search")), false);
 });
@@ -49,7 +49,7 @@ test("decorateResultForResponse adds cache metadata and missing platforms", () =
   assert.match(result.trackId, /^trk_[a-f0-9]{20}$/);
   assert.equal(result.cacheStatus, "partial");
   assert.deepEqual(result.links.map(item => item.type), ["spotify"]);
-  assert.deepEqual(result.missingPlatforms, ["appleMusic", "deezer", "tidal", "youtube", "youtubeMusic"]);
+  assert.deepEqual(result.missingPlatforms, ["appleMusic", "deezer", "youtube", "youtubeMusic"]);
 });
 
 test("validatePlatformUrl rejects search URLs and platform mismatches", () => {
@@ -57,7 +57,7 @@ test("validatePlatformUrl rejects search URLs and platform mismatches", () => {
   assert.equal(validatePlatformUrl("spotify", "https://open.spotify.com/search/abc").ok, false);
   assert.equal(validatePlatformUrl("deezer", "https://www.deezer.com/track/3135553").ok, true);
   assert.equal(validatePlatformUrl("deezer", "https://www.deezer.com/search/daft%20punk").ok, false);
-  assert.equal(validatePlatformUrl("tidal", "https://tidal.com/browse/track/75413016").ok, true);
+  assert.equal(validatePlatformUrl("tidal", "https://tidal.com/browse/track/75413016").ok, false);
   assert.equal(validatePlatformUrl("tidal", "https://tidal.com/search/daft%20punk").ok, false);
   assert.equal(validatePlatformUrl("tidal", "https://tidal.com/browse/album/123").ok, false);
   assert.equal(validatePlatformUrl("youtubeMusic", "https://www.youtube.com/watch?v=abc").ok, false);
@@ -88,6 +88,6 @@ test("getMissingPlatforms reports the current automatic platform set", () => {
       { type: "deezer", url: "https://www.deezer.com/track/1" },
       { type: "youtube", url: "https://www.youtube.com/watch?v=abc" }
     ]),
-    ["appleMusic", "tidal"]
+    ["appleMusic"]
   );
 });

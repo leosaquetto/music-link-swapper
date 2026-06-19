@@ -7,7 +7,6 @@ This app is not "blindado" by default. It has useful application-level safeguard
 - `POST /api/convert` accepts only `POST`.
 - `GET /api/track` accepts only `GET` and validates `trackId` with a strict `trk_...` pattern.
 - `GET /api/deezer/search` accepts only `GET`, validates query length/junk patterns, clamps pagination, and respects `DEEZER_MATCHING_ENABLED=false`.
-- `GET /api/tidal/search` accepts only `GET`, validates query length/junk patterns, clamps pagination cursor/limit, requires server-side TIDAL credentials, and respects `TIDAL_MATCHING_ENABLED=false`.
 - `POST /api/manual-link` validates platform, host, and URL shape before writing anything.
 - Search URLs and platform mismatches are rejected by the shared music contract.
 - Link inputs are length-limited and restricted to known music hosts.
@@ -18,13 +17,13 @@ This app is not "blindado" by default. It has useful application-level safeguard
   - after repeated strikes, the caller is blocked for 10 minutes.
 - `POST /api/convert` has an in-memory concurrency cap of 40 in-flight requests per instance.
 - Low-confidence manual corrections are stored as `pending` and are hidden from public cards.
-- `DATABASE_URL`, `YOUTUBE_API_KEY`, `TIDAL_CLIENT_SECRET`, `STATSLC_BRIDGE_TOKEN`, and `MANUAL_LINK_TOKEN` are server-side secrets and must not be exposed in frontend code.
+- `DATABASE_URL`, `YOUTUBE_API_KEY`, `STATSLC_BRIDGE_TOKEN`, and `MANUAL_LINK_TOKEN` are server-side secrets and must not be exposed in frontend code.
 
 ## Remaining risk
 
 - In-memory rate limits are per serverless instance. They help normal abuse, but they are not a full distributed-abuse barrier.
 - `vercel.json` currently does not declare security headers, challenge rules, or edge rate limits.
-- A burst of cache misses can spend YouTube Data API quota, consume Deezer public API quota, consume TIDAL API quota/access tier, and slow down provider calls.
+- A burst of cache misses can spend YouTube Data API quota, consume Deezer public API quota, and slow down provider calls.
 - Public endpoints are anonymous, so abuse controls must assume no account identity.
 - Manual correction is intentionally public, but incorrect submissions must stay hidden unless trusted.
 - Third-party provider failures can create partial results; the UI should hide missing platforms rather than show dead rows.
@@ -63,8 +62,7 @@ The current app uses external image/media URLs and opens third-party music platf
 - Never commit `.env.local` or raw API keys.
 - Keep the YouTube API key restricted to YouTube Data API v3.
 - Prefer server-side usage only for the YouTube key.
-- Monitor YouTube Data API quota, Deezer provider errors, and TIDAL provider errors after matching changes.
-- Monitor TIDAL auth/rate/access-tier errors after matching changes.
+- Monitor YouTube Data API quota and Deezer provider errors after matching changes.
 - Rotate leaked or pasted keys immediately.
 - Keep `STATSLC_BRIDGE_TOKEN` aligned with the corresponding token in `stats-lc-api`.
 - Use `MANUAL_LINK_TOKEN` only for trusted internal correction flows.
@@ -74,13 +72,12 @@ The current app uses external image/media URLs and opens third-party music platf
 After deploys that touch matching or providers:
 
 - Run `npm run check`.
-- Smoke-test one Spotify, one Apple Music, one Deezer, one TIDAL, and one YouTube Music input.
+- Smoke-test one Spotify, one Apple Music, one Deezer, and one YouTube Music input.
 - Smoke-test `GET /api/deezer/search?q=Daft%20Punk%20One%20More%20Time`.
-- Smoke-test `GET /api/tidal/search?q=Daft%20Punk%20One%20More%20Time`.
 - Check that no result link is a search URL.
 - Check Vercel error/fatal logs after production smoke tests.
 - Watch for spikes in `429`, `5xx`, provider errors, and YouTube quota usage.
-- Watch for Deezer `QUOTA`/`SERVICE_BUSY` errors, TIDAL auth/rate/access-tier errors, and local `deezer_api`/`tidal_api` provider attempts.
+- Watch for Deezer `QUOTA`/`SERVICE_BUSY` errors and local `deezer_api` provider attempts.
 - Check whether repeated cache misses are coming from the same IP, ASN, or user agent.
 
 ## Incident response
@@ -92,7 +89,6 @@ If the app is under obvious abuse:
 3. Disable expensive providers with env kill switches if needed:
    - `YOUTUBE_MATCHING_ENABLED=false`
    - `DEEZER_MATCHING_ENABLED=false`
-   - `TIDAL_MATCHING_ENABLED=false`
    - `SPOTIFY_WEB_MATCHING_ENABLED=false`
    - `STATSLC_BRIDGE_ENABLED=false`
 4. Block or challenge abusive IPs, ASNs, user agents, or countries only after checking logs.

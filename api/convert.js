@@ -28,13 +28,6 @@ import {
   isDeezerMatchingEnabled
 } from "./lib/deezer.js";
 import {
-  extractTidalTrackId,
-  fetchTidalTrackById,
-  findBestTidalTrack,
-  isTidalConfigured,
-  isTidalMatchingEnabled
-} from "./lib/tidal.js";
-import {
   isYoutubeDataMatchingConfigured,
   searchYoutubeVideoForTrackWithDiagnostics
 } from "./lib/youtube-data.js";
@@ -83,7 +76,6 @@ const SONGLINK_PRIORITY_HOSTS = [
   "pandora.com",
   "music.amazon.com",
   "amazon.com/music",
-  "tidal.com",
   "soundcloud.com",
   "qobuz.com"
 ];
@@ -373,12 +365,11 @@ async function buildSpotifySearchFallback(link) {
       return cachedWithCurrentSpotifyUrl;
     }
 
-    const [appleMusicResult, deezerResult, tidalResult] = await Promise.all([
+    const [appleMusicResult, deezerResult] = await Promise.all([
       fetchAppleMusicLinkFromItunes(normalizedQuery.query, normalizedQuery),
-      findBestDeezerTrack(normalizedQuery).catch(() => null),
-      findBestTidalTrack(normalizedQuery).catch(() => null)
+      findBestDeezerTrack(normalizedQuery).catch(() => null)
     ]);
-    const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, link, appleMusicResult, deezerResult, tidalResult);
+    const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, link, appleMusicResult, deezerResult);
     const [songLinkFromApple, primaryFromApple] = appleMusicResult.url
       ? await Promise.all([
           fetchSongLink(appleMusicResult.url, { markVerified: true }),
@@ -408,11 +399,11 @@ async function buildSpotifySearchFallback(link) {
       { title: metadata.title, description: metadata.description || normalizedQuery.artist || "resultado por busca" },
       primaryFromApple.ok ? primaryFromApple.data : songLinkFromApple.ok ? songLinkFromApple.data : {},
       {
-        title: deezerResult?.title || tidalResult?.title || "",
-        description: deezerResult?.artist || tidalResult?.artist || "",
-        album: deezerResult?.album || tidalResult?.album || "",
+        title: deezerResult?.title || "",
+        description: deezerResult?.artist || "",
+        album: deezerResult?.album || "",
         image: metadata.image || deezerResult?.image || "",
-        isrc: deezerResult?.isrc || tidalResult?.isrc || ""
+        isrc: deezerResult?.isrc || ""
       }
     );
 
@@ -454,12 +445,11 @@ async function buildSearchFallbackFromQuery(query) {
     };
   }
 
-  const [appleMusicResult, deezerResult, tidalResult] = await Promise.all([
+  const [appleMusicResult, deezerResult] = await Promise.all([
     fetchAppleMusicLinkFromItunes(normalizedQuery.query, normalizedQuery),
-    findBestDeezerTrack(normalizedQuery).catch(() => null),
-    findBestTidalTrack(normalizedQuery).catch(() => null)
+    findBestDeezerTrack(normalizedQuery).catch(() => null)
   ]);
-  const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, "", appleMusicResult, deezerResult, tidalResult).filter(
+  const baseLinks = buildSearchLinksFromQuery(normalizedQuery.query, "", appleMusicResult, deezerResult).filter(
     item => String(item.type || "").toLowerCase() !== "spotify"
   );
 
@@ -493,11 +483,11 @@ async function buildSearchFallbackFromQuery(query) {
     },
     primaryFromApple.ok ? primaryFromApple.data : songLinkFromApple.ok ? songLinkFromApple.data : {},
     {
-      title: deezerResult?.title || tidalResult?.title || "",
-      description: deezerResult?.artist || tidalResult?.artist || "",
-      album: deezerResult?.album || tidalResult?.album || "",
+      title: deezerResult?.title || "",
+      description: deezerResult?.artist || "",
+      album: deezerResult?.album || "",
       image: deezerResult?.image || "",
-      isrc: deezerResult?.isrc || tidalResult?.isrc || ""
+      isrc: deezerResult?.isrc || ""
     }
   );
 
@@ -540,15 +530,6 @@ async function buildInputCacheContext(link, platform) {
     } else if (platformKey === "deezer") {
       const trackId = extractDeezerTrackId(link);
       const metadata = trackId ? await fetchDeezerTrackById(trackId) : null;
-      context.title = metadata?.title || "";
-      context.artist = metadata?.artist || "";
-      context.album = metadata?.album || "";
-      context.image = metadata?.image || "";
-      context.isrc = metadata?.isrc || "";
-      context.durationMs = Number(metadata?.duration || 0) * 1000;
-    } else if (platformKey === "tidal") {
-      const trackId = extractTidalTrackId(link);
-      const metadata = trackId ? await fetchTidalTrackById(trackId) : null;
       context.title = metadata?.title || "";
       context.artist = metadata?.artist || "";
       context.album = metadata?.album || "";
@@ -663,7 +644,6 @@ function shouldUpgradeCachedResult(data) {
       return isYoutubeDataMatchingConfigured();
     }
     if (platform === "deezer") return isDeezerMatchingEnabled();
-    if (platform === "tidal") return isTidalMatchingEnabled() && isTidalConfigured();
     return platform === "spotify" || platform === "appleMusic";
   });
 }
@@ -939,7 +919,6 @@ function isSupportedMusicLink(link) {
     "music.youtube.com",
     "deezer.com",
     "soundcloud.com",
-    "tidal.com",
     "qobuz.com",
     "pandora.com",
     "music.amazon.com",
@@ -1434,11 +1413,10 @@ function containsAnyToken(tokens, candidates) {
   return candidates.some(item => tokenSet.has(item));
 }
 
-function buildSearchLinksFromQuery(_query, originalSpotifyUrl, appleMusicResult, deezerResult = null, tidalResult = null) {
+function buildSearchLinksFromQuery(_query, originalSpotifyUrl, appleMusicResult, deezerResult = null) {
   const appleMusicUrl = appleMusicResult?.url || "";
   const appleMusicIsVerified = Boolean(appleMusicResult?.isVerified);
   const deezerUrl = deezerResult?.url || "";
-  const tidalUrl = tidalResult?.url || "";
 
   const links = [
     originalSpotifyUrl
@@ -1463,14 +1441,6 @@ function buildSearchLinksFromQuery(_query, originalSpotifyUrl, appleMusicResult,
           url: deezerUrl,
           isVerified: Boolean(deezerResult?.isVerified),
           source: "deezer_api"
-        }
-      : null,
-    tidalUrl
-      ? {
-          type: "tidal",
-          url: tidalUrl,
-          isVerified: Boolean(tidalResult?.isVerified),
-          source: "tidal_api"
         }
       : null
   ];
@@ -1509,17 +1479,14 @@ async function finalizeResultData(data) {
   const spotifyEnriched = await enrichWithSpotifyFallback(base);
   const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
   const deezerEnriched = await enrichWithDeezerMatch(secondaryEnriched);
-  const tidalEnriched = await enrichWithTidalMatch(deezerEnriched);
-  const statslcEnriched = await enrichWithStatslcBridge(tidalEnriched);
+  const statslcEnriched = await enrichWithStatslcBridge(deezerEnriched);
   const spotifyWebEnriched = await enrichWithSpotifyWebMatch(statslcEnriched);
   const postSpotifyStatslcEnriched = await enrichWithStatslcBridge(spotifyWebEnriched);
   const postSpotifyWebFallbackEnriched = await enrichWithSpotifyFallback(postSpotifyStatslcEnriched);
   const postSpotifyDeezerEnriched = await enrichWithDeezerMatch(postSpotifyWebFallbackEnriched);
-  const postSpotifyTidalEnriched = await enrichWithTidalMatch(postSpotifyDeezerEnriched);
-  const appleBridgeEnriched = await enrichWithAppleBridgeFallback(postSpotifyTidalEnriched);
+  const appleBridgeEnriched = await enrichWithAppleBridgeFallback(postSpotifyDeezerEnriched);
   const postAppleDeezerEnriched = await enrichWithDeezerMatch(appleBridgeEnriched);
-  const postAppleTidalEnriched = await enrichWithTidalMatch(postAppleDeezerEnriched);
-  const songLinkEnriched = await enrichWithSongLinkDirectLinks(postAppleTidalEnriched);
+  const songLinkEnriched = await enrichWithSongLinkDirectLinks(postAppleDeezerEnriched);
   const youtubePaired = {
     ...songLinkEnriched,
     links: withYoutubePlatformPairs(Array.isArray(songLinkEnriched?.links) ? songLinkEnriched.links : [])
@@ -1932,7 +1899,7 @@ function songLinkEnrichmentPriority(item, missingSet) {
   if (type === "youtube") score += 30;
   if (type === "spotify" && missingSet.has("appleMusic")) score += 20;
   if (type === "spotify" && (missingSet.has("youtube") || missingSet.has("youtubeMusic"))) score += 18;
-  if (type === "spotify" && (missingSet.has("deezer") || missingSet.has("tidal"))) score += 14;
+  if (type === "spotify" && missingSet.has("deezer")) score += 14;
   if (item?.isVerified) score += 10;
   if (item?.source === "input" || item?.source === "cache") score += 8;
   return score;
@@ -2225,73 +2192,6 @@ async function enrichWithDeezerMatch(data) {
     await recordProviderAttempt({
       trackKey,
       provider: "deezer_api",
-      status: "error",
-      latencyMs: Date.now() - startedAt,
-      message: String(error?.message || error || "unknown_error")
-    });
-    return { ...next, links };
-  }
-}
-
-async function enrichWithTidalMatch(data) {
-  const next = { ...(data || {}) };
-  const links = dedupeAndNormalizeLinks(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
-  const hasDirectTidal = links.some(item => {
-    const type = normalizeContractPlatformKey(item?.type || "");
-    return type === "tidal" && item?.url && !isSearchLikeUrl(item.url, type);
-  });
-
-  if (hasDirectTidal || !isTidalMatchingEnabled() || !isTidalConfigured()) return { ...next, links };
-
-  const title = String(next.title || "").trim();
-  const artist = extractArtistFromPayload(next);
-  const query = [title, artist].filter(Boolean).join(" ").trim();
-  if (!title || !artist || !query) return { ...next, links };
-
-  const startedAt = Date.now();
-  const trackKey = buildCanonicalTrackKey({ title, artist, isrc: next.isrc });
-  try {
-    const match = await findBestTidalTrack({
-      query,
-      title,
-      artist,
-      album: next.album || "",
-      durationMs: Number(next.durationMs || next.duration || 0) || 0,
-      isrc: next.isrc
-    });
-
-    await recordProviderAttempt({
-      trackKey,
-      provider: "tidal_api",
-      status: match?.url ? "hit" : "miss",
-      latencyMs: Date.now() - startedAt,
-      message: match?.url ? `${match.url} score=${Math.round(Number(match.score || 0))}` : "no_match"
-    });
-
-    if (!match?.url) return { ...next, links };
-
-    return {
-      ...next,
-      title: sanitizeMetadataText(next.title || match.title, MAX_METADATA_TEXT_LENGTH) || next.title || match.title || "música encontrada",
-      description: sanitizeMetadataText(next.description || match.artist, MAX_METADATA_TEXT_LENGTH, { blankWhenNoisy: true }),
-      album: next.album || match.album || "",
-      image: next.image || match.image || "",
-      isrc: next.isrc || match.isrc || "",
-      durationMs: Number(next.durationMs || 0) || Number(match.duration || 0) * 1000,
-      links: dedupeAndNormalizeLinks([
-        ...links,
-        {
-          type: "tidal",
-          url: match.url,
-          isVerified: Boolean(match.isVerified),
-          source: "tidal_api"
-        }
-      ])
-    };
-  } catch (error) {
-    await recordProviderAttempt({
-      trackKey,
-      provider: "tidal_api",
       status: "error",
       latencyMs: Date.now() - startedAt,
       message: String(error?.message || error || "unknown_error")
@@ -2602,7 +2502,6 @@ function scoreLinkQuality(item) {
   if (source === "itunes") score += 18;
   if (source === "spotify_web") score += 12;
   if (source === "deezer_api") score += 12;
-  if (source === "tidal_api") score += 12;
   if (source === "songlink") score += 4;
 
   if (key === "applemusic" || key === "itunes") {
@@ -2640,11 +2539,6 @@ function canonicalizeMediaUrl(value) {
     if (host.includes("deezer.com")) {
       const trackId = extractDeezerTrackId(url.toString());
       if (trackId) return `https://www.deezer.com/track/${trackId}`;
-    }
-
-    if (host === "tidal.com" || host.endsWith(".tidal.com")) {
-      const trackId = extractTidalTrackId(url.toString());
-      if (trackId) return `https://tidal.com/browse/track/${trackId}`;
     }
 
     url.hash = "";
@@ -2714,7 +2608,6 @@ function detectAutomaticInputPlatform(value) {
     if (host.includes("open.spotify.com") && parsed.pathname.includes("/track/")) return "spotify";
     if (host.includes("music.apple.com") && parsed.searchParams.has("i")) return "appleMusic";
     if (host.includes("deezer.com") && extractDeezerTrackId(parsed.toString())) return "deezer";
-    if ((host === "tidal.com" || host.endsWith(".tidal.com")) && extractTidalTrackId(parsed.toString())) return "tidal";
     if (host.includes("music.youtube.com") && getYoutubeVideoId(parsed.toString())) return "youtubeMusic";
     if ((host.includes("youtube.com") || host.includes("youtu.be")) && getYoutubeVideoId(parsed.toString())) return "youtube";
     return "";
@@ -3017,7 +2910,6 @@ function detectPlatformFromUrl(url) {
   if (value.includes("soundcloud.")) return "soundcloud";
   if (value.includes("pandora.")) return "pandora";
   if (value.includes("qobuz.")) return "qobuz";
-  if (value.includes("tidal.")) return "tidal";
   if (value.includes("music.amazon.") || value.includes("amazon.com/music")) return "amazon music";
 
   return "serviço";
@@ -3105,7 +2997,6 @@ function isSearchLikeUrl(url, type = "") {
     return lower.includes("search_query=") || lower.includes("/search");
   }
   if (key === "deezer") return lower.includes("deezer.com/search");
-  if (key === "tidal") return lower.includes("tidal.com/search") || lower.includes("tidal.com/browse/search");
   if (key === "soundcloud") return lower.includes("soundcloud.com/search");
   if (key === "qobuz") return lower.includes("qobuz.com") && lower.includes("/search");
   if (key === "amazonmusic" || key === "amazonstore") return lower.includes("music.amazon.com/search");
@@ -3120,7 +3011,6 @@ export const __testHooks = {
   prepareCachedResultForUpgrade,
   finalizeResultData,
   enrichWithDeezerMatch,
-  enrichWithTidalMatch,
   enrichWithSongLinkDirectLinks,
   enrichWithSpotifyFallback,
   normalizeSongLinkPayload

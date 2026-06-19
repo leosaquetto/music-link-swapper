@@ -12,10 +12,6 @@ import {
   extractDeezerTrackId,
   fetchDeezerTrackById
 } from "./lib/deezer.js";
-import {
-  extractTidalTrackId,
-  fetchTidalTrackById
-} from "./lib/tidal.js";
 
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const ITUNES_LOOKUP_API_URL = "https://itunes.apple.com/lookup";
@@ -85,7 +81,6 @@ async function fetchManualLinkMetadata(platform, url) {
   if (platform === "appleMusic") return fetchAppleMetadata(url);
   if (platform === "spotify") return fetchSpotifyMetadata(url);
   if (platform === "deezer") return fetchDeezerMetadata(url);
-  if (platform === "tidal") return fetchTidalMetadata(url);
   return null;
 }
 
@@ -98,21 +93,6 @@ async function fetchDeezerMetadata(url) {
       title: track.title,
       artist: track.artist,
       description: track.album || "Deezer"
-    };
-  } catch (_error) {
-    return null;
-  }
-}
-
-async function fetchTidalMetadata(url) {
-  try {
-    const trackId = extractTidalTrackId(url);
-    const track = trackId ? await fetchTidalTrackById(trackId) : null;
-    if (!track) return null;
-    return {
-      title: track.title,
-      artist: track.artist,
-      description: track.album || "TIDAL"
     };
   } catch (_error) {
     return null;

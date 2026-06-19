@@ -43,11 +43,6 @@ const LOCAL_SAMPLE_CONVERSION = {
       isVerified: true
     },
     {
-      type: "tidal",
-      url: "https://tidal.com/browse/track/75413016",
-      isVerified: true
-    },
-    {
       type: "youtubeMusic",
       url: "https://music.youtube.com/watch?v=LOCALQA1111",
       isVerified: true
@@ -65,7 +60,6 @@ const REQUESTED_ADAPTERS = [
   "appleMusic",
   "spotify",
   "deezer",
-  "tidal",
   "youTube"
 ];
 
@@ -78,7 +72,6 @@ const STREAMING_HOST_HINTS = [
   "music.youtube.com",
   "deezer.com",
   "soundcloud.com",
-  "tidal.com",
   "pandora.com",
   "qobuz.com",
   "bandcamp.com",
@@ -476,19 +469,17 @@ const SVG_ICONS = {
   youtube: `<svg width="20" height="20" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M7.98843,9.58588 L7.98843,3.97425 C9.98064,4.91168 11.5236,5.8172 13.34846,6.79353 C11.84335,7.62824 9.98064,8.56468 7.98843,10.58588 M19.091,1.18289 C18.74734,0.73013 18.16163,0.37809 17.53807,0.26141 C15.70524,-0.08664 4.27097,-0.08763 2.43914,0.26141 C1.9391,0.35515 1.49384,0.58153 1.11134,0.93357 C-0.50036,2.42947 0.00466,10.45151 0.39315,11.75096 C0.55651,12.31342 0.76768,12.71931 1.03364,12.98558 C1.3763,13.33761 1.84546,13.57995 2.38436,13.68865 C3.89345,14.0008 11.66804,14.17532 17.5062,13.73552 C18.04409,13.64178 18.52023,13.39147 18.89576,13.02447 C20.38593,11.53455 20.28433,3.06174 19.091,1.18289" fill="currentColor" transform="translate(0, 3)"></path></svg>`,
   youTube: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true"><path fill="currentColor" d="M400,20C190.1,20,20,190.6,20,401c20,505.4,740.1,505.3,760,0,0-210.4-170.1-381-380-381ZM400,619.2c-120.3,0-218.2-97.9-218.2-218.2,5.9-149.3,117.2-217.1,218.2-217.1h0c100.9,0,212.2,67.8,218.1,216.6,0,120.8-97.9,218.6-218.1,218.6Z"/><path fill="currentColor" d="M400,208.8c-127.6,0-189.6,99.9-193.3,192.7,0,106.1,86.7,192.8,193.3,192.8s193.3-86.7,193.3-193.3c-3.7-92.3-65.7-192.2-193.3-192.2ZM328.4,503.9c0-20.7,0-63.1,0-83.7v-122l174.4,98.4-174.4,107.3Z"/></svg>`,
   deezer: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M24.511 22.011v3.785h6.484v-3.786h-6.486zM16.676 22.011v3.785h6.486v-3.786h-6.486zM8.84 22.011v3.785h6.484v-3.786h-6.486zM1.004 22.011v3.785h6.486v-3.786h-6.486zM24.511 16.742v3.783h6.484v-3.783h-6.484zM16.676 16.742v3.783h6.486v-3.783zM8.84 16.742v3.783h6.484v-3.783h-6.484zM24.51 11.476v3.783h6.486v-3.783zM8.84 11.476v3.783h6.484v-3.783h-6.484zM24.51 6.203v3.786h6.486v-3.786z"></path></svg>`,
-  bandcamp: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.29 6L2 18h14.71L22 6z"/></svg>`,
-  tidal: `<svg fill="currentColor" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M16.016 5.323l-5.339 5.339-5.339-5.339-5.339 5.339 5.339 5.339 5.339-5.339 5.339 5.339-5.339 5.339 5.339 5.339 5.339-5.339-5.339-5.339 5.339-5.339zM21.391 10.661l5.302-5.307 5.307 5.307-5.307 5.307z"/></svg>`
+  bandcamp: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.29 6L2 18h14.71L22 6z"/></svg>`
 };
 
 const PLATFORM_META = {
   appleMusic: { name: "apple music", icon: SVG_ICONS.appleMusic, section: "principais", order: 1, isPrimaryCopy: true, appScheme: "music://" },
   spotify: { name: "spotify", icon: SVG_ICONS.spotify, section: "principais", order: 2, isPrimaryCopy: true, appScheme: "spotify://" },
   deezer: { name: "deezer", icon: SVG_ICONS.deezer, section: "principais", order: 3, isPrimaryCopy: true, appScheme: "deezer://" },
-  tidal: { name: "tidal", icon: SVG_ICONS.tidal, section: "principais", order: 4, isPrimaryCopy: true, appScheme: "tidal://" },
-  youTube: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 5, isPrimaryCopy: true, appScheme: "youtubemusic://" },
-  youtubeMusic: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 5, isPrimaryCopy: true, appScheme: "youtubemusic://" },
-  youtube: { name: "youtube", icon: SVG_ICONS.youtube, section: "principais", order: 6, isPrimaryCopy: true, appScheme: "youtube://" },
-  amazonMusic: { name: "amazon music", icon: SVG_ICONS.amazonMusic, section: "principais", order: 7, isPrimaryCopy: true, appScheme: null },
+  youTube: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 4, isPrimaryCopy: true, appScheme: "youtubemusic://" },
+  youtubeMusic: { name: "youtube music", icon: SVG_ICONS.youTube, section: "principais", order: 4, isPrimaryCopy: true, appScheme: "youtubemusic://" },
+  youtube: { name: "youtube", icon: SVG_ICONS.youtube, section: "principais", order: 5, isPrimaryCopy: true, appScheme: "youtube://" },
+  amazonMusic: { name: "amazon music", icon: SVG_ICONS.amazonMusic, section: "principais", order: 6, isPrimaryCopy: true, appScheme: null },
   amazonStore: { name: "amazon store", icon: SVG_ICONS.amazonStore, section: "outras", order: 11, isPrimaryCopy: false, appScheme: null },
   soundCloud: { name: "soundcloud", icon: SVG_ICONS.soundCloud, section: "outras", order: 6, isPrimaryCopy: false, appScheme: "soundcloud://" },
   pandora: { name: "pandora", icon: SVG_ICONS.pandora, section: "outras", order: 7, isPrimaryCopy: false, appScheme: "pandora://" },
@@ -501,11 +492,10 @@ const SUPPORTED_PLATFORM_CHIPS = [
   "spotify",
   "appleMusic",
   "deezer",
-  "tidal",
   "youtubeMusic",
   "youtube"
 ];
-const AUTOMATIC_DISPLAY_PLATFORMS = new Set(["spotify", "appleMusic", "deezer", "tidal", "youtube", "youtubeMusic"]);
+const AUTOMATIC_DISPLAY_PLATFORMS = new Set(["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"]);
 const MADE_BY_SIGNATURE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" role="img" aria-label="Leo Saquetto signature"><g fill="currentColor"><path d="M147.7,27.1c-1.1,6.5-2.4,14.1-3.7,21.7-1.2,6.7-2.4,13.3-3.7,19.9-1.9,10.3-7.3,17-15.7,20.2-5.5,2.1-11.2,3.5-17.1,2.4-5-.9-8.2-5.2-8.4-11.1-.2-7.2,1.6-14.1,2.8-21.1,1.4-8.7,3-17.3,4.6-25.9,2.4-13.3,8.2-19.6,19.7-21.6,4.6-.8,9.1-.9,13.6.6,6.1,2.1,8.6,6.5,8,15.1ZM116.1,70.9c0,2.1-.4,3.9,1.2,4.7,1.6.8,3.2.4,4.6-1.1,1.4-1.5,1.9-3.6,2.3-5.7,1.8-10.1,3.6-20.2,5.4-30.3.6-3.2,1.2-6.4,1.6-9.6.3-2.7-.9-3.9-3.2-3.6-2.3.3-3.9,2.1-4.6,5.5-1,5.1-1.9,10.2-2.8,15.3-1.5,8.5-3.1,16.9-4.5,24.9Z"/><path d="M257.5,70.2c2.1,1.4,3.9.6,5.7,0,1.4-.5,1.7-.4,1.5,1.5-1.2,8-4.7,11.5-11.4,11.1-2.7-.2-5-1.4-6-4.5-.5-1.5-1.2-1.6-2.4-1.4-2.8.4-5.5.5-8.3-.2-6.6-1.6-9.8-6.9-8.5-14.7,1.8-11,4.2-21.9,6.2-32.9.7-3.8,1.4-7.6,3.1-11,1.9-3.9,4.5-6.6,8-8.3,6.7-3.1,13.7-3.6,20.6-1.6,6.1,1.8,8.5,6.9,7.2,14.2-2.3,11.9-4.5,23.8-6.9,35.7-1.4,6.7-3.4,9.4-8.7,12.3Z"/><path d="M472.5,74.9c-6.1.2-12.1.5-18.2.7-13.6.3-27.1.5-40.7,1-15.4.5-30.9,1-46.3,1.8-14.3.7-28.6,1.4-43,2.4-15.7,1-31.3,2.1-47,3.3-17.5,1.4-35.1,2.9-52.6,4.5-18.5,1.7-37,3.6-55.4,5.9-8.2,1-16.5,1.4-24.6,3.1-21.3,4.5-42.4,9.7-63.5,15.1-.8.2-1.8,0-2.9,1.4,38.8-6.3,77.3-12.4,115.9-16-17.4,3.9-34.9,7.8-52.6,11.8.8.9,1.3.7,1.8.6,16.1-2.4,32.3-3.8,48.4-5.7,2.4-.3,4.5-.4,6.3.5h0s4.3-.5,4.3-.5c-.1-.2-.3-.5-.4-.7,1.3-.8,2.1-.6,2.7.4l6.4-.8c-.1-.3-.3-.6-.5-1,4-.5,7.7-1,11.3-1.5l117.1-12.9c.3,0,.6-.1,1-.1.9,0,1.9,0,2.8-.2l2.8-.3c.7,0,1.4-.2,2.1-.2.6,0,1.3-.4,1.8-.2l15.7-1.4c13.9-1.3,27.8-2.9,41.8-4.1,22.5-1.9,44.9-4.4,67.4-5.7.4,0,.9.1,1-.7-.9-.6-1.9-.3-2.8-.3Z"/></g></svg>`;
 
 const state = {
@@ -2752,7 +2742,6 @@ function detectPlatformKeyFromUrl(url) {
   if (lower.includes("youtube.com") || lower.includes("youtu.be")) return "youtube";
   if (lower.includes("deezer.com")) return "deezer";
   if (lower.includes("soundcloud.com")) return "soundCloud";
-  if (lower.includes("tidal.com")) return "tidal";
   if (lower.includes("qobuz.com")) return "qobuz";
   if (lower.includes("bandcamp.com")) return "bandcamp";
   return "";
@@ -3084,7 +3073,6 @@ function isSearchUrlForPlatform(type, url) {
   if (type === "youtubeMusic") return lower.includes("music.youtube.com/search");
   if (type === "deezer") return lower.includes("deezer.com/search");
   if (type === "soundCloud") return lower.includes("soundcloud.com/search");
-  if (type === "tidal") return lower.includes("tidal.com/search") || lower.includes("tidal.com/browse/search");
   if (type === "qobuz") return lower.includes("qobuz.com/") && lower.includes("/search");
   if (type === "amazonMusic") return lower.includes("music.amazon.com/search");
   if (type === "appleMusic" || type === "itunes") {
@@ -3108,7 +3096,6 @@ function normalizePlatformKey(key) {
   if (normalized === "amazonstore") return "amazonStore";
   if (normalized === "amazon" || normalized === "amazonmusic") return "amazonMusic";
   if (normalized === "apple" || normalized === "itunes" || normalized === "applemusic") return "appleMusic";
-  if (normalized === "tidal") return "tidal";
   return raw;
 }
 
@@ -3202,14 +3189,6 @@ function isUrlForPlatform(platform, parsedUrl) {
     const trackIndex = parts.findIndex(part => part === "track");
     const id = trackIndex !== -1 ? parts[trackIndex + 1] : "";
     return (host === "deezer.com" || host.endsWith(".deezer.com")) && /^\d+$/.test(id);
-  }
-
-  if (platform === "tidal") {
-    const parts = path.split("/").filter(Boolean);
-    let id = "";
-    if (parts[0] === "browse" && parts[1] === "track") id = parts[2] || "";
-    else if (parts[0] === "track") id = parts[1] || "";
-    return (host === "tidal.com" || host.endsWith(".tidal.com")) && /^\d+$/.test(id);
   }
 
   if (platform === "youtubeMusic") {

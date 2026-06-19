@@ -54,10 +54,6 @@ STATSLC_BRIDGE_URL="https://statslc.leosaquetto.com/api/catalog-link-bridge"
 STATSLC_BRIDGE_TOKEN=""
 YOUTUBE_MATCHING_ENABLED="true"
 DEEZER_MATCHING_ENABLED="true"
-TIDAL_MATCHING_ENABLED="true"
-TIDAL_CLIENT_ID=""
-TIDAL_CLIENT_SECRET=""
-TIDAL_COUNTRY_CODE="BR"
 MANUAL_LINK_TOKEN=""
 YOUTUBE_API_KEY=""
 ```
@@ -68,18 +64,15 @@ YOUTUBE_API_KEY=""
 - `STATSLC_BRIDGE_TOKEN` is optional locally, but should match `CATALOG_LINK_BRIDGE_TOKEN` on `stats-lc-api` in production.
 - `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
 - `DEEZER_MATCHING_ENABLED=false` disables Deezer public API lookup/search instantly, including `GET /api/deezer/search`.
-- `TIDAL_MATCHING_ENABLED=false` disables TIDAL lookup/search instantly, including `GET /api/tidal/search`.
-- `TIDAL_CLIENT_ID` and `TIDAL_CLIENT_SECRET` enable server-side TIDAL OAuth client-credentials access only when the TIDAL app is approved/configured for that grant. Keep both server-side only.
-- If TIDAL returns `Grant type client_credentials is not allowed for this client`, keep `TIDAL_MATCHING_ENABLED=false` until the grant is enabled. Conversion can still receive direct TIDAL links from Songlink/Odesli.
-- `TIDAL_COUNTRY_CODE` controls TIDAL catalog market lookup/search and defaults to `BR`.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
 - `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.
+
+TIDAL support is temporarily paused. Do not add TIDAL env vars back unless the app is intentionally reintroducing TIDAL as an automatic platform.
 
 ## Production key care
 
 - Keep `.env.local` out of commits.
 - Restrict `YOUTUBE_API_KEY` to YouTube Data API v3.
-- Never expose TIDAL client credentials in frontend code or logs.
 - Monitor YouTube quota after deploys that touch matching.
 - Rotate any key that is pasted into chat, logs, screenshots, or git by mistake.
 - Keep `STATSLC_BRIDGE_TOKEN` synchronized with the matching token on `stats-lc-api`.
@@ -87,7 +80,6 @@ YOUTUBE_API_KEY=""
 - Use the kill switches when provider cost or abuse is suspected:
   - `YOUTUBE_MATCHING_ENABLED=false`
   - `DEEZER_MATCHING_ENABLED=false`
-  - `TIDAL_MATCHING_ENABLED=false`
   - `SPOTIFY_WEB_MATCHING_ENABLED=false`
   - `STATSLC_BRIDGE_ENABLED=false`
 
