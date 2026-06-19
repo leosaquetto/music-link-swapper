@@ -16,6 +16,56 @@
     <link rel="canonical" href="https://swapper.leosaquetto.com/" />
     <meta property="og:url" content="https://swapper.leosaquetto.com/" />
     <meta name="theme-color" content="#f7f8fb" />
+    <style>
+      :root {
+        background: #111217;
+      }
+
+      body {
+        background: #111217;
+      }
+
+      :root[data-theme="light"] {
+        background: #f7f8fb;
+      }
+
+      :root[data-theme="light"] body {
+        background: #f7f8fb;
+      }
+
+      .launch-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 28% 36%, rgba(243, 95, 127, 0.25), transparent 34%),
+          radial-gradient(circle at 74% 68%, rgba(46, 191, 89, 0.22), transparent 34%),
+          #111217;
+        transition: opacity 220ms ease, visibility 220ms ease;
+      }
+
+      :root[data-theme="light"] .launch-splash {
+        background:
+          radial-gradient(circle at 26% 34%, rgba(243, 95, 127, 0.22), transparent 34%),
+          radial-gradient(circle at 74% 70%, rgba(46, 191, 89, 0.20), transparent 34%),
+          #f7f8fb;
+      }
+
+      .launch-splash img {
+        width: 112px;
+        height: 112px;
+        border-radius: 26px;
+        object-fit: contain;
+        filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.32));
+      }
+
+      .launch-splash.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+    </style>
     <script>
       (function syncInitialThemeMeta() {
         try {
@@ -37,6 +87,10 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <div id="launchSplash" class="launch-splash" aria-hidden="true">
+      <img src="./assets/logo.svg" alt="" />
+    </div>
+
     <div class="bg-orb orb-a"></div>
     <div class="bg-orb orb-b"></div>
 
@@ -60,7 +114,7 @@
             </div>
           </div>
 
-        <p id="heroSubtitle" class="hero-subtitle">qualquer streaming por um só link</p>
+        <p id="heroSubtitle" class="hero-subtitle">crossover entre plataformas</p>
       </header>
 
       <main class="main-stack">
@@ -68,7 +122,10 @@
 
         <section class="card form-card reveal reveal-delay-1">
           <div class="label-row">
-            <label id="inputLabel" class="label" for="linkInput">link da música</label>
+            <div class="label-with-platforms">
+              <label id="inputLabel" class="label" for="linkInput">link da música</label>
+              <div class="supported-chips icon-chips hero-platform-icons" id="supportedChips"></div>
+            </div>
             <div class="label-actions">
               <button id="recentSwapsButton" class="tiny-button tiny-icon-button" type="button" aria-label="swaps recentes" title="swaps recentes"></button>
               <button id="useSampleButton" class="tiny-button tiny-icon-button" type="button" aria-label="sortear exemplo" title="sortear exemplo"></button>
@@ -111,7 +168,6 @@
             ></button>
           </div>
 
-          <div class="supported-chips icon-chips" id="supportedChips"></div>
         </section>
 
         <section id="statusCard" class="card status-card hidden" aria-live="polite"></section>
@@ -204,7 +260,10 @@
 
         <p id="footerMadeByText" class="footer-made-by">feito por 🇧🇷</p>
         <a class="made-by-signature-link" href="https://leosaquetto.com" target="_blank" rel="noopener noreferrer" aria-label="leo saquetto">
-          <div id="madeBySignature" class="made-by-signature" aria-hidden="true"></div>
+          <div id="madeBySignature" class="made-by-signature" aria-hidden="true">
+            <img src="./assets/leo-saquetto-mark.svg" alt="" />
+            <span>LEO SAQUETTO</span>
+          </div>
         </a>
         <div class="footer-legal-links">
           <button id="privacyPolicyButton" class="footer-legal-link" type="button">política de privacidade</button>
@@ -222,7 +281,7 @@
           <svg width="294" height="323" viewBox="0 0 294 323" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
             <defs>
               <pattern id="appIcon" patternUnits="objectBoundingBox" width="1" height="1">
-                <image href="https://i.imgur.com/T1uEx9T.gif" x="0" y="0" width="120" height="120" />
+                <image href="./assets/logo.svg" x="0" y="0" width="120" height="120" />
               </pattern>
             </defs>
             <g fill="currentColor" opacity="0.3">
@@ -271,6 +330,16 @@
       </section>
     </div>
 
+    <script>
+      window.addEventListener("load", function hideLaunchSplash() {
+        var splash = document.getElementById("launchSplash");
+        if (!splash) return;
+        splash.classList.add("is-hidden");
+        window.setTimeout(function removeLaunchSplash() {
+          splash.remove();
+        }, 260);
+      });
+    </script>
     <script src="./app.js"></script>
   </body>
 </html>

@@ -28,7 +28,7 @@ O repositorio possui `package.json` com scripts de validacao e testes. A pasta `
 - `telegram.js`: helper para Telegram WebApp, mas nao esta importado por `index.html` no estado atual.
 - `vercel.json`: somente declara o schema da Vercel, sem rotas, rewrites, headers ou configuracoes adicionais.
 - `.github/workflows/blank.yml`: workflow placeholder gerado pelo GitHub Actions, sem validacao real do projeto.
-- `assets/`: contem `logo.png`, `logo.svg`, `logo_transparent.svg`, `leosaquetto.svg` e `faveicon.png`.
+- `assets/`: contem os logos do app, a marca de rodape `leo-saquetto-mark.svg`, icones PWA e demais assets visuais.
 - `reference/idonthavespotify/`: projeto de referencia vendorizado, com README, parsers, adapters, schemas, services e utils em TypeScript.
 
 ## Superficies do produto
@@ -75,7 +75,15 @@ Principais responsabilidades de `app.js`:
 - Controlar modais de iOS install, historico e legal.
 - Controlar clipboard, share, haptics e deeplinks.
 
-O HTML inclui assets remotos para a marca principal, especialmente o GIF `https://i.imgur.com/T1uEx9T.gif?v=20260411`, alem de assets locais para icones e assinatura.
+O HTML usa assets locais para a marca principal, splash de inicializacao, icones e assinatura do rodape.
+
+A superficie inicial atual inclui:
+
+- splash claro/escuro com `assets/logo.svg`;
+- subtitulo `crossover entre plataformas`;
+- icones das quatro plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
+- fundo com orbs rosa e verde animados somente no eixo horizontal;
+- marca `LEO SAQUETTO` no rodape com o simbolo oficial do repositorio `leosaquettoapp`.
 
 ## API `/api/convert`
 
@@ -221,6 +229,8 @@ O modo de entrada e um controle segmentado `link`/`nome`, com placeholder, CTA e
 O card de resultado deve manter:
 
 - Acoes de cabecalho para limpar resultado, copiar link original, copiar principais e compartilhar.
+- Entrada e saida do modal mobile por movimento vertical; o fechamento programatico desliza o sheet para baixo, assim como o gesto de arrastar.
+- Fundo translucido por tema, bordas discretas/transparentes e cards de plataforma mais escuros no modo escuro.
 - Cores de icones aplicadas somente nos resultados do swap, nao nos chips de plataformas suportadas:
   - Apple Music: vermelho do modo claro tambem no escuro.
   - Spotify: `#25D05F`.
@@ -290,7 +300,7 @@ Pontos mapeados:
 
 - O workflow GitHub Actions e placeholder e nao valida o projeto.
 - `telegram.js` existe, mas `index.html` importa somente `app.js`.
-- `assets/faveicon.png` existe, mas o HTML usa `assets/logo.svg`, `assets/logo.png`, `assets/logo.png` como apple touch icon e imagens remotas.
+- `assets/faveicon.png` existe, mas o HTML usa principalmente `assets/logo.svg` e `assets/logo.png` para favicon, apple touch icon, PWA e splash.
 - `vercel.json` nao configura nada alem do schema.
 - A camada de borda ainda depende principalmente do padrao da Vercel; faltam regras explicitas de WAF/rate limit/headers conforme [`docs/security.md`](./docs/security.md).
 - A API depende fortemente de provedores externos que podem mudar, bloquear scraping, alterar payloads ou sair do ar.

@@ -17,6 +17,38 @@ const SAMPLE_LINKS = [
   "https://music.apple.com/br/album/let-me-go-first/1862926375?i=1862926628",
   "https://music.apple.com/br/album/golden/1820264137?i=1820264150"
 ];
+const LOCAL_SAMPLE_CONVERSION = {
+  trackId: "trk_11111111111111111111",
+  cacheStatus: "local_sample",
+  title: "Who Will You Follow",
+  description: "Who Will You Follow - Sample Artist - Local QA",
+  album: "Local QA",
+  image: "./assets/logo.png",
+  universalLink: SAMPLE_LINKS[0],
+  missingPlatforms: [],
+  links: [
+    {
+      type: "appleMusic",
+      url: SAMPLE_LINKS[0],
+      isVerified: true
+    },
+    {
+      type: "spotify",
+      url: "https://open.spotify.com/track/0LOCALQA11111111111111",
+      isVerified: true
+    },
+    {
+      type: "youtubeMusic",
+      url: "https://music.youtube.com/watch?v=LOCALQA1111",
+      isVerified: true
+    },
+    {
+      type: "youtube",
+      url: "https://www.youtube.com/watch?v=LOCALQA1111",
+      isVerified: true
+    }
+  ]
+};
 const HERO_LOGO_GIF_URL = "./assets/logo_gif.gif";
 
 const REQUESTED_ADAPTERS = [
@@ -61,7 +93,7 @@ const TRANSLATIONS = {
     linkLabel: "link da música",
     linkPlaceholder: "cole o link da música aqui",
     byline: "por leo saquetto",
-    subtitle: "qualquer streaming por um só link",
+    subtitle: "crossover entre plataformas",
     availableAs: "Disponível como",
     madeBy: "feito por 🇧🇷",
     languageSelected: "português-brasil selecionado.",
@@ -103,16 +135,16 @@ const TRANSLATIONS = {
     completeLinkInvalid: "cole um link direto válido.",
     completeLinkPlatformMismatch: "esse link não parece ser da plataforma escolhida.",
     completeLinkError: "não consegui salvar esse link agora.",
-    publicCard: "card público",
-    publicCardHint: "link compartilhável deste resultado",
-    publicCardCopyAction: "copiar card público",
-    publicCardShareAction: "compartilhar card público",
-    publicCardOpenAction: "abrir card público",
-    publicCardCopied: "card público copiado.",
-    publicCardShared: "card público compartilhado.",
-    publicCardUnavailable: "card público indisponível.",
-    publicCardLoading: "abrindo card público...",
-    publicCardNotFound: "não encontrei esse card público."
+    publicCard: "card swap",
+    publicCardHint: "link compartilhável",
+    publicCardCopyAction: "copiar card swap",
+    publicCardShareAction: "compartilhar card swap",
+    publicCardOpenAction: "abrir card swap",
+    publicCardCopied: "card swap copiado.",
+    publicCardShared: "card swap compartilhado.",
+    publicCardUnavailable: "card swap indisponível.",
+    publicCardLoading: "abrindo card swap...",
+    publicCardNotFound: "não encontrei esse card swap."
   },
   en: {
     loadingSwap: "swapping...",
@@ -123,7 +155,7 @@ const TRANSLATIONS = {
     linkLabel: "song link",
     linkPlaceholder: "paste the song link here",
     byline: "by leo saquetto",
-    subtitle: "any streaming into one link",
+    subtitle: "crossover between platforms",
     availableAs: "Available as",
     madeBy: "made by 🇧🇷",
     languageSelected: "english selected.",
@@ -165,16 +197,16 @@ const TRANSLATIONS = {
     completeLinkInvalid: "paste a valid direct link.",
     completeLinkPlatformMismatch: "this link does not look like the selected platform.",
     completeLinkError: "could not save this link now.",
-    publicCard: "public card",
-    publicCardHint: "shareable link for this result",
-    publicCardCopyAction: "copy public card",
-    publicCardShareAction: "share public card",
-    publicCardOpenAction: "open public card",
-    publicCardCopied: "public card copied.",
-    publicCardShared: "public card shared.",
-    publicCardUnavailable: "public card unavailable.",
-    publicCardLoading: "opening public card...",
-    publicCardNotFound: "could not find this public card."
+    publicCard: "swap card",
+    publicCardHint: "shareable link",
+    publicCardCopyAction: "copy swap card",
+    publicCardShareAction: "share swap card",
+    publicCardOpenAction: "open swap card",
+    publicCardCopied: "swap card copied.",
+    publicCardShared: "swap card shared.",
+    publicCardUnavailable: "swap card unavailable.",
+    publicCardLoading: "opening swap card...",
+    publicCardNotFound: "could not find this swap card."
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
@@ -185,7 +217,7 @@ const TRANSLATIONS = {
     linkLabel: "enlace de la canción",
     linkPlaceholder: "pega aquí el enlace de la canción",
     byline: "por leo saquetto",
-    subtitle: "cualquier streaming en un solo enlace",
+    subtitle: "crossover entre plataformas",
     availableAs: "Disponible como",
     madeBy: "hecho por 🇧🇷",
     languageSelected: "español seleccionado.",
@@ -227,16 +259,16 @@ const TRANSLATIONS = {
     completeLinkInvalid: "pega un enlace directo válido.",
     completeLinkPlatformMismatch: "este enlace no parece ser de la plataforma elegida.",
     completeLinkError: "no pude guardar este enlace ahora.",
-    publicCard: "card público",
-    publicCardHint: "enlace compartible de este resultado",
-    publicCardCopyAction: "copiar card público",
-    publicCardShareAction: "compartir card público",
-    publicCardOpenAction: "abrir card público",
-    publicCardCopied: "card público copiado.",
-    publicCardShared: "card público compartido.",
-    publicCardUnavailable: "card público no disponible.",
-    publicCardLoading: "abriendo card público...",
-    publicCardNotFound: "no encontré este card público."
+    publicCard: "card swap",
+    publicCardHint: "enlace compartible",
+    publicCardCopyAction: "copiar card swap",
+    publicCardShareAction: "compartir card swap",
+    publicCardOpenAction: "abrir card swap",
+    publicCardCopied: "card swap copiado.",
+    publicCardShared: "card swap compartido.",
+    publicCardUnavailable: "card swap no disponible.",
+    publicCardLoading: "abriendo card swap...",
+    publicCardNotFound: "no encontré este card swap."
   },
   "it-it": {
     loadingSwap: "conversione...",
@@ -247,7 +279,7 @@ const TRANSLATIONS = {
     linkLabel: "link della canzone",
     linkPlaceholder: "incolla qui il link della canzone",
     byline: "di leo saquetto",
-    subtitle: "qualsiasi streaming in un solo link",
+    subtitle: "crossover tra piattaforme",
     availableAs: "Disponibile come",
     madeBy: "fatto da 🇧🇷",
     languageSelected: "italiano selezionato.",
@@ -289,16 +321,16 @@ const TRANSLATIONS = {
     completeLinkInvalid: "incolla un link diretto valido.",
     completeLinkPlatformMismatch: "questo link non sembra della piattaforma scelta.",
     completeLinkError: "non ho potuto salvare questo link ora.",
-    publicCard: "card pubblico",
-    publicCardHint: "link condivisibile di questo risultato",
-    publicCardCopyAction: "copia card pubblico",
-    publicCardShareAction: "condividi card pubblico",
-    publicCardOpenAction: "apri card pubblico",
-    publicCardCopied: "card pubblico copiato.",
-    publicCardShared: "card pubblico condiviso.",
-    publicCardUnavailable: "card pubblico non disponibile.",
-    publicCardLoading: "apertura card pubblico...",
-    publicCardNotFound: "non ho trovato questo card pubblico."
+    publicCard: "card swap",
+    publicCardHint: "link condivisibile",
+    publicCardCopyAction: "copia card swap",
+    publicCardShareAction: "condividi card swap",
+    publicCardOpenAction: "apri card swap",
+    publicCardCopied: "card swap copiato.",
+    publicCardShared: "card swap condiviso.",
+    publicCardUnavailable: "card swap non disponibile.",
+    publicCardLoading: "apertura card swap...",
+    publicCardNotFound: "non ho trovato questo card swap."
   },
   "fr-fr": {
     loadingSwap: "conversion...",
@@ -309,7 +341,7 @@ const TRANSLATIONS = {
     linkLabel: "lien de la chanson",
     linkPlaceholder: "collez le lien de la chanson ici",
     byline: "par leo saquetto",
-    subtitle: "n’importe quel streaming en un seul lien",
+    subtitle: "crossover entre plateformes",
     availableAs: "Disponible en",
     madeBy: "fait par 🇧🇷",
     languageSelected: "français sélectionné.",
@@ -351,16 +383,16 @@ const TRANSLATIONS = {
     completeLinkInvalid: "collez un lien direct valide.",
     completeLinkPlatformMismatch: "ce lien ne semble pas correspondre à la plateforme choisie.",
     completeLinkError: "impossible d’enregistrer ce lien maintenant.",
-    publicCard: "carte publique",
-    publicCardHint: "lien partageable de ce résultat",
-    publicCardCopyAction: "copier la carte publique",
-    publicCardShareAction: "partager la carte publique",
-    publicCardOpenAction: "ouvrir la carte publique",
-    publicCardCopied: "carte publique copiée.",
-    publicCardShared: "carte publique partagée.",
-    publicCardUnavailable: "carte publique indisponible.",
-    publicCardLoading: "ouverture de la carte publique...",
-    publicCardNotFound: "carte publique introuvable."
+    publicCard: "carte swap",
+    publicCardHint: "lien partageable",
+    publicCardCopyAction: "copier la carte swap",
+    publicCardShareAction: "partager la carte swap",
+    publicCardOpenAction: "ouvrir la carte swap",
+    publicCardCopied: "carte swap copiée.",
+    publicCardShared: "carte swap partagée.",
+    publicCardUnavailable: "carte swap indisponible.",
+    publicCardLoading: "ouverture de la carte swap...",
+    publicCardNotFound: "carte swap introuvable."
   }
 };
 
@@ -1335,6 +1367,7 @@ function bindEvents() {
   els.useSampleButton?.addEventListener("click", event => {
     const randomSample = pickRandomSampleLink();
     state.shuffleInProgress = true;
+    els.input.classList.add("is-shuffling-sample");
     els.input.value = "sorteando um swap...";
     hideStatus();
     softlyDismissKeyboard();
@@ -1706,6 +1739,34 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   startCoverShimmer();
 
   try {
+    const localSamplePayload = getLocalSampleConversion(link, fromShuffle);
+    if (localSamplePayload) {
+      const result = normalizeApiPayload(localSamplePayload, link, false);
+      if (!result) {
+        stopCoverShimmer();
+        showStatus("não encontrei plataformas para esse link.", "error");
+        return;
+      }
+
+      state.currentOriginalUrl = link;
+      state.currentResult = result;
+      renderResult(result);
+      const directCount = result.links.length;
+      hideStatus();
+      showFloatingToast(directCount === 1 ? t("swapsFoundSingle") : tCount("swapsFoundPlural", directCount), "success");
+      els.input.value = "";
+
+      if (state.scrollAfterConvert) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            els.resultCard?.scrollIntoView({ behavior: getScrollBehavior(), block: "start" });
+          }, state.autoConvertedFromQuery ? 40 : 100);
+        });
+      }
+
+      return;
+    }
+
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -1758,6 +1819,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       els.input.value = "";
     }
     if (fromShuffle) {
+      els.input.classList.remove("is-shuffling-sample");
       state.shuffleInProgress = false;
     }
     setLoading(false);
@@ -2891,8 +2953,21 @@ function updateConvertButtonLabel() {
 }
 
 function pickRandomSampleLink() {
+  if (isLocalTestHost()) {
+    return SAMPLE_LINKS[0];
+  }
+
   const index = Math.floor(Math.random() * SAMPLE_LINKS.length);
   return SAMPLE_LINKS[index];
+}
+
+function isLocalTestHost() {
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
+function getLocalSampleConversion(link, fromShuffle = false) {
+  if (!fromShuffle || !isLocalTestHost() || link !== SAMPLE_LINKS[0]) return null;
+  return LOCAL_SAMPLE_CONVERSION;
 }
 
 function resetForm({ announce = false } = {}) {
