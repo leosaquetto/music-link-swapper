@@ -7,13 +7,14 @@ const AUTOMATIC_PLATFORM_SET = new Set(AUTOMATIC_PLATFORM_KEYS.map(key => key.to
 export function normalizePlatformKey(key) {
   const raw = String(key || "").trim();
   const normalized = raw.toLowerCase();
+  const compact = normalized.replace(/[\s_-]+/g, "");
   if (!normalized) return "";
-  if (normalized === "apple" || normalized === "itunes" || normalized === "applemusic") return "appleMusic";
-  if (normalized === "youtubemusic" || normalized === "youtube_music") return "youtubeMusic";
+  if (compact === "apple" || compact === "itunes" || compact === "applemusic") return "appleMusic";
+  if (compact === "youtubemusic") return "youtubeMusic";
   if (normalized === "youtube" || normalized === "youtu") return "youtube";
   if (normalized === "spotify") return "spotify";
   if (normalized === "soundcloud") return "soundCloud";
-  if (normalized === "amazon" || normalized === "amazonmusic") return "amazonMusic";
+  if (compact === "amazon" || compact === "amazonmusic") return "amazonMusic";
   return raw;
 }
 

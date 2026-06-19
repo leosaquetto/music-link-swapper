@@ -170,6 +170,312 @@ test("Spotify fallback preserves an existing direct Apple Music link", async () 
   });
 });
 
+test("YouTube Music cold path adds Apple after Spotify Web matching", async () => {
+  const previousStatslc = process.env.STATSLC_BRIDGE_ENABLED;
+  const previousSpotifyWeb = process.env.SPOTIFY_WEB_MATCHING_ENABLED;
+  process.env.STATSLC_BRIDGE_ENABLED = "false";
+  process.env.SPOTIFY_WEB_MATCHING_ENABLED = "true";
+
+  await withMockFetch(async input => {
+    const url = String(input);
+
+    if (url === "https://open.spotify.com/api/server-time") {
+      return jsonResponse({ serverTime: 1234567890 });
+    }
+
+    if (url === "https://open.spotify.com") {
+      return textResponse(`"<https://example.test/mobile-web-player.a1b2c3.js>"`.replace("<", "").replace(">", ""));
+    }
+
+    if (url === "https://example.test/mobile-web-player.a1b2c3.js") {
+      return textResponse(`const data = { secret: "abc123", version: 1 };`);
+    }
+
+    if (url.startsWith("https://open.spotify.com/api/token")) {
+      return jsonResponse({
+        accessToken: "spotify-web-token",
+        accessTokenExpirationTimestampMs: Date.now() + 60_000
+      });
+    }
+
+    if (url.startsWith("https://api-partner.spotify.com/pathfinder/v1/query")) {
+      return jsonResponse({
+        data: {
+          searchV2: {
+            tracks: {
+              items: [
+                {
+                  track: {
+                    name: "Fight Like A Girl (feat. K.Flay)",
+                    uri: "spotify:track:6TUYOU8S2s5l8zgdHeVsjZ",
+                    artists: {
+                      items: [
+                        { profile: { name: "Evanescence" } }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      });
+    }
+
+    if (url.startsWith("https://itunes.apple.com/search")) {
+      return jsonResponse({
+        results: [
+          {
+            kind: "song",
+            trackName: "Fight Like A Girl (feat. K.Flay)",
+            artistName: "Evanescence",
+            collectionName: "Fight Like A Girl (feat. K.Flay) - Single",
+            trackViewUrl: "https://music.apple.com/us/album/fight-like-a-girl-feat-k-flay/1816243805?i=1816243806&uo=4"
+          }
+        ]
+      });
+    }
+
+    return textResponse("", { ok: false, status: 502 });
+  }, async () => {
+    try {
+      const result = await __testHooks.finalizeResultData({
+        title: "Fight Like A Girl (feat. K.Flay)",
+        description: "Evanescence",
+        links: [
+          {
+            type: "youtubeMusic",
+            url: "https://music.youtube.com/watch?v=15qCAHaw4Xw",
+            isVerified: true,
+            source: "input"
+          }
+        ]
+      });
+
+      assert.ok(result.links.find(link => link.type === "spotify"));
+      assert.ok(result.links.find(link => link.type === "youtube"));
+      assert.ok(result.links.find(link => link.type === "youtubeMusic"));
+      const apple = result.links.find(link => link.type === "appleMusic");
+      assert.ok(apple);
+      assert.equal(apple.source, "itunes");
+    } finally {
+      restoreEnv("STATSLC_BRIDGE_ENABLED", previousStatslc);
+      restoreEnv("SPOTIFY_WEB_MATCHING_ENABLED", previousSpotifyWeb);
+    }
+  });
+});
+
+test("partial YouTube Music cache upgrades with clean input metadata before matching", async () => {
+  const previousStatslc = process.env.STATSLC_BRIDGE_ENABLED;
+  const previousSpotifyWeb = process.env.SPOTIFY_WEB_MATCHING_ENABLED;
+  process.env.STATSLC_BRIDGE_ENABLED = "false";
+  process.env.SPOTIFY_WEB_MATCHING_ENABLED = "true";
+
+  await withMockFetch(async input => {
+    const url = String(input);
+
+    if (url === "https://open.spotify.com/api/server-time") {
+      return jsonResponse({ serverTime: 1234567890 });
+    }
+
+    if (url === "https://open.spotify.com") {
+      return textResponse(`"<https://example.test/mobile-web-player.a1b2c3.js>"`.replace("<", "").replace(">", ""));
+    }
+
+    if (url === "https://example.test/mobile-web-player.a1b2c3.js") {
+      return textResponse(`const data = { secret: "abc123", version: 1 };`);
+    }
+
+    if (url.startsWith("https://open.spotify.com/api/token")) {
+      return jsonResponse({
+        accessToken: "spotify-web-token",
+        accessTokenExpirationTimestampMs: Date.now() + 60_000
+      });
+    }
+
+    if (url.startsWith("https://api-partner.spotify.com/pathfinder/v1/query")) {
+      return jsonResponse({
+        data: {
+          searchV2: {
+            tracks: {
+              items: [
+                {
+                  track: {
+                    name: "Don't Tell Me",
+                    uri: "spotify:track:6sqNctd7MlJoKDOxPVCAvU",
+                    artists: {
+                      items: [
+                        { profile: { name: "Avril Lavigne" } }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      });
+    }
+
+    if (url.startsWith("https://itunes.apple.com/search")) {
+      return jsonResponse({
+        results: [
+          {
+            kind: "song",
+            trackName: "Don't Tell Me",
+            artistName: "Avril Lavigne",
+            collectionName: "Under My Skin",
+            trackViewUrl: "https://music.apple.com/us/album/dont-tell-me/1440857781?i=1440857792&uo=4"
+          }
+        ]
+      });
+    }
+
+    return textResponse("", { ok: false, status: 502 });
+  }, async () => {
+    try {
+      const prepared = __testHooks.prepareCachedResultForUpgrade(
+        {
+          title: "música encontrada",
+          description: "Grupo Accion Oaxaca",
+          links: [
+            {
+              type: "youtube",
+              url: "https://www.youtube.com/watch?v=qHqEcMqqGAA",
+              isVerified: true,
+              source: "cache"
+            },
+            {
+              type: "youtubeMusic",
+              url: "https://music.youtube.com/watch?v=qHqEcMqqGAA",
+              isVerified: true,
+              source: "cache"
+            }
+          ],
+          missingPlatforms: ["spotify", "appleMusic"]
+        },
+        {
+          title: "Don't Tell Me",
+          artist: "Avril Lavigne",
+          image: "https://i.ytimg.com/vi/qHqEcMqqGAA/hqdefault.jpg"
+        }
+      );
+
+      const result = await __testHooks.finalizeResultData(prepared);
+
+      assert.equal(result.title, "Don't Tell Me");
+      assert.equal(result.description, "Avril Lavigne");
+      assert.ok(result.links.find(link => link.type === "spotify"));
+      assert.ok(result.links.find(link => link.type === "youtube"));
+      assert.ok(result.links.find(link => link.type === "youtubeMusic"));
+      const apple = result.links.find(link => link.type === "appleMusic");
+      assert.ok(apple);
+      assert.equal(apple.source, "itunes");
+    } finally {
+      restoreEnv("STATSLC_BRIDGE_ENABLED", previousStatslc);
+      restoreEnv("SPOTIFY_WEB_MATCHING_ENABLED", previousSpotifyWeb);
+    }
+  });
+});
+
+test("YouTube input context reads clean title and artist from oEmbed", async () => {
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url.startsWith("https://www.youtube.com/oembed")) {
+      return jsonResponse({
+        title: "Time",
+        author_name: "Bebe Rexha - Topic",
+        thumbnail_url: "https://i.ytimg.com/vi/viJzrnayC2E/hqdefault.jpg"
+      });
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    const context = await __testHooks.buildInputCacheContext(
+      "https://music.youtube.com/watch?v=viJzrnayC2E&si=SIJo04ifRfFl4Oxz",
+      "youtube music"
+    );
+
+    assert.equal(context.title, "Time");
+    assert.equal(context.artist, "Bebe Rexha");
+    assert.equal(context.canonicalKey, "track:time|artist:bebe rexha");
+  });
+});
+
+test("YouTube input context falls back to noembed when YouTube oEmbed fails", async () => {
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url.startsWith("https://www.youtube.com/oembed")) {
+      return textResponse("", { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://noembed.com/embed")) {
+      return jsonResponse({
+        title: "Don't Tell Me",
+        author_name: "Avril Lavigne - Topic",
+        thumbnail_url: "https://i.ytimg.com/vi/qHqEcMqqGAA/hqdefault.jpg"
+      });
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    const context = await __testHooks.buildInputCacheContext(
+      "https://music.youtube.com/watch?v=qHqEcMqqGAA&si=i2uUWEPKuBXUlCy8",
+      "youtubeMusic"
+    );
+
+    assert.equal(context.title, "Don't Tell Me");
+    assert.equal(context.artist, "Avril Lavigne");
+    assert.equal(context.canonicalKey, "track:don t tell me|artist:avril lavigne");
+  });
+});
+
+test("YouTube input context falls back to YouTube Data metadata when public embeds fail", async () => {
+  const previousKey = process.env.YOUTUBE_API_KEY;
+  const previousMatching = process.env.YOUTUBE_MATCHING_ENABLED;
+  process.env.YOUTUBE_API_KEY = "test-youtube-key";
+  process.env.YOUTUBE_MATCHING_ENABLED = "true";
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url.startsWith("https://www.youtube.com/oembed")) {
+      return textResponse("", { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://noembed.com/embed")) {
+      return textResponse("", { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://www.googleapis.com/youtube/v3/videos")) {
+      return jsonResponse({
+        items: [
+          {
+            snippet: {
+              title: "Don't Tell Me",
+              channelTitle: "Avril Lavigne - Topic",
+              thumbnails: {
+                high: {
+                  url: "https://i.ytimg.com/vi/qHqEcMqqGAA/hqdefault.jpg"
+                }
+              }
+            }
+          }
+        ]
+      });
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const context = await __testHooks.buildInputCacheContext(
+        "https://music.youtube.com/watch?v=qHqEcMqqGAA&si=i2uUWEPKuBXUlCy8",
+        "youtubeMusic"
+      );
+
+      assert.equal(context.title, "Don't Tell Me");
+      assert.equal(context.artist, "Avril Lavigne");
+      assert.equal(context.canonicalKey, "track:don t tell me|artist:avril lavigne");
+    } finally {
+      restoreEnv("YOUTUBE_API_KEY", previousKey);
+      restoreEnv("YOUTUBE_MATCHING_ENABLED", previousMatching);
+    }
+  });
+});
+
 test("Songlink normalization excludes non-automatic platforms", () => {
   const normalized = __testHooks.normalizeSongLinkPayload({
     entityUniqueId: "song::123",
@@ -204,6 +510,14 @@ async function withMockFetch(fetchImpl, run) {
     await run();
   } finally {
     globalThis.fetch = originalFetch;
+  }
+}
+
+function restoreEnv(key, value) {
+  if (value === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = value;
   }
 }
 
