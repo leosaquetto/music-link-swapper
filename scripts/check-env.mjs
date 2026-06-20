@@ -43,6 +43,8 @@ for (const key of OPTIONAL_URL_KEYS) {
 validateCountryCode("RAPIDAPI_COUNTRY_CODE", env.RAPIDAPI_COUNTRY_CODE, { issues });
 validateLocale("RAPIDAPI_SHAZAM_LOCALE", env.RAPIDAPI_SHAZAM_LOCALE, { issues });
 validatePositiveInteger("RAPIDAPI_DAILY_REQUEST_LIMIT", env.RAPIDAPI_DAILY_REQUEST_LIMIT, { issues });
+validatePositiveInteger("PROVIDER_ATTEMPT_RETENTION_DAYS", env.PROVIDER_ATTEMPT_RETENTION_DAYS, { issues });
+validatePositiveInteger("PROVIDER_ATTEMPT_MAX_ROWS", env.PROVIDER_ATTEMPT_MAX_ROWS, { issues });
 if (issues.length) {
   console.error(["Environment check failed:", ...issues.map(item => `- ${item}`)].join("\n"));
   process.exit(1);

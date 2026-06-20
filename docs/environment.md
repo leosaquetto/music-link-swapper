@@ -45,6 +45,8 @@ When `DATABASE_URL` is absent, the API still converts links, but `tracks`, `trac
 
 When `DATABASE_URL` starts with `pglite://`, the cache is local to that filesystem. Use Neon/Postgres for a shared production library.
 
+`provider_attempts` telemetry is retained for 30 days by default and capped at 10,000 rows per instance run. Pruning is opportunistic after successful provider-attempt writes, at most once per day per running instance.
+
 ## Optional variables
 
 ```bash
@@ -54,6 +56,8 @@ STATSLC_BRIDGE_URL="https://statslc.leosaquetto.com/api/catalog-link-bridge"
 STATSLC_BRIDGE_TOKEN=""
 YOUTUBE_MATCHING_ENABLED="true"
 DEEZER_MATCHING_ENABLED="true"
+PROVIDER_ATTEMPT_RETENTION_DAYS="30"
+PROVIDER_ATTEMPT_MAX_ROWS="10000"
 RAPIDAPI_FALLBACKS_ENABLED="false"
 RAPIDAPI_KEY=""
 RAPIDAPI_SPOTIFY_ENABLED="true"
@@ -74,18 +78,32 @@ YOUTUBE_API_KEY=""
 - `STATSLC_BRIDGE_TOKEN` is optional locally, but should match `CATALOG_LINK_BRIDGE_TOKEN` on `stats-lc-api` in production.
 - `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
 - `DEEZER_MATCHING_ENABLED=false` disables Deezer public API lookup/search instantly, including `GET /api/deezer/search`.
+- `PROVIDER_ATTEMPT_RETENTION_DAYS` controls how long provider attempt telemetry is kept. The default is `30`.
+- `PROVIDER_ATTEMPT_MAX_ROWS` caps retained provider attempt telemetry after age pruning. The default is `10000`.
 - `RAPIDAPI_FALLBACKS_ENABLED=true` enables quota-limited RapidAPI fallbacks when `RAPIDAPI_KEY` is also set. It is disabled by default.
 - `RAPIDAPI_KEY` is the server-side RapidAPI key. Never expose it in frontend code or logs.
 - `RAPIDAPI_SPOTIFY_ENABLED=false` disables the Spotify23 fallback.
 - `RAPIDAPI_SPOTIFY_WEB_API3_ENABLED=false` disables the Spotify Web API3 secondary fallback.
 - `RAPIDAPI_SHAZAM_ENABLED=false` disables the Shazam fallback for Apple Music direct-link recovery.
-- `RAPIDAPI_SHAZAM_LOCALE` controls Shazam search locale and defaults to `en-US`.
+- `RAPIDAPI_SHAZAM_LOCALE` controls the fallback Shazam search locale and defaults to `en-US`. The selected app language can override it per request.
 - `RAPIDAPI_MUSICDATA_ENABLED=false` disables the MusicData YouTube video metadata fallback.
 - `RAPIDAPI_YOUTUBE_MUSIC_ENABLED=false` disables the YouTube Music API3 fallback.
 - `RAPIDAPI_DAILY_REQUEST_LIMIT` is a conservative per-instance guardrail for RapidAPI calls. The default is `8`; RapidAPI hard limits still apply globally.
-- `RAPIDAPI_COUNTRY_CODE` controls the Spotify23 `gl` market parameter and defaults to `BR`.
+- `RAPIDAPI_COUNTRY_CODE` controls the fallback Spotify23 `gl` market parameter and defaults to `BR`. The selected app language can override it per request.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
-- `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.
+- `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID. When enabled, YouTube search receives request-level `regionCode` and `relevanceLanguage` from the selected app language.
+
+The frontend sends catalog preferences with `POST /api/convert` based on the selected UI language:
+
+| App language | API locale | API country |
+| --- | --- | --- |
+| `pt-br` | `pt-BR` | `BR` |
+| `en` | `en-US` | `US` |
+| `es-es` | `es-ES` | `ES` |
+| `it-it` | `it-IT` | `IT` |
+| `fr-fr` | `fr-FR` | `FR` |
+
+These preferences tune provider ranking/market where supported. They do not use browser geolocation and do not split the public card cache by country.
 
 TIDAL support is temporarily paused. Do not add TIDAL env vars back unless the app is intentionally reintroducing TIDAL as an automatic platform.
 

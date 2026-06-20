@@ -25,6 +25,7 @@ test("RapidAPI Spotify23 search returns a scored direct Spotify track link", asy
       assert.equal(url.hostname, "spotify23.p.rapidapi.com");
       assert.equal(url.pathname, "/search/");
       assert.equal(url.searchParams.get("type"), "tracks");
+      assert.equal(url.searchParams.get("gl"), "US");
       assert.equal(options.headers["x-rapidapi-host"], "spotify23.p.rapidapi.com");
       assert.equal(options.headers["x-rapidapi-key"], "test-rapidapi-key");
 
@@ -55,7 +56,8 @@ test("RapidAPI Spotify23 search returns a scored direct Spotify track link", asy
         title: "One More Time",
         artist: "Daft Punk",
         album: "Discovery",
-        durationMs: 320000
+        durationMs: 320000,
+        countryCode: "US"
       });
 
       assert.equal(match.type, "spotify");
@@ -110,7 +112,7 @@ test("RapidAPI Shazam search returns Apple Music direct link and ignores provide
       assert.equal(url.hostname, "shazam.p.rapidapi.com");
       assert.equal(url.pathname, "/v2/search");
       assert.equal(url.searchParams.get("term"), "Kiss The Rain Billie Myers");
-      assert.equal(url.searchParams.get("locale"), "en-US");
+      assert.equal(url.searchParams.get("locale"), "fr-FR");
       assert.equal(options.headers["x-rapidapi-host"], "shazam.p.rapidapi.com");
 
       return jsonResponse({
@@ -157,7 +159,8 @@ test("RapidAPI Shazam search returns Apple Music direct link and ignores provide
       const match = await searchRapidApiShazamTrack({
         query: "Kiss The Rain Billie Myers",
         title: "Kiss The Rain",
-        artist: "Billie Myers"
+        artist: "Billie Myers",
+        locale: "fr-FR"
       });
 
       assert.equal(match.type, "shazam");

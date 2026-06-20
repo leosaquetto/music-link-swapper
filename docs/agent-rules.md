@@ -28,6 +28,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Preserve the Deezer matching/search kill switch: `DEEZER_MATCHING_ENABLED=false`.
 - Preserve the RapidAPI fallback kill switch and local quota guard: `RAPIDAPI_FALLBACKS_ENABLED=false` and `RAPIDAPI_DAILY_REQUEST_LIMIT`.
 - Preserve the stats-lc bridge kill switch: `STATSLC_BRIDGE_ENABLED=false`.
+- Preserve provider attempt retention controls: `PROVIDER_ATTEMPT_RETENTION_DAYS` and `PROVIDER_ATTEMPT_MAX_ROWS`.
 
 ## Known regression patterns
 
@@ -43,6 +44,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Do not add UI rows for `notAvailable`, "nao localizado", or search fallback links.
 - Do not broaden Apple/iTunes matching so much that a different artist can win just because the title is similar.
 - Do not remove provider-attempt recording when touching provider code.
+- Do not turn `provider_attempts` back into unbounded permanent storage.
 
 ## Frontend rules
 

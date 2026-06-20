@@ -39,9 +39,11 @@ When `DATABASE_URL` is configured, the API persists a shared music library:
 - `tracks`: canonical track metadata and keys.
 - `track_links`: direct platform links only.
 - `track_aliases`: normalized input URLs and alternate keys.
-- `provider_attempts`: provider hit/miss telemetry.
+- `provider_attempts`: provider hit/miss telemetry, pruned by age and capped by row count.
 
 When `DATABASE_URL` is absent, conversion still works, but durable cache and provider attempt storage are disabled. Local development can use `pglite://.data/music-link-swapper`; production should use Neon/Postgres.
+
+Provider attempt telemetry defaults to `PROVIDER_ATTEMPT_RETENTION_DAYS=30` and `PROVIDER_ATTEMPT_MAX_ROWS=10000`. Cleanup runs opportunistically after successful provider-attempt writes and at most once per day per running instance, so it should be treated as lightweight diagnostics rather than permanent analytics.
 
 ## API response contract
 
@@ -162,6 +164,8 @@ They require:
 - provider switches left enabled, such as `RAPIDAPI_SPOTIFY_ENABLED=true`, `RAPIDAPI_SPOTIFY_WEB_API3_ENABLED=true`, `RAPIDAPI_SHAZAM_ENABLED=true`, `RAPIDAPI_MUSICDATA_ENABLED=true`, and `RAPIDAPI_YOUTUBE_MUSIC_ENABLED=true`
 
 The implementation keeps a conservative in-memory daily quota via `RAPIDAPI_DAILY_REQUEST_LIMIT`. Because serverless instances do not share memory, production should still rely on the RapidAPI hard limits and logs. RapidAPI results must still pass the same direct-link-only contract; no RapidAPI search URL is ever returned to the frontend.
+
+`POST /api/convert` also accepts sanitized request-level catalog preferences from the frontend: `locale` and `countryCode`. The app maps its language picker to `pt-BR/BR`, `en-US/US`, `es-ES/ES`, `it-IT/IT`, or `fr-FR/FR`. Spotify23 uses the country as `gl`, Shazam uses the locale, and YouTube Data API uses `regionCode` plus `relevanceLanguage`. Provider env vars remain fallback defaults when no request preference is provided. Deezer public search remains global in this flow because the endpoint used here does not take a market parameter.
 
 ## Recent hardening notes
 

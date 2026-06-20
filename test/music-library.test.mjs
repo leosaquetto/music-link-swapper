@@ -10,6 +10,7 @@ import {
   isMusicLibraryEnabled,
   readCachedResultByAlias,
   readCachedResultByTrackId,
+  recordProviderAttempt,
   upsertCachedResult,
   upsertManualLink
 } from "../api/lib/music-library.js";
@@ -143,6 +144,59 @@ test("music library supports zero-cost pglite DATABASE_URL", async () => {
   }
 });
 
+test("provider attempt telemetry prunes old rows and caps retained rows", async () => {
+  const db = newDb();
+  registerPgFunctions(db);
+  const sql = createPgMemSqlTag(db);
+  __setMusicLibrarySqlClientForTests(sql);
+
+  const previousRetentionDays = process.env.PROVIDER_ATTEMPT_RETENTION_DAYS;
+  const previousMaxRows = process.env.PROVIDER_ATTEMPT_MAX_ROWS;
+  const originalNow = Date.now;
+  const baseNow = originalNow();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  process.env.PROVIDER_ATTEMPT_RETENTION_DAYS = "30";
+  process.env.PROVIDER_ATTEMPT_MAX_ROWS = "2";
+
+  try {
+    await recordProviderAttempt({
+      trackKey: "seed",
+      provider: "unit",
+      status: "miss",
+      latencyMs: 12,
+      message: "schema seed"
+    });
+
+    const oldIso = new Date(baseNow - 60 * dayMs).toISOString();
+    const recentIso = new Date(baseNow - dayMs).toISOString();
+    sql.raw(`
+      insert into provider_attempts (track_key, provider, status, latency_ms, message, created_at)
+      values
+        ('old', 'unit', 'miss', 1, 'old row', '${oldIso}'::timestamptz),
+        ('recent', 'unit', 'hit', 2, 'recent row', '${recentIso}'::timestamptz)
+    `);
+
+    Date.now = () => baseNow + 2 * dayMs;
+    await recordProviderAttempt({
+      trackKey: "new",
+      provider: "unit",
+      status: "hit",
+      latencyMs: 5
+    });
+
+    const rows = sql.raw("select track_key from provider_attempts order by created_at desc, id desc");
+    assert.equal(rows.length, 2);
+    assert.equal(rows.some(row => row.track_key === "new"), true);
+    assert.equal(rows.some(row => row.track_key === "old"), false);
+  } finally {
+    Date.now = originalNow;
+    restoreEnv("PROVIDER_ATTEMPT_RETENTION_DAYS", previousRetentionDays);
+    restoreEnv("PROVIDER_ATTEMPT_MAX_ROWS", previousMaxRows);
+    await __resetMusicLibraryForTests();
+  }
+});
+
 function registerPgFunctions(db) {
   db.public.registerFunction({
     name: "nullif",
@@ -181,4 +235,9 @@ function toSqlLiteral(value) {
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : "null";
   if (typeof value === "boolean") return value ? "true" : "false";
   return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function restoreEnv(key, value) {
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
 }

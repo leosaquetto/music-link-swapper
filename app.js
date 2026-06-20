@@ -88,6 +88,13 @@ const LANGUAGE_OPTIONS = [
   { label: "IT", value: "it-it", fullName: "italiano" },
   { label: "FR", value: "fr-fr", fullName: "français" }
 ];
+const CATALOG_PREFERENCES_BY_LANGUAGE = {
+  "pt-br": { locale: "pt-BR", countryCode: "BR" },
+  en: { locale: "en-US", countryCode: "US" },
+  "es-es": { locale: "es-ES", countryCode: "ES" },
+  "it-it": { locale: "it-IT", countryCode: "IT" },
+  "fr-fr": { locale: "fr-FR", countryCode: "FR" }
+};
 const TRANSLATIONS = {
   "pt-br": {
     loadingSwap: "swappando...",
@@ -649,6 +656,10 @@ function forceHeroGifLogo() {
 function getCurrentLanguage() {
   const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
   return TRANSLATIONS[saved] ? saved : "pt-br";
+}
+
+function getCatalogPreferences() {
+  return CATALOG_PREFERENCES_BY_LANGUAGE[state.currentLanguage] || CATALOG_PREFERENCES_BY_LANGUAGE["pt-br"];
 }
 
 function t(key) {
@@ -1778,7 +1789,8 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       },
       body: JSON.stringify({
         link,
-        adapters: REQUESTED_ADAPTERS
+        adapters: REQUESTED_ADAPTERS,
+        ...getCatalogPreferences()
       })
     });
 

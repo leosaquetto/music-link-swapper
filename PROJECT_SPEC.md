@@ -138,6 +138,8 @@ Resposta de erro esperada:
 
 `GET /api/deezer/search?q=<texto>&limit=<1-20>&index=<0+>` pesquisa tracks no catalogo publico da Deezer e retorna candidatos normalizados. O endpoint e somente leitura, respeita `DEEZER_MATCHING_ENABLED=false`, valida consulta/paginacao e nao grava cache.
 
+`POST /api/convert` aceita preferencias opcionais de catalogo vindas do seletor de idioma do app: `locale` e `countryCode`. Elas ajustam ranking/mercado nos provedores que suportam isso, sem geolocalizacao do navegador e sem fragmentar o card publico por pais. Mapeamento atual: `pt-br -> pt-BR/BR`, `en -> en-US/US`, `es-es -> es-ES/ES`, `it-it -> it-IT/IT`, `fr-fr -> fr-FR/FR`.
+
 Regras e limites observados:
 
 - Metodo diferente de `POST` retorna 405.
@@ -151,6 +153,7 @@ Regras e limites observados:
   - apos 3 strikes, bloqueio por 10 minutos.
 - Cache em memoria para Spotify URL, Spotify query, falhas Spotify e resultados de links de exemplo.
 - Cache persistente opcional em Postgres/Neon/PGlite para `tracks`, `track_links`, `track_aliases` e `provider_attempts`.
+- `provider_attempts` e telemetria operacional rotacionada: retencao padrao de 30 dias, limite padrao de 10.000 linhas e prune oportunistico apos writes bem-sucedidos.
 - Rate limits e caches curtos em memoria continuam volateis por instancia serverless.
 - `data.links` deve conter somente links diretos e abríveis. URLs de busca geradas nao sao links de resultado validos.
 - Para protecoes adicionais de borda, WAF, headers e resposta a abuso, consultar [`docs/security.md`](./docs/security.md).

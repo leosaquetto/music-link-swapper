@@ -110,6 +110,41 @@ const SAMPLE_CACHEABLE_LINKS = new Set([
 const SAMPLE_CACHEABLE_IDENTITIES = new Set(
   Array.from(SAMPLE_CACHEABLE_LINKS).map(buildSampleLinkIdentity)
 );
+const LOCALE_CATALOG_DEFAULTS = new Map([
+  ["pt-br", { locale: "pt-BR", countryCode: "BR" }],
+  ["en", { locale: "en-US", countryCode: "US" }],
+  ["en-us", { locale: "en-US", countryCode: "US" }],
+  ["es-es", { locale: "es-ES", countryCode: "ES" }],
+  ["it-it", { locale: "it-IT", countryCode: "IT" }],
+  ["fr-fr", { locale: "fr-FR", countryCode: "FR" }]
+]);
+
+function buildRequestContext({ locale, countryCode } = {}) {
+  const normalizedLocale = normalizeLocale(locale);
+  const localeDefaults = normalizedLocale
+    ? LOCALE_CATALOG_DEFAULTS.get(normalizedLocale.toLowerCase()) || { locale: normalizedLocale }
+    : {};
+  const normalizedCountryCode = normalizeCountryCode(countryCode) || localeDefaults.countryCode || "";
+
+  return {
+    locale: localeDefaults.locale || normalizedLocale || "",
+    countryCode: normalizedCountryCode
+  };
+}
+
+function normalizeLocale(value) {
+  const raw = String(value || "").trim().replace("_", "-");
+  const match = raw.match(/^([a-z]{2})(?:-([a-z]{2}))?$/i);
+  if (!match) return "";
+  const language = match[1].toLowerCase();
+  const region = match[2] ? match[2].toUpperCase() : "";
+  return region ? `${language}-${region}` : language;
+}
+
+function normalizeCountryCode(value) {
+  const raw = String(value || "").trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(raw) ? raw : "";
+}
 
 export default async function handler(req, res) {
   metrics.requests += 1;
@@ -131,7 +166,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { link, adapters, queryMode, query } = req.body || {};
+    const { link, adapters, queryMode, query, locale, countryCode } = req.body || {};
+    const requestContext = buildRequestContext({ locale, countryCode });
     const mode = queryMode ? "query" : "link";
     const rateLimit = enforceRateLimit(req, res, mode);
     if (!rateLimit.allowed) {
@@ -163,12 +199,13 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, data: cachedByQuery });
       }
 
-      const fallbackByQuery = await buildSearchFallbackFromQuery(query.trim());
+      const fallbackByQuery = await buildSearchFallbackFromQuery(query.trim(), requestContext);
       if (fallbackByQuery.ok) {
         const data = await finalizeAndPersistResult(fallbackByQuery.data, {
           cacheStatus: "miss",
           aliases: [],
-          defaultSource: "query"
+          defaultSource: "query",
+          requestContext
         });
         return res.status(200).json({ ok: true, data });
       }
@@ -210,7 +247,8 @@ export default async function handler(req, res) {
       const data = await maybeUpgradeCachedResult(cachedByAlias, {
         aliases: [inputAlias],
         defaultSource: "cache_upgrade",
-        inputContext: cacheInputContext
+        inputContext: cacheInputContext,
+        requestContext
       });
       return res.status(200).json({ ok: true, data });
     }
@@ -222,7 +260,8 @@ export default async function handler(req, res) {
         const data = await maybeUpgradeCachedResult(cachedByTrack, {
           aliases: [inputAlias],
           defaultSource: "cache_upgrade",
-          inputContext
+          inputContext,
+          requestContext
         });
         if (data?.trackId) {
           await attachAliasesToTrack(data.trackId, [inputAlias]);
@@ -255,7 +294,7 @@ export default async function handler(req, res) {
         : primaryResult.data;
 
       const groundedData = await enforceInputTrackGroundTruth(mergedData, link);
-      const finalizedData = await finalizeResultData(groundedData);
+      const finalizedData = await finalizeResultData(groundedData, requestContext);
       const data = await finalizeAndPersistResult(finalizedData, {
         cacheStatus: "miss",
         aliases: [inputAlias],
@@ -274,7 +313,7 @@ export default async function handler(req, res) {
 
     if (fallbackResult.ok) {
       const groundedData = await enforceInputTrackGroundTruth(fallbackResult.data, link);
-      const finalizedData = await finalizeResultData(groundedData);
+      const finalizedData = await finalizeResultData(groundedData, requestContext);
       const data = await finalizeAndPersistResult(finalizedData, {
         cacheStatus: "miss",
         aliases: [inputAlias],
@@ -288,10 +327,10 @@ export default async function handler(req, res) {
     }
 
     if (platform === "spotify") {
-      const spotifyFallback = await buildSpotifySearchFallback(link);
+      const spotifyFallback = await buildSpotifySearchFallback(link, requestContext);
       if (spotifyFallback.ok) {
         const groundedData = await enforceInputTrackGroundTruth(spotifyFallback.data, link);
-        const finalizedData = await finalizeResultData(groundedData);
+        const finalizedData = await finalizeResultData(groundedData, requestContext);
         const data = await finalizeAndPersistResult(finalizedData, {
           cacheStatus: "miss",
           aliases: [inputAlias],
@@ -307,7 +346,7 @@ export default async function handler(req, res) {
 
     const directInputFallback = buildDirectInputFallback(link, inputContext);
     if (directInputFallback.ok) {
-      const finalizedData = await finalizeResultData(directInputFallback.data);
+      const finalizedData = await finalizeResultData(directInputFallback.data, requestContext);
       const data = await finalizeAndPersistResult(finalizedData, {
         cacheStatus: "miss",
         aliases: [inputAlias],
@@ -335,7 +374,7 @@ export default async function handler(req, res) {
   }
 }
 
-async function buildSpotifySearchFallback(link) {
+async function buildSpotifySearchFallback(link, requestContext = {}) {
   const normalizedLink = normalizeSpotifyUrl(link);
   const negativeCacheKey = `spotify:${normalizedLink}`;
 
@@ -421,10 +460,13 @@ async function buildSpotifySearchFallback(link) {
     const successResult = {
       ok: true,
       status: 200,
-      data: await finalizeResultData({
-        ...metadataPayload,
-        links
-      })
+      data: await finalizeResultData(
+        {
+          ...metadataPayload,
+          links
+        },
+        requestContext
+      )
     };
     writeCache(spotifyUrlCache, normalizedLink, successResult, SPOTIFY_URL_CACHE_TTL_MS);
     writeCache(spotifyQueryCache, queryCacheKey, successResult, SPOTIFY_QUERY_CACHE_TTL_MS);
@@ -442,7 +484,7 @@ async function buildSpotifySearchFallback(link) {
   }
 }
 
-async function buildSearchFallbackFromQuery(query) {
+async function buildSearchFallbackFromQuery(query, requestContext = {}) {
   const normalizedQuery = buildSpotifyQueryFromMetadata({
     title: query,
     description: ""
@@ -505,10 +547,13 @@ async function buildSearchFallbackFromQuery(query) {
   return {
     ok: true,
     status: 200,
-    data: await finalizeResultData({
-      ...metadataPayload,
-      links
-    })
+    data: await finalizeResultData(
+      {
+        ...metadataPayload,
+        links
+      },
+      requestContext
+    )
   };
 }
 
@@ -614,12 +659,12 @@ async function finalizeAndPersistResult(data, options = {}) {
   return responseData;
 }
 
-async function maybeUpgradeCachedResult(cachedData, { aliases = [], defaultSource = "cache_upgrade", inputContext = null } = {}) {
+async function maybeUpgradeCachedResult(cachedData, { aliases = [], defaultSource = "cache_upgrade", inputContext = null, requestContext = {} } = {}) {
   if (!shouldUpgradeCachedResult(cachedData)) return cachedData;
 
   try {
     const upgradeInput = prepareCachedResultForUpgrade(cachedData, inputContext);
-    const finalizedData = await finalizeResultData(upgradeInput);
+    const finalizedData = await finalizeResultData(upgradeInput, requestContext);
     if (!isCachedUpgradeUseful(cachedData, finalizedData)) return cachedData;
 
     const withInputContext = applyInputContextToResult(finalizedData, inputContext);
@@ -1487,7 +1532,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
   };
 }
 
-async function finalizeResultData(data) {
+async function finalizeResultData(data, requestContext = {}) {
   const payload = data || {};
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
   const youtubeAdjustedLinks = withYoutubePlatformPairs(refineYoutubePlatformsWithCandidates(normalizedLinks, payload));
@@ -1506,11 +1551,11 @@ async function finalizeResultData(data) {
   const deezerEnriched = await enrichWithDeezerMatch(secondaryEnriched);
   const statslcEnriched = await enrichWithStatslcBridge(deezerEnriched);
   const spotifyWebEnriched = await enrichWithSpotifyWebMatch(statslcEnriched);
-  const rapidSpotifyEnriched = await enrichWithRapidApiSpotifyMatch(spotifyWebEnriched);
+  const rapidSpotifyEnriched = await enrichWithRapidApiSpotifyMatch(spotifyWebEnriched, requestContext);
   const postSpotifyStatslcEnriched = await enrichWithStatslcBridge(rapidSpotifyEnriched);
   const postSpotifyWebFallbackEnriched = await enrichWithSpotifyFallback(postSpotifyStatslcEnriched);
   const postSpotifyDeezerEnriched = await enrichWithDeezerMatch(postSpotifyWebFallbackEnriched);
-  const shazamAppleEnriched = await enrichWithRapidApiShazamAppleMusic(postSpotifyDeezerEnriched);
+  const shazamAppleEnriched = await enrichWithRapidApiShazamAppleMusic(postSpotifyDeezerEnriched, requestContext);
   const appleBridgeEnriched = await enrichWithAppleBridgeFallback(shazamAppleEnriched);
   const postAppleDeezerEnriched = await enrichWithDeezerMatch(appleBridgeEnriched);
   const songLinkEnriched = await enrichWithSongLinkDirectLinks(postAppleDeezerEnriched);
@@ -1518,8 +1563,8 @@ async function finalizeResultData(data) {
     ...songLinkEnriched,
     links: withYoutubePlatformPairs(Array.isArray(songLinkEnriched?.links) ? songLinkEnriched.links : [])
   };
-  const youtubeDataEnriched = await enrichWithYoutubeDataMatch(youtubePaired);
-  return enrichWithRapidApiYoutubeMusicMatch(youtubeDataEnriched);
+  const youtubeDataEnriched = await enrichWithYoutubeDataMatch(youtubePaired, requestContext);
+  return enrichWithRapidApiYoutubeMusicMatch(youtubeDataEnriched, requestContext);
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
@@ -2402,7 +2447,7 @@ async function enrichWithSpotifyWebMatch(data) {
   }
 }
 
-async function enrichWithRapidApiSpotifyMatch(data) {
+async function enrichWithRapidApiSpotifyMatch(data, requestContext = {}) {
   const next = { ...(data || {}) };
   const links = Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : [];
   const hasDirectSpotify = links.some(item => {
@@ -2422,7 +2467,9 @@ async function enrichWithRapidApiSpotifyMatch(data) {
     title,
     artist,
     album: next.album || "",
-    durationMs: Number(next.durationMs || next.duration || 0) || 0
+    durationMs: Number(next.durationMs || next.duration || 0) || 0,
+    countryCode: requestContext.countryCode || "",
+    locale: requestContext.locale || ""
   };
   const providers = [
     {
@@ -2478,7 +2525,7 @@ async function enrichWithRapidApiSpotifyMatch(data) {
   return { ...next, links };
 }
 
-async function enrichWithRapidApiShazamAppleMusic(data) {
+async function enrichWithRapidApiShazamAppleMusic(data, requestContext = {}) {
   const next = { ...(data || {}) };
   const links = dedupeAndNormalizeLinks(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
   const hasDirectAppleMusic = links.some(item => {
@@ -2502,7 +2549,9 @@ async function enrichWithRapidApiShazamAppleMusic(data) {
       title,
       artist,
       album: next.album || "",
-      durationMs: Number(next.durationMs || next.duration || 0) || 0
+      durationMs: Number(next.durationMs || next.duration || 0) || 0,
+      countryCode: requestContext.countryCode || "",
+      locale: requestContext.locale || ""
     });
 
     let appleUrl = match?.appleMusicUrl || "";
@@ -2561,7 +2610,7 @@ async function enrichWithRapidApiShazamAppleMusic(data) {
   }
 }
 
-async function enrichWithYoutubeDataMatch(data) {
+async function enrichWithYoutubeDataMatch(data, requestContext = {}) {
   const next = { ...(data || {}) };
   const links = withYoutubePlatformPairs(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
   const hasDirectYoutube = links.some(item => {
@@ -2584,7 +2633,9 @@ async function enrichWithYoutubeDataMatch(data) {
     const youtubeResult = await searchYoutubeVideoForTrackWithDiagnostics(query, {
       title,
       artist,
-      durationMs: Number(next.durationMs || next.duration || 0) || 0
+      durationMs: Number(next.durationMs || next.duration || 0) || 0,
+      countryCode: requestContext.countryCode || "",
+      locale: requestContext.locale || ""
     });
     const match = youtubeResult?.match || null;
 
@@ -2620,7 +2671,7 @@ async function enrichWithYoutubeDataMatch(data) {
   }
 }
 
-async function enrichWithRapidApiYoutubeMusicMatch(data) {
+async function enrichWithRapidApiYoutubeMusicMatch(data, requestContext = {}) {
   const next = { ...(data || {}) };
   const links = withYoutubePlatformPairs(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
   const hasDirectYoutube = links.some(item => {
@@ -2645,7 +2696,9 @@ async function enrichWithRapidApiYoutubeMusicMatch(data) {
       title,
       artist,
       album: next.album || "",
-      durationMs: Number(next.durationMs || next.duration || 0) || 0
+      durationMs: Number(next.durationMs || next.duration || 0) || 0,
+      countryCode: requestContext.countryCode || "",
+      locale: requestContext.locale || ""
     });
     await recordProviderAttempt({
       trackKey,

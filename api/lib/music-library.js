@@ -14,6 +14,12 @@ import {
 let sqlClient = null;
 let injectedSqlClient = null;
 let schemaReady = null;
+let providerAttemptsLastPrunedAt = 0;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const PROVIDER_ATTEMPT_PRUNE_INTERVAL_MS = DAY_MS;
+const DEFAULT_PROVIDER_ATTEMPT_RETENTION_DAYS = 30;
+const DEFAULT_PROVIDER_ATTEMPT_MAX_ROWS = 10_000;
 
 function getSql() {
   if (injectedSqlClient) return injectedSqlClient;
@@ -43,6 +49,7 @@ export async function __resetMusicLibraryForTests() {
   injectedSqlClient = null;
   sqlClient = null;
   schemaReady = null;
+  providerAttemptsLastPrunedAt = 0;
 }
 
 export async function readCachedResultByAlias(alias) {
@@ -267,7 +274,41 @@ export async function recordProviderAttempt({ trackKey = "", provider, status, l
     `;
   } catch (error) {
     logLibraryWarning("record_provider_attempt", error);
+    return;
   }
+
+  try {
+    await pruneProviderAttemptsIfDue(sql);
+  } catch (error) {
+    logLibraryWarning("prune_provider_attempts", error);
+  }
+}
+
+async function pruneProviderAttemptsIfDue(sql) {
+  const now = Date.now();
+  if (providerAttemptsLastPrunedAt && now - providerAttemptsLastPrunedAt < PROVIDER_ATTEMPT_PRUNE_INTERVAL_MS) {
+    return;
+  }
+  providerAttemptsLastPrunedAt = now;
+
+  const retentionDays = getPositiveIntegerEnv("PROVIDER_ATTEMPT_RETENTION_DAYS", DEFAULT_PROVIDER_ATTEMPT_RETENTION_DAYS);
+  const maxRows = getPositiveIntegerEnv("PROVIDER_ATTEMPT_MAX_ROWS", DEFAULT_PROVIDER_ATTEMPT_MAX_ROWS);
+  const cutoffIso = new Date(now - retentionDays * DAY_MS).toISOString();
+
+  await sql`
+    delete from provider_attempts
+    where created_at < ${cutoffIso}::timestamptz
+  `;
+
+  await sql`
+    delete from provider_attempts
+    where id not in (
+      select id
+      from provider_attempts
+      order by created_at desc, id desc
+      limit ${maxRows}
+    )
+  `;
 }
 
 async function ensureSchema() {
@@ -338,6 +379,16 @@ async function createSchema(sql) {
       created_at timestamptz not null default now()
     )
   `;
+
+  await sql`
+    create index if not exists provider_attempts_created_at_idx
+    on provider_attempts (created_at)
+  `;
+}
+
+function getPositiveIntegerEnv(name, fallback) {
+  const parsed = Number.parseInt(process.env[name] || "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function logLibraryWarning(action, error) {

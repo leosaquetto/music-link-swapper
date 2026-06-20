@@ -90,7 +90,9 @@ test("YouTube data matching accepts a strict official audio candidate first", as
     const result = await searchYoutubeVideoForTrackWithDiagnostics("SZA Saturn", {
       title: "Saturn",
       artist: "SZA",
-      durationMs: 186000
+      durationMs: 186000,
+      countryCode: "ES",
+      locale: "es-ES"
     });
 
     assert.equal(result.match.videoId, "strict123");
@@ -98,6 +100,8 @@ test("YouTube data matching accepts a strict official audio candidate first", as
     assert.equal(searchUrls.length, 1);
     const strictUrl = new URL(searchUrls[0]);
     assert.equal(strictUrl.searchParams.get("videoCategoryId"), "10");
+    assert.equal(strictUrl.searchParams.get("regionCode"), "ES");
+    assert.equal(strictUrl.searchParams.get("relevanceLanguage"), "es");
     assert.match(strictUrl.searchParams.get("q"), /official audio/i);
   });
 });

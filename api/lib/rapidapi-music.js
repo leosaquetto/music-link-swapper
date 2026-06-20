@@ -68,7 +68,7 @@ export async function searchRapidApiSpotifyTrack(target = {}) {
   url.searchParams.set("offset", "0");
   url.searchParams.set("limit", "10");
   url.searchParams.set("numberOfTopResults", "5");
-  const countryCode = getCountryCode();
+  const countryCode = getCountryCode(normalizedTarget.countryCode);
   if (countryCode) url.searchParams.set("gl", countryCode);
 
   const payload = await fetchRapidApiJson(url.toString(), SPOTIFY23_HOST);
@@ -149,7 +149,7 @@ export async function searchRapidApiShazamTrack(target = {}) {
 
   const url = new URL(`${SHAZAM_BASE_URL}/v2/search`);
   url.searchParams.set("term", query);
-  url.searchParams.set("locale", getShazamLocale());
+  url.searchParams.set("locale", getShazamLocale(normalizedTarget.locale));
   url.searchParams.set("offset", "0");
   url.searchParams.set("limit", "5");
 
@@ -358,7 +358,9 @@ function normalizeTarget(target = {}) {
     artist,
     album,
     query,
-    durationMs: Number(target.durationMs || target.duration || 0) || 0
+    durationMs: Number(target.durationMs || target.duration || 0) || 0,
+    countryCode: normalizeCountryCode(target.countryCode),
+    locale: normalizeLocale(target.locale)
   };
 }
 
@@ -717,14 +719,26 @@ function getRapidApiKey() {
   return String(process.env.RAPIDAPI_KEY || "").trim();
 }
 
-function getCountryCode() {
-  const value = String(process.env.RAPIDAPI_COUNTRY_CODE || "BR").trim().toUpperCase();
-  return /^[A-Z]{2}$/.test(value) ? value : "BR";
+function getCountryCode(preferredCountryCode = "") {
+  return normalizeCountryCode(preferredCountryCode) || normalizeCountryCode(process.env.RAPIDAPI_COUNTRY_CODE) || "BR";
 }
 
-function getShazamLocale() {
-  const value = String(process.env.RAPIDAPI_SHAZAM_LOCALE || "en-US").trim();
-  return /^[a-z]{2}-[A-Z]{2}$/.test(value) ? value : "en-US";
+function getShazamLocale(preferredLocale = "") {
+  return normalizeLocale(preferredLocale) || normalizeLocale(process.env.RAPIDAPI_SHAZAM_LOCALE) || "en-US";
+}
+
+function normalizeCountryCode(value) {
+  const normalized = String(value || "").trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(normalized) ? normalized : "";
+}
+
+function normalizeLocale(value) {
+  const raw = String(value || "").trim().replace("_", "-");
+  const match = raw.match(/^([a-z]{2})(?:-([a-z]{2}))?$/i);
+  if (!match) return "";
+  const language = match[1].toLowerCase();
+  const region = match[2] ? match[2].toUpperCase() : "";
+  return region ? `${language}-${region}` : "";
 }
 
 function clampNumber(value, min, max, fallback) {

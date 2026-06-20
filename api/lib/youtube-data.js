@@ -65,6 +65,17 @@ function getYoutubeApiKey() {
   return String(process.env.YOUTUBE_API_KEY || "").trim();
 }
 
+function normalizeCountryCode(value) {
+  const normalized = String(value || "").trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(normalized) ? normalized : "";
+}
+
+function normalizeLanguage(value) {
+  const raw = String(value || "").trim().replace("_", "-");
+  const match = raw.match(/^([a-z]{2})(?:-[a-z]{2})?$/i);
+  return match ? match[1].toLowerCase() : "";
+}
+
 async function runYoutubeSearchPass(apiKey, query, target, options) {
   const searchTerm = buildYoutubeSearchTerm(query, target, options);
   if (!searchTerm) {
@@ -87,6 +98,10 @@ async function runYoutubeSearchPass(apiKey, query, target, options) {
   if (options.includeMusicCategory) {
     searchUrl.searchParams.set("videoCategoryId", MUSIC_CATEGORY_ID);
   }
+  const regionCode = normalizeCountryCode(target.countryCode);
+  const relevanceLanguage = normalizeLanguage(target.locale);
+  if (regionCode) searchUrl.searchParams.set("regionCode", regionCode);
+  if (relevanceLanguage) searchUrl.searchParams.set("relevanceLanguage", relevanceLanguage);
   searchUrl.searchParams.set("q", searchTerm);
 
   const searchResponse = await fetchWithTimeout(searchUrl.toString());
