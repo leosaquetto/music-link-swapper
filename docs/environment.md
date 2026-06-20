@@ -54,6 +54,16 @@ STATSLC_BRIDGE_URL="https://statslc.leosaquetto.com/api/catalog-link-bridge"
 STATSLC_BRIDGE_TOKEN=""
 YOUTUBE_MATCHING_ENABLED="true"
 DEEZER_MATCHING_ENABLED="true"
+RAPIDAPI_FALLBACKS_ENABLED="false"
+RAPIDAPI_KEY=""
+RAPIDAPI_SPOTIFY_ENABLED="true"
+RAPIDAPI_SPOTIFY_WEB_API3_ENABLED="true"
+RAPIDAPI_SHAZAM_ENABLED="true"
+RAPIDAPI_SHAZAM_LOCALE="en-US"
+RAPIDAPI_MUSICDATA_ENABLED="true"
+RAPIDAPI_YOUTUBE_MUSIC_ENABLED="true"
+RAPIDAPI_DAILY_REQUEST_LIMIT="8"
+RAPIDAPI_COUNTRY_CODE="BR"
 MANUAL_LINK_TOKEN=""
 YOUTUBE_API_KEY=""
 ```
@@ -64,15 +74,30 @@ YOUTUBE_API_KEY=""
 - `STATSLC_BRIDGE_TOKEN` is optional locally, but should match `CATALOG_LINK_BRIDGE_TOKEN` on `stats-lc-api` in production.
 - `YOUTUBE_MATCHING_ENABLED=false` disables YouTube Data API matching instantly.
 - `DEEZER_MATCHING_ENABLED=false` disables Deezer public API lookup/search instantly, including `GET /api/deezer/search`.
+- `RAPIDAPI_FALLBACKS_ENABLED=true` enables quota-limited RapidAPI fallbacks when `RAPIDAPI_KEY` is also set. It is disabled by default.
+- `RAPIDAPI_KEY` is the server-side RapidAPI key. Never expose it in frontend code or logs.
+- `RAPIDAPI_SPOTIFY_ENABLED=false` disables the Spotify23 fallback.
+- `RAPIDAPI_SPOTIFY_WEB_API3_ENABLED=false` disables the Spotify Web API3 secondary fallback.
+- `RAPIDAPI_SHAZAM_ENABLED=false` disables the Shazam fallback for Apple Music direct-link recovery.
+- `RAPIDAPI_SHAZAM_LOCALE` controls Shazam search locale and defaults to `en-US`.
+- `RAPIDAPI_MUSICDATA_ENABLED=false` disables the MusicData YouTube video metadata fallback.
+- `RAPIDAPI_YOUTUBE_MUSIC_ENABLED=false` disables the YouTube Music API3 fallback.
+- `RAPIDAPI_DAILY_REQUEST_LIMIT` is a conservative per-instance guardrail for RapidAPI calls. The default is `8`; RapidAPI hard limits still apply globally.
+- `RAPIDAPI_COUNTRY_CODE` controls the Spotify23 `gl` market parameter and defaults to `BR`.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
 - `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID.
 
 TIDAL support is temporarily paused. Do not add TIDAL env vars back unless the app is intentionally reintroducing TIDAL as an automatic platform.
 
+## Vercel environment scope notes
+
+The linked Vercel project uses `main` as the Production Branch. The Vercel CLI currently refuses Preview env vars scoped to `main` with `branch_not_found` / "Cannot set Production Branch `main` for a Preview Environment Variable." For this repo, configure server secrets in Production for live deploys and Development for local `vercel dev`/pull workflows. Only add Preview env vars when a real non-production preview branch exists.
+
 ## Production key care
 
 - Keep `.env.local` out of commits.
 - Restrict `YOUTUBE_API_KEY` to YouTube Data API v3.
+- Keep `RAPIDAPI_KEY` server-side only and rotate it if it appears in chat, logs, screenshots, or git.
 - Monitor YouTube quota after deploys that touch matching.
 - Rotate any key that is pasted into chat, logs, screenshots, or git by mistake.
 - Keep `STATSLC_BRIDGE_TOKEN` synchronized with the matching token on `stats-lc-api`.
@@ -80,6 +105,7 @@ TIDAL support is temporarily paused. Do not add TIDAL env vars back unless the a
 - Use the kill switches when provider cost or abuse is suspected:
   - `YOUTUBE_MATCHING_ENABLED=false`
   - `DEEZER_MATCHING_ENABLED=false`
+  - `RAPIDAPI_FALLBACKS_ENABLED=false`
   - `SPOTIFY_WEB_MATCHING_ENABLED=false`
   - `STATSLC_BRIDGE_ENABLED=false`
 

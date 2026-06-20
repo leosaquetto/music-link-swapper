@@ -317,8 +317,12 @@ function scoreLinkQuality(item) {
   if (item?.source === "manual") score += 10;
   if (item?.source === "statslc_bridge") score += 9;
   if (item?.source === "spotify_web") score += 8;
+  if (item?.source === "rapidapi_spotify23") score += 8;
+  if (item?.source === "rapidapi_spotify_web_api3") score += 8;
+  if (item?.source === "rapidapi_shazam") score += 8;
   if (item?.source === "deezer_api") score += 8;
   if (item?.source === "youtube_api") score += 8;
+  if (item?.source === "rapidapi_youtube_music_api3") score += 7;
   if (platform === "appleMusic" && /\/album\/.+\?i=\d+/.test(url)) score += 18;
   if (platform === "appleMusic" && url.includes("geo.music.apple.com")) score -= 18;
   if ((platform === "youtube" || platform === "youtubeMusic") && getYoutubeVideoId(url)) score += 12;

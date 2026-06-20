@@ -31,6 +31,17 @@ import {
   isYoutubeDataMatchingConfigured,
   searchYoutubeVideoForTrackWithDiagnostics
 } from "./lib/youtube-data.js";
+import {
+  fetchRapidApiMusicDataYoutubeVideo,
+  isRapidApiShazamEnabled,
+  isRapidApiSpotifyEnabled,
+  isRapidApiSpotifyWebApi3Enabled,
+  isRapidApiYoutubeMusicEnabled,
+  searchRapidApiShazamTrack,
+  searchRapidApiSpotifyTrack,
+  searchRapidApiSpotifyWebApi3Track,
+  searchRapidApiYoutubeMusicTrack
+} from "./lib/rapidapi-music.js";
 
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
@@ -641,10 +652,11 @@ function shouldUpgradeCachedResult(data) {
 
   return missingPlatforms.some(platform => {
     if (platform === "youtube" || platform === "youtubeMusic") {
-      return isYoutubeDataMatchingConfigured();
+      return isYoutubeDataMatchingConfigured() || isRapidApiYoutubeMusicEnabled();
     }
     if (platform === "deezer") return isDeezerMatchingEnabled();
-    return platform === "spotify" || platform === "appleMusic";
+    if (platform === "spotify") return true;
+    return platform === "appleMusic";
   });
 }
 
@@ -1011,6 +1023,19 @@ async function fetchYoutubeMetadata(link) {
     } catch (_error) {
       continue;
     }
+  }
+
+  try {
+    const musicDataMetadata = await fetchRapidApiMusicDataYoutubeVideo(videoId);
+    if (musicDataMetadata?.title || musicDataMetadata?.artist || musicDataMetadata?.image) {
+      return {
+        title: sanitizeYoutubeOEmbedTitle(musicDataMetadata.title || musicDataMetadata.rawTitle || ""),
+        artist: sanitizeYoutubeOEmbedAuthor(musicDataMetadata.artist || ""),
+        image: musicDataMetadata.image || ""
+      };
+    }
+  } catch (_error) {
+    // Keep the YouTube Data API fallback available when RapidAPI is unavailable.
   }
 
   const youtubeDataMetadata = await fetchYoutubeDataApiMetadata(videoId);
@@ -1481,17 +1506,20 @@ async function finalizeResultData(data) {
   const deezerEnriched = await enrichWithDeezerMatch(secondaryEnriched);
   const statslcEnriched = await enrichWithStatslcBridge(deezerEnriched);
   const spotifyWebEnriched = await enrichWithSpotifyWebMatch(statslcEnriched);
-  const postSpotifyStatslcEnriched = await enrichWithStatslcBridge(spotifyWebEnriched);
+  const rapidSpotifyEnriched = await enrichWithRapidApiSpotifyMatch(spotifyWebEnriched);
+  const postSpotifyStatslcEnriched = await enrichWithStatslcBridge(rapidSpotifyEnriched);
   const postSpotifyWebFallbackEnriched = await enrichWithSpotifyFallback(postSpotifyStatslcEnriched);
   const postSpotifyDeezerEnriched = await enrichWithDeezerMatch(postSpotifyWebFallbackEnriched);
-  const appleBridgeEnriched = await enrichWithAppleBridgeFallback(postSpotifyDeezerEnriched);
+  const shazamAppleEnriched = await enrichWithRapidApiShazamAppleMusic(postSpotifyDeezerEnriched);
+  const appleBridgeEnriched = await enrichWithAppleBridgeFallback(shazamAppleEnriched);
   const postAppleDeezerEnriched = await enrichWithDeezerMatch(appleBridgeEnriched);
   const songLinkEnriched = await enrichWithSongLinkDirectLinks(postAppleDeezerEnriched);
   const youtubePaired = {
     ...songLinkEnriched,
     links: withYoutubePlatformPairs(Array.isArray(songLinkEnriched?.links) ? songLinkEnriched.links : [])
   };
-  return enrichWithYoutubeDataMatch(youtubePaired);
+  const youtubeDataEnriched = await enrichWithYoutubeDataMatch(youtubePaired);
+  return enrichWithRapidApiYoutubeMusicMatch(youtubeDataEnriched);
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
@@ -2374,6 +2402,165 @@ async function enrichWithSpotifyWebMatch(data) {
   }
 }
 
+async function enrichWithRapidApiSpotifyMatch(data) {
+  const next = { ...(data || {}) };
+  const links = Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : [];
+  const hasDirectSpotify = links.some(item => {
+    const type = String(item?.type || "").toLowerCase();
+    return type === "spotify" && item?.url && !isSearchLikeUrl(item.url, type);
+  });
+  if (hasDirectSpotify || (!isRapidApiSpotifyEnabled() && !isRapidApiSpotifyWebApi3Enabled())) return { ...next, links };
+
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!title || !artist || !query) return { ...next, links };
+
+  const trackKey = buildCanonicalTrackKey({ title, artist });
+  const request = {
+    query,
+    title,
+    artist,
+    album: next.album || "",
+    durationMs: Number(next.durationMs || next.duration || 0) || 0
+  };
+  const providers = [
+    {
+      enabled: isRapidApiSpotifyEnabled(),
+      provider: "rapidapi_spotify23",
+      search: searchRapidApiSpotifyTrack
+    },
+    {
+      enabled: isRapidApiSpotifyWebApi3Enabled(),
+      provider: "rapidapi_spotify_web_api3",
+      search: searchRapidApiSpotifyWebApi3Track
+    }
+  ];
+
+  for (const provider of providers) {
+    if (!provider.enabled) continue;
+    const startedAt = Date.now();
+    try {
+      const match = await provider.search(request);
+      await recordProviderAttempt({
+        trackKey,
+        provider: provider.provider,
+        status: match?.url ? "hit" : "miss",
+        latencyMs: Date.now() - startedAt,
+        message: match?.url ? `${match.url} score=${Math.round(Number(match.score || 0))}` : "no_match"
+      });
+
+      if (!match?.url) continue;
+
+      return {
+        ...next,
+        links: dedupeAndNormalizeLinks([
+          ...links,
+          {
+            type: "spotify",
+            url: match.url,
+            isVerified: Boolean(match.isVerified),
+            source: match.source || provider.provider
+          }
+        ])
+      };
+    } catch (error) {
+      await recordProviderAttempt({
+        trackKey,
+        provider: provider.provider,
+        status: "error",
+        latencyMs: Date.now() - startedAt,
+        message: String(error?.message || error || "unknown_error")
+      });
+    }
+  }
+
+  return { ...next, links };
+}
+
+async function enrichWithRapidApiShazamAppleMusic(data) {
+  const next = { ...(data || {}) };
+  const links = dedupeAndNormalizeLinks(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
+  const hasDirectAppleMusic = links.some(item => {
+    const type = normalizeContractPlatformKey(item?.type || "");
+    const url = String(item?.url || "");
+    if (type !== "appleMusic" || !url || isSearchLikeUrl(url, type)) return false;
+    return !/\/artist\//.test(url) && !url.includes("geo.music.apple.com");
+  });
+  if (hasDirectAppleMusic || !isRapidApiShazamEnabled()) return { ...next, links };
+
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!title || !artist || !query) return { ...next, links };
+
+  const startedAt = Date.now();
+  const trackKey = buildCanonicalTrackKey({ title, artist });
+  try {
+    const match = await searchRapidApiShazamTrack({
+      query,
+      title,
+      artist,
+      album: next.album || "",
+      durationMs: Number(next.durationMs || next.duration || 0) || 0
+    });
+
+    let appleUrl = match?.appleMusicUrl || "";
+    let appleMetadata = null;
+    if (!appleUrl && match?.appleMusicTrackId) {
+      appleMetadata = await fetchAppleTrackMetadataById(match.appleMusicTrackId);
+      appleUrl = appleMetadata?.url || "";
+    }
+
+    await recordProviderAttempt({
+      trackKey,
+      provider: "rapidapi_shazam",
+      status: appleUrl ? "hit" : "miss",
+      latencyMs: Date.now() - startedAt,
+      message: appleUrl ? `${appleUrl} score=${Math.round(Number(match?.score || 0))}` : "no_match"
+    });
+
+    if (!appleUrl) return { ...next, links };
+
+    const titleCandidate =
+      (!isGenericTrackTitle(next.title) && !isLikelyNonTrackTitle(next.title))
+        ? next.title
+        : match?.title || appleMetadata?.title || next.title;
+    const descriptionCandidate =
+      extractArtistFromPayload(next) || match?.artist || appleMetadata?.artist || "";
+
+    return {
+      ...next,
+      title: sanitizeMetadataText(titleCandidate, MAX_METADATA_TEXT_LENGTH) || next.title || match?.title || "música encontrada",
+      description: sanitizeMetadataText(
+        descriptionCandidate,
+        MAX_METADATA_TEXT_LENGTH,
+        { blankWhenNoisy: true }
+      ),
+      album: sanitizeMetadataText(next.album || appleMetadata?.album || match?.album, MAX_METADATA_TEXT_LENGTH),
+      image: next.image || match?.image || appleMetadata?.image || "",
+      links: dedupeAndNormalizeLinks([
+        ...links,
+        {
+          type: "appleMusic",
+          url: canonicalizeMediaUrl(appleUrl),
+          isVerified: Boolean(match?.isVerified),
+          source: "rapidapi_shazam"
+        }
+      ])
+    };
+  } catch (error) {
+    await recordProviderAttempt({
+      trackKey,
+      provider: "rapidapi_shazam",
+      status: "error",
+      latencyMs: Date.now() - startedAt,
+      message: String(error?.message || error || "unknown_error")
+    });
+    return { ...next, links };
+  }
+}
+
 async function enrichWithYoutubeDataMatch(data) {
   const next = { ...(data || {}) };
   const links = withYoutubePlatformPairs(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
@@ -2425,6 +2612,62 @@ async function enrichWithYoutubeDataMatch(data) {
     await recordProviderAttempt({
       trackKey,
       provider: "youtube_api",
+      status: "error",
+      latencyMs: Date.now() - startedAt,
+      message: String(error?.message || error || "unknown_error")
+    });
+    return { ...next, links };
+  }
+}
+
+async function enrichWithRapidApiYoutubeMusicMatch(data) {
+  const next = { ...(data || {}) };
+  const links = withYoutubePlatformPairs(Array.isArray(next.links) ? next.links.map(item => ({ ...item })) : []);
+  const hasDirectYoutube = links.some(item => {
+    const type = normalizeContractPlatformKey(item?.type || "");
+    return (type === "youtube" || type === "youtubeMusic") && getYoutubeVideoId(item?.url || "") && !isSearchLikeUrl(item.url, type);
+  });
+
+  if (hasDirectYoutube || !isRapidApiYoutubeMusicEnabled()) {
+    return { ...next, links };
+  }
+
+  const title = String(next.title || "").trim();
+  const artist = extractArtistFromPayload(next);
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!title || !artist || !query) return { ...next, links };
+
+  const startedAt = Date.now();
+  const trackKey = buildCanonicalTrackKey({ title, artist });
+  try {
+    const match = await searchRapidApiYoutubeMusicTrack({
+      query,
+      title,
+      artist,
+      album: next.album || "",
+      durationMs: Number(next.durationMs || next.duration || 0) || 0
+    });
+    await recordProviderAttempt({
+      trackKey,
+      provider: "rapidapi_youtube_music_api3",
+      status: match?.videoId ? "hit" : "miss",
+      latencyMs: Date.now() - startedAt,
+      message: match?.videoId ? `${match.videoId} score=${Math.round(Number(match.score || 0))}` : "no_match"
+    });
+
+    if (!match?.videoId) return { ...next, links };
+
+    return {
+      ...next,
+      links: dedupeAndNormalizeLinks([
+        ...links,
+        ...(Array.isArray(match.links) ? match.links : [])
+      ])
+    };
+  } catch (error) {
+    await recordProviderAttempt({
+      trackKey,
+      provider: "rapidapi_youtube_music_api3",
       status: "error",
       latencyMs: Date.now() - startedAt,
       message: String(error?.message || error || "unknown_error")
@@ -2501,7 +2744,11 @@ function scoreLinkQuality(item) {
   if (source === "statslc_bridge") score += 20;
   if (source === "itunes") score += 18;
   if (source === "spotify_web") score += 12;
+  if (source === "rapidapi_spotify23") score += 11;
+  if (source === "rapidapi_spotify_web_api3") score += 11;
+  if (source === "rapidapi_shazam") score += 10;
   if (source === "deezer_api") score += 12;
+  if (source === "rapidapi_youtube_music_api3") score += 10;
   if (source === "songlink") score += 4;
 
   if (key === "applemusic" || key === "itunes") {
@@ -3013,5 +3260,8 @@ export const __testHooks = {
   enrichWithDeezerMatch,
   enrichWithSongLinkDirectLinks,
   enrichWithSpotifyFallback,
+  enrichWithRapidApiSpotifyMatch,
+  enrichWithRapidApiShazamAppleMusic,
+  enrichWithRapidApiYoutubeMusicMatch,
   normalizeSongLinkPayload
 };

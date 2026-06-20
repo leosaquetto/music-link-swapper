@@ -19,11 +19,14 @@ Agent-facing rules for preserving this behavior live in [`agent-rules.md`](./age
 4. Direct input link preservation when the submitted URL is already a valid platform link.
 5. stats-lc bridge for Spotify and Apple Music enrichment from stats.fm catalog IDs.
 6. Spotify Web Player matching when enabled.
-7. Apple Music/iTunes lookup and search.
-8. Deezer public API lookup/search when enabled.
-9. Songlink/Odesli enrichment for direct links returned by that provider.
-10. YouTube Data API matching only when still missing YouTube or YouTube Music.
-11. Manual correction, hidden unless a primary platform is missing.
+7. RapidAPI Spotify23, then Spotify Web API3, only when explicitly enabled and Spotify is still missing.
+8. Apple Music/iTunes lookup and search.
+9. RapidAPI Shazam fallback only when explicitly enabled and Apple Music is still missing.
+10. Deezer public API lookup/search when enabled.
+11. Songlink/Odesli enrichment for direct links returned by that provider.
+12. YouTube Data API matching only when still missing YouTube or YouTube Music.
+13. RapidAPI YouTube Music API3 fallback only when explicitly enabled and YouTube links are still missing.
+14. Manual correction, hidden unless a primary platform is missing.
 
 Songlink/Odesli is intentionally before the YouTube Data API. If it returns a direct YouTube, YouTube Music, Apple Music, Deezer, or Spotify link, the app can persist that result without spending YouTube API quota. This enrichment also runs when Deezer is the only missing automatic platform. If it returns only unrelated platforms or the same input platform, the app skips those links.
 
@@ -47,11 +50,15 @@ When `DATABASE_URL` is absent, conversion still works, but durable cache and pro
 - `input`
 - `cache`
 - `spotify_web`
+- `rapidapi_spotify23`
+- `rapidapi_spotify_web_api3`
+- `rapidapi_shazam`
 - `itunes`
 - `deezer_api`
 - `songlink`
 - `idhs`
 - `youtube_api`
+- `rapidapi_youtube_music_api3`
 - `statslc_bridge`
 - `manual`
 
@@ -132,9 +139,29 @@ For YouTube and YouTube Music input metadata, preserve this fallback order:
 
 1. YouTube oEmbed.
 2. noembed.
-3. YouTube Data API `videos.list`, only when the key is configured.
+3. RapidAPI MusicData `/youtube/video/{videoId}` when RapidAPI fallbacks are enabled.
+4. YouTube Data API `videos.list`, only when the key is configured.
 
 This metadata path is separate from search matching. It exists so official YouTube Music inputs can produce a reliable title/artist before Spotify, Apple Music, and YouTube matching run.
+
+## RapidAPI limited fallbacks
+
+RapidAPI providers are intentionally last-mile fallbacks, not primary matching:
+
+- Spotify23 can fill a missing Spotify direct track link after the current free/internal Spotify paths miss.
+- Spotify Web API3 can fill a missing Spotify direct track link if Spotify23 misses or is unavailable.
+- Shazam can fill a missing Apple Music direct track link and cleaner title/artist metadata. Its Spotify and Deezer provider actions are search deeplinks, so they must never be returned as display links.
+- MusicData can recover title/artist metadata for a submitted YouTube video id before spending YouTube Data API quota. That same trusted `videoId` can back both YouTube and YouTube Music links, but MusicData does not search for a new cross-platform match. Its stats links are metadata only, not display-link sources.
+- YouTube Music API3 can fill a missing YouTube/YouTube Music pair after Songlink/Odesli and YouTube Data API miss.
+- Apple Music RapidAPI is not used in the normal flow yet because iTunes Lookup/Search is free and already handles Apple links/search. It can be reconsidered later for controlled ISRC/metadata enrichment.
+
+They require:
+
+- `RAPIDAPI_FALLBACKS_ENABLED=true`
+- `RAPIDAPI_KEY`
+- provider switches left enabled, such as `RAPIDAPI_SPOTIFY_ENABLED=true`, `RAPIDAPI_SPOTIFY_WEB_API3_ENABLED=true`, `RAPIDAPI_SHAZAM_ENABLED=true`, `RAPIDAPI_MUSICDATA_ENABLED=true`, and `RAPIDAPI_YOUTUBE_MUSIC_ENABLED=true`
+
+The implementation keeps a conservative in-memory daily quota via `RAPIDAPI_DAILY_REQUEST_LIMIT`. Because serverless instances do not share memory, production should still rely on the RapidAPI hard limits and logs. RapidAPI results must still pass the same direct-link-only contract; no RapidAPI search URL is ever returned to the frontend.
 
 ## Recent hardening notes
 
@@ -147,6 +174,7 @@ This metadata path is separate from search matching. It exists so official YouTu
 - Apple/iTunes search has an alternate simplified query for live titles with venue/date suffixes.
 - YouTube metadata can fall back from public embed endpoints to YouTube Data API `videos.list`.
 - Production validation covered official YouTube Music, Apple Music, and Spotify examples returning the previous four automatic platforms with direct URLs. Deezer was added afterward and should be smoke-tested separately after deploy.
+- RapidAPI Spotify23, Spotify Web API3, Shazam, MusicData, and YouTube Music API3 were added as disabled-by-default quota-limited fallbacks; smoke-test them only with `RAPIDAPI_FALLBACKS_ENABLED=true` and a low `RAPIDAPI_DAILY_REQUEST_LIMIT`.
 
 Known fixtures that should keep working:
 
@@ -200,6 +228,7 @@ Before deploying matching changes:
 - Confirm pending manual links do not appear in `GET /api/track`.
 - Test at least one Spotify input, one Apple Music input, one Deezer input, and one YouTube input.
 - Test `/api/deezer/search?q=Daft%20Punk%20One%20More%20Time`.
+- If RapidAPI fallbacks are enabled, test one Spotify miss and one YouTube/YouTube Music miss with a low daily limit.
 - Test at least one YouTube Music official art-track input that starts from cache miss.
 - Test at least one partial-cache upgrade when a platform is missing.
 - Check Vercel runtime logs for error/fatal logs after production smoke tests.

@@ -2,9 +2,20 @@
 import { existsSync, readFileSync } from "node:fs";
 
 const ENV_FILES = [".env.local", ".env"];
-const OPTIONAL_KEYS = ["MANUAL_LINK_TOKEN", "STATSLC_BRIDGE_TOKEN", "YOUTUBE_API_KEY"];
+const OPTIONAL_KEYS = ["MANUAL_LINK_TOKEN", "RAPIDAPI_KEY", "STATSLC_BRIDGE_TOKEN", "YOUTUBE_API_KEY"];
 const OPTIONAL_URL_KEYS = ["STATSLC_BRIDGE_URL"];
-const BOOLEAN_KEYS = ["SPOTIFY_WEB_MATCHING_ENABLED", "STATSLC_BRIDGE_ENABLED", "YOUTUBE_MATCHING_ENABLED"];
+const BOOLEAN_KEYS = [
+  "DEEZER_MATCHING_ENABLED",
+  "RAPIDAPI_FALLBACKS_ENABLED",
+  "RAPIDAPI_MUSICDATA_ENABLED",
+  "RAPIDAPI_SHAZAM_ENABLED",
+  "RAPIDAPI_SPOTIFY_ENABLED",
+  "RAPIDAPI_SPOTIFY_WEB_API3_ENABLED",
+  "RAPIDAPI_YOUTUBE_MUSIC_ENABLED",
+  "SPOTIFY_WEB_MATCHING_ENABLED",
+  "STATSLC_BRIDGE_ENABLED",
+  "YOUTUBE_MATCHING_ENABLED"
+];
 
 const fileEnv = loadEnvFiles(ENV_FILES);
 const env = {
@@ -29,6 +40,9 @@ for (const key of OPTIONAL_KEYS) {
 for (const key of OPTIONAL_URL_KEYS) {
   validateOptionalUrl(key, env[key], { issues });
 }
+validateCountryCode("RAPIDAPI_COUNTRY_CODE", env.RAPIDAPI_COUNTRY_CODE, { issues });
+validateLocale("RAPIDAPI_SHAZAM_LOCALE", env.RAPIDAPI_SHAZAM_LOCALE, { issues });
+validatePositiveInteger("RAPIDAPI_DAILY_REQUEST_LIMIT", env.RAPIDAPI_DAILY_REQUEST_LIMIT, { issues });
 if (issues.length) {
   console.error(["Environment check failed:", ...issues.map(item => `- ${item}`)].join("\n"));
   process.exit(1);
@@ -101,6 +115,22 @@ function validateCountryCode(key, value, { issues }) {
   if (!raw) return;
   if (!/^[A-Za-z]{2}$/.test(raw)) {
     issues.push(`${key} must be an ISO 3166-1 alpha-2 country code when set.`);
+  }
+}
+
+function validateLocale(key, value, { issues }) {
+  const raw = String(value || "").trim();
+  if (!raw) return;
+  if (!/^[a-z]{2}-[A-Z]{2}$/.test(raw)) {
+    issues.push(`${key} must use a locale like en-US or pt-BR when set.`);
+  }
+}
+
+function validatePositiveInteger(key, value, { issues }) {
+  const raw = String(value || "").trim();
+  if (!raw) return;
+  if (!/^\d+$/.test(raw) || Number(raw) < 1) {
+    issues.push(`${key} must be a positive integer when set.`);
   }
 }
 

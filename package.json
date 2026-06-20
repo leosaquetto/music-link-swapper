@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check api/convert.js && node --check api/deezer/search.js && node --check api/manual-link.js && node --check api/track.js && node --check api/lib/deezer.js && node --check api/lib/statslc-bridge.js && node --check api/lib/youtube-data.js && node --check app.js && node --check scripts/check-env.mjs && node --check scripts/setup-neon.mjs && node --check scripts/provider-probe.mjs && node --test",
+    "check": "node --check api/convert.js && node --check api/deezer/search.js && node --check api/manual-link.js && node --check api/track.js && node --check api/lib/deezer.js && node --check api/lib/rapidapi-music.js && node --check api/lib/statslc-bridge.js && node --check api/lib/youtube-data.js && node --check app.js && node --check scripts/check-env.mjs && node --check scripts/setup-neon.mjs && node --check scripts/provider-probe.mjs && node --test",
     "check:env": "node scripts/check-env.mjs",
     "setup:neon": "node scripts/setup-neon.mjs",
     "test": "node --test",

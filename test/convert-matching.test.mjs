@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import convertHandler, { __testHooks } from "../api/convert.js";
+import { __resetRapidApiQuotaForTests } from "../api/lib/rapidapi-music.js";
 
 const SPOTIFY_TRACK_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT";
 process.env.DEEZER_MATCHING_ENABLED = "false";
@@ -200,6 +201,175 @@ test("Spotify fallback preserves an existing direct Apple Music link", async () 
 
     assert.equal(itunesCalls, 0);
     assert.equal(result.links.find(link => link.type === "appleMusic").url, appleUrl);
+  });
+});
+
+test("RapidAPI Spotify fallback adds a direct Spotify link when enabled", async () => {
+  const previousEnabled = process.env.RAPIDAPI_FALLBACKS_ENABLED;
+  const previousKey = process.env.RAPIDAPI_KEY;
+  const previousSpotify = process.env.RAPIDAPI_SPOTIFY_ENABLED;
+  process.env.RAPIDAPI_FALLBACKS_ENABLED = "true";
+  process.env.RAPIDAPI_KEY = "test-rapidapi-key";
+  process.env.RAPIDAPI_SPOTIFY_ENABLED = "true";
+  __resetRapidApiQuotaForTests();
+
+  await withMockFetch(async input => {
+    const url = new URL(String(input));
+    assert.equal(url.hostname, "spotify23.p.rapidapi.com");
+    return textResponse(JSON.stringify({
+      tracks: {
+        items: [
+          {
+            data: {
+              id: "0DiWol3AO6WpXZgp0goxAV",
+              uri: "spotify:track:0DiWol3AO6WpXZgp0goxAV",
+              name: "One More Time",
+              artists: { items: [{ profile: { name: "Daft Punk" } }] },
+              albumOfTrack: { name: "Discovery" },
+              duration: { totalMilliseconds: 320000 }
+            }
+          }
+        ]
+      }
+    }));
+  }, async () => {
+    try {
+      const result = await __testHooks.enrichWithRapidApiSpotifyMatch({
+        title: "One More Time",
+        description: "Daft Punk",
+        album: "Discovery",
+        durationMs: 320000,
+        links: []
+      });
+
+      const spotify = result.links.find(link => link.type === "spotify");
+      assert.ok(spotify);
+      assert.equal(spotify.url, "https://open.spotify.com/track/0DiWol3AO6WpXZgp0goxAV");
+      assert.equal(spotify.source, "rapidapi_spotify23");
+    } finally {
+      restoreEnv("RAPIDAPI_FALLBACKS_ENABLED", previousEnabled);
+      restoreEnv("RAPIDAPI_KEY", previousKey);
+      restoreEnv("RAPIDAPI_SPOTIFY_ENABLED", previousSpotify);
+      __resetRapidApiQuotaForTests();
+    }
+  });
+});
+
+test("RapidAPI Spotify Web API3 fallback runs after Spotify23 misses", async () => {
+  const previousEnabled = process.env.RAPIDAPI_FALLBACKS_ENABLED;
+  const previousKey = process.env.RAPIDAPI_KEY;
+  const previousSpotify = process.env.RAPIDAPI_SPOTIFY_ENABLED;
+  const previousSpotifyWebApi3 = process.env.RAPIDAPI_SPOTIFY_WEB_API3_ENABLED;
+  process.env.RAPIDAPI_FALLBACKS_ENABLED = "true";
+  process.env.RAPIDAPI_KEY = "test-rapidapi-key";
+  process.env.RAPIDAPI_SPOTIFY_ENABLED = "true";
+  process.env.RAPIDAPI_SPOTIFY_WEB_API3_ENABLED = "true";
+  __resetRapidApiQuotaForTests();
+
+  await withMockFetch(async (input, options = {}) => {
+    const url = new URL(String(input));
+    if (url.hostname === "spotify23.p.rapidapi.com") {
+      return textResponse(JSON.stringify({ tracks: { items: [] } }));
+    }
+    if (url.hostname === "spotify-web-api3.p.rapidapi.com") {
+      assert.equal(options.method, "POST");
+      return textResponse(JSON.stringify({
+        tracks: [
+          {
+            track: "The Kill",
+            link: "https://open.spotify.com/track/4rRNDclay9ayn1iR1VpMMB",
+            artist: "Thirty Seconds To Mars"
+          }
+        ]
+      }));
+    }
+    throw new Error(`unexpected fetch: ${url.toString()}`);
+  }, async () => {
+    try {
+      const result = await __testHooks.enrichWithRapidApiSpotifyMatch({
+        title: "The Kill",
+        description: "Thirty Seconds To Mars",
+        links: []
+      });
+
+      const spotify = result.links.find(link => link.type === "spotify");
+      assert.ok(spotify);
+      assert.equal(spotify.url, "https://open.spotify.com/track/4rRNDclay9ayn1iR1VpMMB");
+      assert.equal(spotify.source, "rapidapi_spotify_web_api3");
+    } finally {
+      restoreEnv("RAPIDAPI_FALLBACKS_ENABLED", previousEnabled);
+      restoreEnv("RAPIDAPI_KEY", previousKey);
+      restoreEnv("RAPIDAPI_SPOTIFY_ENABLED", previousSpotify);
+      restoreEnv("RAPIDAPI_SPOTIFY_WEB_API3_ENABLED", previousSpotifyWebApi3);
+      __resetRapidApiQuotaForTests();
+    }
+  });
+});
+
+test("RapidAPI Shazam fallback adds a direct Apple Music link when enabled", async () => {
+  const previousEnabled = process.env.RAPIDAPI_FALLBACKS_ENABLED;
+  const previousKey = process.env.RAPIDAPI_KEY;
+  const previousShazam = process.env.RAPIDAPI_SHAZAM_ENABLED;
+  process.env.RAPIDAPI_FALLBACKS_ENABLED = "true";
+  process.env.RAPIDAPI_KEY = "test-rapidapi-key";
+  process.env.RAPIDAPI_SHAZAM_ENABLED = "true";
+  __resetRapidApiQuotaForTests();
+
+  await withMockFetch(async input => {
+    const url = new URL(String(input));
+    assert.equal(url.hostname, "shazam.p.rapidapi.com");
+    return textResponse(JSON.stringify({
+      tracks: {
+        hits: [
+          {
+            track: {
+              key: "20066955",
+              title: "Kiss The Rain",
+              subtitle: "Billie Myers",
+              images: { coverart: "https://example.com/cover.jpg" },
+              hub: {
+                actions: [{ type: "applemusicplay", id: "1444027955" }],
+                options: [
+                  {
+                    actions: [
+                      {
+                        type: "applemusicopen",
+                        uri: "https://music.apple.com/us/album/kiss-the-rain/1444027943?i=1444027955&mttnagencyid=s2n"
+                      }
+                    ]
+                  }
+                ],
+                providers: [
+                  {
+                    type: "SPOTIFY",
+                    actions: [{ type: "uri", uri: "spotify:search:Kiss%20The%20Rain%20Billie%20Myers" }]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }));
+  }, async () => {
+    try {
+      const result = await __testHooks.enrichWithRapidApiShazamAppleMusic({
+        title: "Kiss The Rain",
+        description: "Billie Myers",
+        links: []
+      });
+
+      const appleMusic = result.links.find(link => link.type === "appleMusic");
+      assert.ok(appleMusic);
+      assert.equal(appleMusic.url, "https://music.apple.com/us/album/kiss-the-rain/1444027943?i=1444027955");
+      assert.equal(appleMusic.source, "rapidapi_shazam");
+      assert.equal(result.links.some(link => String(link.url || "").startsWith("spotify:search:")), false);
+    } finally {
+      restoreEnv("RAPIDAPI_FALLBACKS_ENABLED", previousEnabled);
+      restoreEnv("RAPIDAPI_KEY", previousKey);
+      restoreEnv("RAPIDAPI_SHAZAM_ENABLED", previousShazam);
+      __resetRapidApiQuotaForTests();
+    }
   });
 });
 
@@ -505,6 +675,102 @@ test("YouTube input context falls back to YouTube Data metadata when public embe
     } finally {
       restoreEnv("YOUTUBE_API_KEY", previousKey);
       restoreEnv("YOUTUBE_MATCHING_ENABLED", previousMatching);
+    }
+  });
+});
+
+test("YouTube input context uses RapidAPI MusicData before YouTube Data API", async () => {
+  const previousRapidEnabled = process.env.RAPIDAPI_FALLBACKS_ENABLED;
+  const previousRapidKey = process.env.RAPIDAPI_KEY;
+  const previousMusicData = process.env.RAPIDAPI_MUSICDATA_ENABLED;
+  const previousYoutubeKey = process.env.YOUTUBE_API_KEY;
+  const previousYoutubeMatching = process.env.YOUTUBE_MATCHING_ENABLED;
+  process.env.RAPIDAPI_FALLBACKS_ENABLED = "true";
+  process.env.RAPIDAPI_KEY = "test-rapidapi-key";
+  process.env.RAPIDAPI_MUSICDATA_ENABLED = "true";
+  process.env.YOUTUBE_API_KEY = "test-youtube-key";
+  process.env.YOUTUBE_MATCHING_ENABLED = "true";
+  __resetRapidApiQuotaForTests();
+
+  await withMockFetch(async input => {
+    const url = String(input);
+    if (url.startsWith("https://www.youtube.com/oembed")) {
+      return textResponse("", { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://noembed.com/embed")) {
+      return textResponse("", { ok: false, status: 502 });
+    }
+    if (url.startsWith("https://musicdata-api.p.rapidapi.com/youtube/video/")) {
+      return textResponse(JSON.stringify([
+        {
+          track: "Avril Lavigne - Keep Holding On (Official Lyric Video)",
+          link: "https://www.youtube.com/watch/ZtdcRMgAU0A"
+        }
+      ]));
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  }, async () => {
+    try {
+      const context = await __testHooks.buildInputCacheContext(
+        "https://music.youtube.com/watch?v=ZtdcRMgAU0A",
+        "youtubeMusic"
+      );
+
+      assert.equal(context.title, "Keep Holding On");
+      assert.equal(context.artist, "Avril Lavigne");
+      assert.equal(context.canonicalKey, "track:keep holding on|artist:avril lavigne");
+    } finally {
+      restoreEnv("RAPIDAPI_FALLBACKS_ENABLED", previousRapidEnabled);
+      restoreEnv("RAPIDAPI_KEY", previousRapidKey);
+      restoreEnv("RAPIDAPI_MUSICDATA_ENABLED", previousMusicData);
+      restoreEnv("YOUTUBE_API_KEY", previousYoutubeKey);
+      restoreEnv("YOUTUBE_MATCHING_ENABLED", previousYoutubeMatching);
+      __resetRapidApiQuotaForTests();
+    }
+  });
+});
+
+test("RapidAPI YouTube Music fallback adds paired YouTube links when enabled", async () => {
+  const previousEnabled = process.env.RAPIDAPI_FALLBACKS_ENABLED;
+  const previousKey = process.env.RAPIDAPI_KEY;
+  const previousYoutubeMusic = process.env.RAPIDAPI_YOUTUBE_MUSIC_ENABLED;
+  process.env.RAPIDAPI_FALLBACKS_ENABLED = "true";
+  process.env.RAPIDAPI_KEY = "test-rapidapi-key";
+  process.env.RAPIDAPI_YOUTUBE_MUSIC_ENABLED = "true";
+  __resetRapidApiQuotaForTests();
+
+  await withMockFetch(async input => {
+    const url = new URL(String(input));
+    assert.equal(url.hostname, "youtube-music-api3.p.rapidapi.com");
+    return textResponse(JSON.stringify({
+      result: [
+        {
+          videoId: "FGBhQbmPwH8",
+          title: "One More Time",
+          artists: [{ name: "Daft Punk" }],
+          album: { name: "Discovery" },
+          duration: "5:20"
+        }
+      ]
+    }));
+  }, async () => {
+    try {
+      const result = await __testHooks.enrichWithRapidApiYoutubeMusicMatch({
+        title: "One More Time",
+        description: "Daft Punk",
+        album: "Discovery",
+        durationMs: 320000,
+        links: []
+      });
+
+      assert.equal(result.links.find(link => link.type === "youtube")?.url, "https://www.youtube.com/watch?v=FGBhQbmPwH8");
+      assert.equal(result.links.find(link => link.type === "youtubeMusic")?.url, "https://music.youtube.com/watch?v=FGBhQbmPwH8");
+      assert.equal(result.links.find(link => link.type === "youtube")?.source, "rapidapi_youtube_music_api3");
+    } finally {
+      restoreEnv("RAPIDAPI_FALLBACKS_ENABLED", previousEnabled);
+      restoreEnv("RAPIDAPI_KEY", previousKey);
+      restoreEnv("RAPIDAPI_YOUTUBE_MUSIC_ENABLED", previousYoutubeMusic);
+      __resetRapidApiQuotaForTests();
     }
   });
 });

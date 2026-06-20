@@ -2,6 +2,18 @@
 import { performance } from "node:perf_hooks";
 
 import { findBestDeezerTrack } from "../api/lib/deezer.js";
+import {
+  fetchRapidApiMusicDataYoutubeVideo,
+  isRapidApiMusicDataEnabled,
+  isRapidApiShazamEnabled,
+  isRapidApiSpotifyEnabled,
+  isRapidApiSpotifyWebApi3Enabled,
+  isRapidApiYoutubeMusicEnabled,
+  searchRapidApiShazamTrack,
+  searchRapidApiSpotifyTrack,
+  searchRapidApiSpotifyWebApi3Track,
+  searchRapidApiYoutubeMusicTrack
+} from "../api/lib/rapidapi-music.js";
 import { searchSpotifyWebTrack } from "../api/lib/spotify-web.js";
 import { searchYoutubeVideoForTrack } from "../api/lib/youtube-data.js";
 
@@ -43,11 +55,16 @@ const selectedFixtures = fixtures.slice(0, Math.max(1, Math.min(limit, fixtures.
 
 const providers = [
   ["spotify_web", probeSpotifyWeb],
+  ["rapidapi_spotify23", probeRapidApiSpotify],
+  ["rapidapi_spotify_web_api3", probeRapidApiSpotifyWebApi3],
   ["itunes", probeItunes],
+  ["rapidapi_shazam", probeRapidApiShazam],
   ["deezer_api", probeDeezerApi],
   ["songlink", probeSonglink],
   ["idhs", probeIdhs],
-  ["youtube_api", probeYoutubeApi]
+  ["rapidapi_musicdata_youtube_video", probeRapidApiMusicDataYoutubeVideo],
+  ["youtube_api", probeYoutubeApi],
+  ["rapidapi_youtube_music_api3", probeRapidApiYoutubeMusic]
 ];
 
 const rows = [];
@@ -96,6 +113,34 @@ async function probeSpotifyWeb(_fixture, query) {
   };
 }
 
+async function probeRapidApiSpotify(fixture, query) {
+  if (!isRapidApiSpotifyEnabled()) return { hit: false, url: "", error: "rapidapi_spotify_disabled_or_missing_key" };
+  const match = await searchRapidApiSpotifyTrack({
+    query,
+    title: fixture.title,
+    artist: fixture.artist
+  });
+  return {
+    hit: Boolean(match?.url),
+    url: match?.url || "",
+    error: match?.url ? "" : "no_match"
+  };
+}
+
+async function probeRapidApiSpotifyWebApi3(fixture, query) {
+  if (!isRapidApiSpotifyWebApi3Enabled()) return { hit: false, url: "", error: "rapidapi_spotify_web_api3_disabled_or_missing_key" };
+  const match = await searchRapidApiSpotifyWebApi3Track({
+    query,
+    title: fixture.title,
+    artist: fixture.artist
+  });
+  return {
+    hit: Boolean(match?.url),
+    url: match?.url || "",
+    error: match?.url ? "" : "no_match"
+  };
+}
+
 async function probeItunes(fixture, query) {
   const url = new URL(ITUNES_SEARCH_API_URL);
   url.searchParams.set("term", query);
@@ -109,6 +154,20 @@ async function probeItunes(fixture, query) {
     hit: Boolean(song?.trackViewUrl),
     url: song?.trackViewUrl || "",
     expected: [fixture.artist, fixture.title].filter(Boolean).join(" - ")
+  };
+}
+
+async function probeRapidApiShazam(fixture, query) {
+  if (!isRapidApiShazamEnabled()) return { hit: false, url: "", error: "rapidapi_shazam_disabled_or_missing_key" };
+  const match = await searchRapidApiShazamTrack({
+    query,
+    title: fixture.title,
+    artist: fixture.artist
+  });
+  return {
+    hit: Boolean(match?.appleMusicUrl),
+    url: match?.appleMusicUrl || "",
+    error: match?.appleMusicUrl ? "" : "no_match"
   };
 }
 
@@ -152,6 +211,18 @@ async function probeIdhs(fixture) {
   return { hit: links.length > 0, url: links[0] || "" };
 }
 
+async function probeRapidApiMusicDataYoutubeVideo(fixture) {
+  if (!isRapidApiMusicDataEnabled()) return { hit: false, url: "", error: "rapidapi_musicdata_disabled_or_missing_key" };
+  const videoId = getYoutubeVideoId(fixture.inputUrl || "");
+  if (!videoId) return { hit: false, url: "", error: "missing_video_id" };
+  const metadata = await fetchRapidApiMusicDataYoutubeVideo(videoId);
+  return {
+    hit: Boolean(metadata?.title || metadata?.artist),
+    url: metadata?.url || "",
+    error: metadata?.title || metadata?.artist ? "" : "no_metadata"
+  };
+}
+
 async function probeYoutubeApi(_fixture, query) {
   if (!process.env.YOUTUBE_API_KEY) return { hit: false, url: "", error: "missing_youtube_api_key" };
   const match = await searchYoutubeVideoForTrack(query, _fixture);
@@ -160,6 +231,32 @@ async function probeYoutubeApi(_fixture, query) {
     url: match?.url || "",
     error: match?.url ? "" : "no_match"
   };
+}
+
+async function probeRapidApiYoutubeMusic(fixture, query) {
+  if (!isRapidApiYoutubeMusicEnabled()) return { hit: false, url: "", error: "rapidapi_youtube_music_disabled_or_missing_key" };
+  const match = await searchRapidApiYoutubeMusicTrack({
+    query,
+    title: fixture.title,
+    artist: fixture.artist
+  });
+  return {
+    hit: Boolean(match?.url),
+    url: match?.url || "",
+    error: match?.url ? "" : "no_match"
+  };
+}
+
+function getYoutubeVideoId(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    const host = url.hostname.toLowerCase();
+    if (host === "youtu.be" || host.endsWith(".youtu.be")) return url.pathname.replace("/", "").trim();
+    if (host.includes("youtube.com")) return url.searchParams.get("v") || "";
+    return "";
+  } catch (_error) {
+    return "";
+  }
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 10_000) {

@@ -17,13 +17,13 @@ This app is not "blindado" by default. It has useful application-level safeguard
   - after repeated strikes, the caller is blocked for 10 minutes.
 - `POST /api/convert` has an in-memory concurrency cap of 40 in-flight requests per instance.
 - Low-confidence manual corrections are stored as `pending` and are hidden from public cards.
-- `DATABASE_URL`, `YOUTUBE_API_KEY`, `STATSLC_BRIDGE_TOKEN`, and `MANUAL_LINK_TOKEN` are server-side secrets and must not be exposed in frontend code.
+- `DATABASE_URL`, `YOUTUBE_API_KEY`, `RAPIDAPI_KEY`, `STATSLC_BRIDGE_TOKEN`, and `MANUAL_LINK_TOKEN` are server-side secrets and must not be exposed in frontend code.
 
 ## Remaining risk
 
 - In-memory rate limits are per serverless instance. They help normal abuse, but they are not a full distributed-abuse barrier.
 - `vercel.json` currently does not declare security headers, challenge rules, or edge rate limits.
-- A burst of cache misses can spend YouTube Data API quota, consume Deezer public API quota, and slow down provider calls.
+- A burst of cache misses can spend YouTube Data API quota, consume Deezer public API quota, spend RapidAPI fallback quota when enabled, and slow down provider calls.
 - Public endpoints are anonymous, so abuse controls must assume no account identity.
 - Manual correction is intentionally public, but incorrect submissions must stay hidden unless trusted.
 - Third-party provider failures can create partial results; the UI should hide missing platforms rather than show dead rows.
@@ -62,7 +62,8 @@ The current app uses external image/media URLs and opens third-party music platf
 - Never commit `.env.local` or raw API keys.
 - Keep the YouTube API key restricted to YouTube Data API v3.
 - Prefer server-side usage only for the YouTube key.
-- Monitor YouTube Data API quota and Deezer provider errors after matching changes.
+- Keep `RAPIDAPI_KEY` server-side only. RapidAPI fallbacks should stay disabled by default and behind a low `RAPIDAPI_DAILY_REQUEST_LIMIT`.
+- Monitor YouTube Data API quota, Deezer provider errors, and RapidAPI fallback quota after matching changes.
 - Rotate leaked or pasted keys immediately.
 - Keep `STATSLC_BRIDGE_TOKEN` aligned with the corresponding token in `stats-lc-api`.
 - Use `MANUAL_LINK_TOKEN` only for trusted internal correction flows.
@@ -78,6 +79,7 @@ After deploys that touch matching or providers:
 - Check Vercel error/fatal logs after production smoke tests.
 - Watch for spikes in `429`, `5xx`, provider errors, and YouTube quota usage.
 - Watch for Deezer `QUOTA`/`SERVICE_BUSY` errors and local `deezer_api` provider attempts.
+- If RapidAPI is enabled, watch `rapidapi_spotify23`, `rapidapi_spotify_web_api3`, `rapidapi_shazam`, and `rapidapi_youtube_music_api3` provider attempts, include `rapidapi_musicdata_youtube_video` in provider probes, and monitor any RapidAPI `429` or quota exhaustion.
 - Check whether repeated cache misses are coming from the same IP, ASN, or user agent.
 
 ## Incident response
@@ -89,6 +91,7 @@ If the app is under obvious abuse:
 3. Disable expensive providers with env kill switches if needed:
    - `YOUTUBE_MATCHING_ENABLED=false`
    - `DEEZER_MATCHING_ENABLED=false`
+   - `RAPIDAPI_FALLBACKS_ENABLED=false`
    - `SPOTIFY_WEB_MATCHING_ENABLED=false`
    - `STATSLC_BRIDGE_ENABLED=false`
 4. Block or challenge abusive IPs, ASNs, user agents, or countries only after checking logs.

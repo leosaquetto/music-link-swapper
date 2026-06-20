@@ -81,7 +81,7 @@ A superficie inicial atual inclui:
 
 - splash claro/escuro com `assets/logo.svg`;
 - subtitulo `crossover entre plataformas`;
-- icones das seis plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
+- icones das cinco plataformas automaticas ao lado de `link da musica`, em vermelho no tema claro e verde no escuro;
 - fundo com orbs rosa e verde animados somente no eixo horizontal;
 - marca `LEO SAQUETTO` no rodape com o simbolo oficial do repositorio `leosaquettoapp`.
 
@@ -176,7 +176,7 @@ Cada item de plataforma renderizado pelo frontend pode conter:
 - `name`: nome amigavel.
 - `url`: URL direta final.
 - `isVerified`: sinal de link verificado.
-- `source`: origem do link, como `input`, `cache`, `spotify_web`, `itunes`, `deezer_api`, `songlink`, `idhs`, `youtube_api`, `statslc_bridge` ou `manual`.
+- `source`: origem do link, como `input`, `cache`, `spotify_web`, `rapidapi_spotify23`, `rapidapi_spotify_web_api3`, `rapidapi_shazam`, `itunes`, `deezer_api`, `songlink`, `idhs`, `youtube_api`, `rapidapi_youtube_music_api3`, `statslc_bridge` ou `manual`.
 - `icon`: SVG inline escolhido pelo frontend.
 
 As plataformas automaticas sao Spotify, Apple Music, Deezer, YouTube e YouTube Music. Plataformas ausentes nao sao renderizadas como linhas de erro ou links de busca.
@@ -190,8 +190,13 @@ Integracoes usadas pela API:
 - `https://api.song.link/v1-alpha.1/links`: Song.link/Odesli como enriquecimento de links diretos antes de usar a YouTube Data API.
 - `https://statslc.leosaquetto.com/api/catalog-link-bridge`: bridge interno stats-lc/stats.fm para enriquecer Spotify e Apple Music.
 - Spotify Web Player partner API: matching Spotify quando habilitado.
+- RapidAPI Spotify23: fallback limitado para preencher Spotify quando fontes gratuitas/atuais nao retornam link direto e `RAPIDAPI_FALLBACKS_ENABLED=true`.
+- RapidAPI Spotify Web API3: fallback secundario limitado para preencher Spotify quando Spotify23 nao retorna link direto.
+- RapidAPI Shazam: fallback limitado para preencher Apple Music direto e metadados quando iTunes/Songlink nao retornam link util; deep links de busca Spotify/Deezer vindos do Shazam nao sao publicados.
+- RapidAPI MusicData: fallback limitado para recuperar metadados de um video YouTube por `videoId` antes de gastar YouTube Data API; links estatisticos retornados por ele nao sao publicados.
 - Deezer Simple API: lookup por track id, busca por track e endpoint interno `/api/deezer/search`, todos sem OAuth nesta etapa.
 - YouTube Data API: matching opcional para YouTube e YouTube Music quando ainda nao ha link direto confiavel.
+- RapidAPI YouTube Music API3: fallback limitado para preencher YouTube/YouTube Music quando Songlink/YouTube Data API nao retornam link direto e `RAPIDAPI_FALLBACKS_ENABLED=true`.
 - YouTube oEmbed, noembed e YouTube Data API `videos.list`: fallback de metadados para inputs YouTube/YouTube Music oficiais.
 - `https://itunes.apple.com/search`: busca Apple/iTunes para fallback por query.
 - `https://itunes.apple.com/lookup`: lookup por track id quando o link de entrada e Apple Music/iTunes.
@@ -204,9 +209,12 @@ Prioridade especial:
 - Song.link/Odesli fica antes da YouTube Data API para economizar quota e enriquecer o cache quando devolver links diretos uteis.
 - O bridge stats-lc/stats.fm e oportunista para Spotify e Apple Music; ele nao bloqueia o fluxo se falhar ou nao encontrar match.
 - Para Spotify, quando as fontes principais falham, a API tenta obter metadados via Spotify, montar query, buscar Apple Music via iTunes e enriquecer via Song.link/IDHS.
+- Para Spotify ausente, a API pode usar RapidAPI Spotify23 e depois Spotify Web API3 como fallbacks caros/limitados depois de Spotify Web e stats-lc quando `RAPIDAPI_KEY` e `RAPIDAPI_FALLBACKS_ENABLED=true` estiverem configurados.
 - Para Apple Music/iTunes, a API tenta usar o track id do link de entrada como fonte de verdade para titulo, artista, album e capa.
+- Para Apple Music ausente, a API pode usar RapidAPI Shazam como fallback caro/limitado para obter URL Apple direta e entao reusar os enriquecimentos existentes.
 - Para Deezer, a API usa `/track/{id}` como fonte de verdade em inputs diretos e `/search/track` para matching por titulo/artista, aceitando somente URLs diretas `deezer.com/track/{id}`.
-- YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API ou correcao aceita.
+- Para inputs YouTube/YouTube Music, a API pode usar RapidAPI MusicData como metadado antes da YouTube Data API quando oEmbed/noembed falham.
+- YouTube e YouTube Music so aparecem automaticamente quando ha um video id direto confiavel de input, cache, provider confiavel, YouTube Data API, RapidAPI YouTube Music API3 ou correcao aceita.
 - Cache parcial pode ser reidratado com metadados confiaveis do input antes de rodar provedores. Isso evita que registros antigos como `musica encontrada` bloqueiem um match 4/4.
 
 O resultado nao exibe mais assinatura visual de provedores externos. Dependencias como IDHS/Song.link seguem como integracoes internas de matching/enriquecimento, documentadas em [`docs/link-matching.md`](./docs/link-matching.md).
@@ -224,6 +232,7 @@ Rodada de 2026-06-19:
 - Validado em producao que faixas oficiais de YouTube Music, Apple Music e Spotify podem retornar Spotify, Apple Music, YouTube e YouTube Music com links diretos, sem search URLs.
 - Adicionado Deezer como quinta plataforma automatica, incluindo cliente `deezer_api`, endpoint `/api/deezer/search`, validacao de link direto e kill switch `DEEZER_MATCHING_ENABLED=false`.
 - Removido temporariamente o suporte TIDAL enquanto o grant `client_credentials` nao estiver habilitado para o app; links TIDAL vindos de provedores externos sao filtrados pelo contrato automatico.
+- Adicionados fallbacks limitados via RapidAPI para Spotify23, Spotify Web API3, Shazam, MusicData e YouTube Music API3, protegidos por `RAPIDAPI_FALLBACKS_ENABLED=true`, `RAPIDAPI_KEY`, quota diaria local e provider attempts.
 
 Essas regras sao regressao critica. Antes de alterar matching ou UI de resultados, leia [`docs/agent-rules.md`](./docs/agent-rules.md).
 
@@ -312,7 +321,7 @@ Pontos mapeados:
 - A camada de borda ainda depende principalmente do padrao da Vercel; faltam regras explicitas de WAF/rate limit/headers conforme [`docs/security.md`](./docs/security.md).
 - A API depende fortemente de provedores externos que podem mudar, bloquear scraping, alterar payloads ou sair do ar.
 - A API primaria `idonthavespotify.sjdonado.com` e externa ao repositorio; seu contrato real pode mudar sem controle local.
-- Song.link/Odesli, iTunes, Spotify Web/oEmbed/Open Graph, stats-lc bridge, YouTube Data API e Deezer API sao pontos externos de falha ou latencia.
+- Song.link/Odesli, iTunes, Spotify Web/oEmbed/Open Graph, stats-lc bridge, YouTube Data API, Deezer API e RapidAPI sao pontos externos de falha, latencia ou quota.
 - Rate limit e caches curtos em memoria nao sobrevivem a cold starts e nao sao compartilhados entre instancias.
 - O cache persistente depende de `DATABASE_URL`; sem ele a conversao funciona, mas a biblioteca compartilhada nao aprende.
 - A lista de exemplos e fixa e focada em links Apple Music.
