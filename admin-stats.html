@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Music Link Swapper Admin Stats</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09090b;
+      --panel: #141418;
+      --panel-strong: #1c1c22;
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f7f7fb;
+      --muted: #a1a1aa;
+      --soft: #d4d4dc;
+      --green: #25d05f;
+      --red: #ff3b3b;
+      --yellow: #f5c84c;
+      --blue: #6aa8ff;
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(37, 208, 95, 0.16), transparent 30rem),
+        radial-gradient(circle at 88% 0%, rgba(255, 59, 59, 0.18), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--green);
+      color: #061208;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: var(--panel-strong);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    input,
+    select {
+      min-height: 42px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(37, 208, 95, 0.7);
+      box-shadow: 0 0 0 3px rgba(37, 208, 95, 0.14);
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--soft);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 10px 0 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.35rem, 2vw, 2rem);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--soft);
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .status.ok .dot {
+      background: var(--green);
+    }
+
+    .status.error .dot {
+      background: var(--red);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 120px 120px auto auto;
+      align-items: end;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(20, 20, 24, 0.86);
+      backdrop-filter: blur(18px);
+    }
+
+    .save-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-top: 9px;
+    }
+
+    .save-row input {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--green);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .metric,
+    section {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(20, 20, 24, 0.84);
+    }
+
+    .metric {
+      padding: 14px;
+      min-height: 94px;
+      display: grid;
+      align-content: space-between;
+      gap: 12px;
+    }
+
+    .metric .value {
+      font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    section {
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .two-col {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th,
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    .bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--green);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 26px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--soft);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .pill.error {
+      background: rgba(255, 59, 59, 0.16);
+      color: #ffaaaa;
+    }
+
+    .pill.miss {
+      background: rgba(245, 200, 76, 0.16);
+      color: #ffe094;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      display: grid;
+      gap: 4px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.04);
+      min-width: 0;
+    }
+
+    .item strong,
+    .item span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .raw {
+      max-height: 380px;
+      overflow: auto;
+      padding: 14px;
+      border-radius: var(--radius);
+      background: #050507;
+      color: #d7f9df;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    .empty {
+      min-height: 90px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 940px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .toolbar label:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 16px;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      table {
+        font-size: 0.8rem;
+      }
+
+      th,
+      td {
+        padding: 9px 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">
+        <img src="./assets/logo.svg" alt="">
+        <div>
+          <h1>Admin Stats</h1>
+          <p class="muted">Music Link Swapper</p>
+        </div>
+      </div>
+      <div class="status" id="status"><span class="dot"></span><span>Pronto</span></div>
+    </header>
+
+    <form class="toolbar" id="controls">
+      <label>
+        Token
+        <input id="token" name="token" type="password" autocomplete="off" placeholder="ADMIN_STATS_TOKEN">
+        <span class="save-row">
+          <input id="saveToken" type="checkbox">
+          <span>Salvar neste navegador</span>
+        </span>
+      </label>
+      <label>
+        Dias
+        <select id="days" name="days">
+          <option value="1">1</option>
+          <option value="7">7</option>
+          <option value="14" selected>14</option>
+          <option value="30">30</option>
+          <option value="90">90</option>
+        </select>
+      </label>
+      <label>
+        Limite
+        <select id="limit" name="limit">
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+        </select>
+      </label>
+      <button id="refresh" type="submit">Atualizar</button>
+      <button class="secondary" id="clearToken" type="button">Limpar</button>
+    </form>
+
+    <div class="grid metrics" id="metrics"></div>
+
+    <div class="grid two-col">
+      <section>
+        <div class="section-head">
+          <h2>Plataformas</h2>
+          <span class="muted" id="platformHint"></span>
+        </div>
+        <div id="platforms"></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Providers 24h</h2>
+          <span class="muted">hit / miss / error</span>
+        </div>
+        <div id="providers24"></div>
+      </section>
+    </div>
+
+    <div class="grid two-col">
+      <section>
+        <div class="section-head">
+          <h2>Diario</h2>
+          <span class="muted" id="windowLabel"></span>
+        </div>
+        <div id="daily"></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Sources</h2>
+          <span class="muted">links publicados</span>
+        </div>
+        <div id="sources"></div>
+      </section>
+    </div>
+
+    <div class="grid two-col">
+      <section>
+        <div class="section-head">
+          <h2>Issues recentes</h2>
+          <span class="muted">providers</span>
+        </div>
+        <div id="issues"></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Links recentes</h2>
+          <span class="muted">atualizados</span>
+        </div>
+        <div id="links"></div>
+      </section>
+    </div>
+
+    <section>
+      <div class="section-head">
+        <h2>Inputs rastreados</h2>
+        <span class="muted">aliases recentes</span>
+      </div>
+      <div id="inputs"></div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>JSON</h2>
+        <button class="secondary" id="toggleRaw" type="button">Mostrar</button>
+      </div>
+      <pre class="raw hidden" id="raw"></pre>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "music-link-swapper:admin-stats-token";
+    const state = {
+      data: null,
+      loading: false
+    };
+
+    const refs = {
+      controls: document.getElementById("controls"),
+      token: document.getElementById("token"),
+      saveToken: document.getElementById("saveToken"),
+      days: document.getElementById("days"),
+      limit: document.getElementById("limit"),
+      refresh: document.getElementById("refresh"),
+      clearToken: document.getElementById("clearToken"),
+      status: document.getElementById("status"),
+      metrics: document.getElementById("metrics"),
+      platforms: document.getElementById("platforms"),
+      platformHint: document.getElementById("platformHint"),
+      providers24: document.getElementById("providers24"),
+      daily: document.getElementById("daily"),
+      windowLabel: document.getElementById("windowLabel"),
+      sources: document.getElementById("sources"),
+      issues: document.getElementById("issues"),
+      links: document.getElementById("links"),
+      inputs: document.getElementById("inputs"),
+      raw: document.getElementById("raw"),
+      toggleRaw: document.getElementById("toggleRaw")
+    };
+
+    init();
+
+    function init() {
+      const stored = localStorage.getItem(STORAGE_KEY) || "";
+      if (stored) {
+        refs.token.value = stored;
+        refs.saveToken.checked = true;
+      }
+
+      refs.controls.addEventListener("submit", event => {
+        event.preventDefault();
+        loadStats();
+      });
+
+      refs.clearToken.addEventListener("click", () => {
+        localStorage.removeItem(STORAGE_KEY);
+        refs.token.value = "";
+        refs.saveToken.checked = false;
+        refs.token.focus();
+        setStatus("Token limpo", "idle");
+      });
+
+      refs.toggleRaw.addEventListener("click", () => {
+        const hidden = refs.raw.classList.toggle("hidden");
+        refs.toggleRaw.textContent = hidden ? "Mostrar" : "Ocultar";
+      });
+
+      renderEmpty();
+      if (stored) loadStats();
+    }
+
+    async function loadStats() {
+      const token = refs.token.value.trim();
+      const days = refs.days.value;
+      const limit = refs.limit.value;
+      if (!token) {
+        setStatus("Token ausente", "error");
+        refs.token.focus();
+        return;
+      }
+
+      state.loading = true;
+      refs.refresh.disabled = true;
+      setStatus("Carregando", "idle");
+
+      try {
+        const response = await fetch(`/api/admin/library-stats?days=${encodeURIComponent(days)}&limit=${encodeURIComponent(limit)}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json"
+          }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.error || `HTTP ${response.status}`);
+        }
+
+        if (refs.saveToken.checked) localStorage.setItem(STORAGE_KEY, token);
+        else localStorage.removeItem(STORAGE_KEY);
+
+        state.data = payload.data;
+        render(payload.data);
+        setStatus("Atualizado", "ok");
+      } catch (error) {
+        setStatus(error.message || "Erro", "error");
+      } finally {
+        state.loading = false;
+        refs.refresh.disabled = false;
+      }
+    }
+
+    function render(data) {
+      const totals = data.totals || {};
+      const platforms = data.platforms || {};
+      const storageMb = data.storage?.available
+        ? formatMb(data.storage.totalBytes || 0)
+        : "n/a";
+
+      refs.metrics.innerHTML = [
+        metric("Tracks", formatNumber(totals.tracks)),
+        metric("Links", formatNumber(totals.publishedLinks)),
+        metric("Aliases", formatNumber(totals.aliases)),
+        metric("Attempts", formatNumber(totals.providerAttempts)),
+        metric("Completas", formatNumber(platforms.completeTracks)),
+        metric("Storage", storageMb)
+      ].join("");
+
+      refs.platformHint.textContent = `${formatNumber(platforms.partialTracks)} parciais`;
+      refs.platforms.innerHTML = table(
+        ["Plataforma", "Tracks", "Faltam", ""],
+        (platforms.byPlatform || []).map(item => {
+          const total = Number(totals.tracks || 0);
+          const have = Number(item.tracksWithLink || 0);
+          const pct = total ? Math.round((have / total) * 100) : 0;
+          return [
+            platformName(item.platform),
+            formatNumber(have),
+            formatNumber(item.missingTracks),
+            `<div class="bar"><span style="width:${pct}%"></span></div>`
+          ];
+        })
+      );
+
+      refs.providers24.innerHTML = providerTable(data.providerHealth?.last24h || []);
+      refs.windowLabel.textContent = `${data.window?.days || "-"} dias`;
+      refs.daily.innerHTML = dailyTable(data.daily || []);
+      refs.sources.innerHTML = table(
+        ["Source", "Links"],
+        (data.sources || []).map(item => [escapeHtml(item.source), formatNumber(item.count)])
+      );
+      refs.issues.innerHTML = issueList(data.recent?.providerIssues || []);
+      refs.links.innerHTML = linkList(data.recent?.publishedLinks || []);
+      refs.inputs.innerHTML = inputList(data.recent?.trackedInputs || []);
+      refs.raw.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function renderEmpty() {
+      refs.metrics.innerHTML = [
+        metric("Tracks", "-"),
+        metric("Links", "-"),
+        metric("Aliases", "-"),
+        metric("Attempts", "-"),
+        metric("Completas", "-"),
+        metric("Storage", "-")
+      ].join("");
+      refs.platforms.innerHTML = empty("Sem dados");
+      refs.providers24.innerHTML = empty("Sem dados");
+      refs.daily.innerHTML = empty("Sem dados");
+      refs.sources.innerHTML = empty("Sem dados");
+      refs.issues.innerHTML = empty("Sem issues");
+      refs.links.innerHTML = empty("Sem links");
+      refs.inputs.innerHTML = empty("Sem inputs");
+      refs.raw.textContent = "";
+    }
+
+    function providerTable(rows) {
+      return table(
+        ["Provider", "Hit", "Miss", "Error", "Avg"],
+        rows.map(item => [
+          escapeHtml(item.provider),
+          `<span class="pill">${formatNumber(item.hit)}</span>`,
+          `<span class="pill miss">${formatNumber(item.miss)}</span>`,
+          `<span class="pill error">${formatNumber(item.error)}</span>`,
+          `${formatNumber(item.avgLatencyMs)}ms`
+        ])
+      );
+    }
+
+    function dailyTable(rows) {
+      return table(
+        ["Data", "Inputs", "Links", "Hit", "Miss", "Error"],
+        rows.map(item => [
+          escapeHtml(item.date),
+          formatNumber(item.inputsTracked),
+          formatNumber(item.linksUpdated),
+          formatNumber(item.providerHits),
+          formatNumber(item.providerMisses),
+          formatNumber(item.providerErrors)
+        ])
+      );
+    }
+
+    function issueList(rows) {
+      if (!rows.length) return empty("Sem issues recentes");
+      return `<div class="list">${rows.map(item => `
+        <div class="item">
+          <strong>${escapeHtml(item.provider)} <span class="pill ${item.status === "miss" ? "miss" : "error"}">${escapeHtml(item.status)}</span></strong>
+          <span class="muted">${formatDate(item.createdAt)} · ${formatNumber(item.latencyMs)}ms</span>
+          <span>${escapeHtml(item.message || item.trackKey || "")}</span>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function linkList(rows) {
+      if (!rows.length) return empty("Sem links recentes");
+      return `<div class="list">${rows.map(item => `
+        <div class="item">
+          <strong>${platformName(item.platform)} · ${escapeHtml(item.source)}</strong>
+          <span>${escapeHtml([item.title, item.artist].filter(Boolean).join(" - "))}</span>
+          <span class="muted">${formatDate(item.updatedAt)}</span>
+          <span>${escapeHtml(item.url)}</span>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function inputList(rows) {
+      if (!rows.length) return empty("Sem inputs recentes");
+      return `<div class="list">${rows.map(item => `
+        <div class="item">
+          <strong>${escapeHtml([item.title, item.artist].filter(Boolean).join(" - ") || item.trackId)}</strong>
+          <span class="muted">${formatDate(item.createdAt)} · ${escapeHtml(item.source)}</span>
+          <span>${escapeHtml(item.alias)}</span>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function table(headers, rows) {
+      if (!rows.length) return empty("Sem dados");
+      return `<table>
+        <thead><tr>${headers.map(header => `<th>${escapeHtml(header)}</th>`).join("")}</tr></thead>
+        <tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table>`;
+    }
+
+    function metric(label, value) {
+      return `<div class="metric"><div class="value">${escapeHtml(value)}</div><div class="label">${escapeHtml(label)}</div></div>`;
+    }
+
+    function empty(text) {
+      return `<div class="empty">${escapeHtml(text)}</div>`;
+    }
+
+    function setStatus(text, mode) {
+      refs.status.className = `status ${mode === "ok" ? "ok" : mode === "error" ? "error" : ""}`;
+      refs.status.querySelector("span:last-child").textContent = text;
+    }
+
+    function platformName(key) {
+      const names = {
+        spotify: "Spotify",
+        appleMusic: "Apple Music",
+        deezer: "Deezer",
+        youtube: "YouTube",
+        youtubeMusic: "YouTube Music"
+      };
+      return names[key] || key || "unknown";
+    }
+
+    function formatNumber(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "0";
+      return new Intl.NumberFormat("pt-BR").format(number);
+    }
+
+    function formatMb(bytes) {
+      const number = Number(bytes);
+      if (!Number.isFinite(number)) return "n/a";
+      return `${(number / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+  </script>
+</body>
+</html>

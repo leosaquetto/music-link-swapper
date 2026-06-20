@@ -11,6 +11,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Use `missingPlatforms` only for discreet correction UI.
 - Preserve `trackId`, `cacheStatus`, `links[].source`, and `missingPlatforms` in API responses.
 - `GET /api/track` is read-only and must not call external providers.
+- `GET /api/admin/library-stats` is read-only, token-protected, and must not call external providers.
 
 ## Matching and provider rules
 
@@ -71,7 +72,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 ## Security rules for agents
 
 - Never print or commit raw secrets from `.env.local`.
-- Do not expose `YOUTUBE_API_KEY`, `RAPIDAPI_KEY`, `DATABASE_URL`, `STATSLC_BRIDGE_TOKEN`, or `MANUAL_LINK_TOKEN` in frontend code.
+- Do not expose `YOUTUBE_API_KEY`, `RAPIDAPI_KEY`, `DATABASE_URL`, `STATSLC_BRIDGE_TOKEN`, `MANUAL_LINK_TOKEN`, or `ADMIN_STATS_TOKEN` in frontend code.
 - Do not add unauthenticated write endpoints without a pending/review state or a trusted token path.
 - Keep manual corrections hidden unless confidence is high or a trusted token is supplied.
 - If adding expensive provider calls, document the quota impact in `docs/security.md` and keep a kill switch.

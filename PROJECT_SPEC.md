@@ -138,6 +138,12 @@ Resposta de erro esperada:
 
 `GET /api/deezer/search?q=<texto>&limit=<1-20>&index=<0+>` pesquisa tracks no catalogo publico da Deezer e retorna candidatos normalizados. O endpoint e somente leitura, respeita `DEEZER_MATCHING_ENABLED=false`, valida consulta/paginacao e nao grava cache.
 
+## API `/api/admin/library-stats`
+
+`GET /api/admin/library-stats?days=<1-90>&limit=<1-200>` retorna diagnosticos internos da biblioteca persistente. O endpoint e somente leitura, exige `ADMIN_STATS_TOKEN`, aceita token por `Authorization: Bearer <token>` ou `?token=<token>` para checks manuais no navegador, e nao chama provedores externos.
+
+A resposta inclui totais de cache, completude por plataforma, fontes de links usadas, atividade diaria, aliases de entrada recentes, links publicados/atualizados recentes, health de providers em 24h/7d e estimativa de tamanho das tabelas quando o banco suporta funcoes Postgres de size.
+
 `POST /api/convert` aceita preferencias opcionais de catalogo vindas do seletor de idioma do app: `locale` e `countryCode`. Elas ajustam ranking/mercado nos provedores que suportam isso, sem geolocalizacao do navegador e sem fragmentar o card publico por pais. Mapeamento atual: `pt-br -> pt-BR/BR`, `en -> en-US/US`, `es-es -> es-ES/ES`, `it-it -> it-IT/IT`, `fr-fr -> fr-FR/FR`.
 
 Regras e limites observados:

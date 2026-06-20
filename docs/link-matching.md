@@ -45,6 +45,14 @@ When `DATABASE_URL` is absent, conversion still works, but durable cache and pro
 
 Provider attempt telemetry defaults to `PROVIDER_ATTEMPT_RETENTION_DAYS=30` and `PROVIDER_ATTEMPT_MAX_ROWS=10000`. Cleanup runs opportunistically after successful provider-attempt writes and at most once per day per running instance, so it should be treated as lightweight diagnostics rather than permanent analytics.
 
+The read-only admin diagnostics endpoint is:
+
+```text
+GET /api/admin/library-stats?days=<1-90>&limit=<1-200>
+```
+
+It requires `ADMIN_STATS_TOKEN` through `Authorization: Bearer <token>` or, for browser-only checks, `?token=<token>`. It returns cache totals, platform completeness, daily tracked inputs, link sources used per day, provider hit/miss/error summaries, recent provider issues, and optional relation-size estimates when the database supports Postgres size functions. It does not call external providers and does not write cache data.
+
 ## API response contract
 
 `data.links` contains only direct usable links. Each link includes a `source` such as:

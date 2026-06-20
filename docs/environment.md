@@ -69,6 +69,7 @@ RAPIDAPI_YOUTUBE_MUSIC_ENABLED="true"
 RAPIDAPI_DAILY_REQUEST_LIMIT="8"
 RAPIDAPI_COUNTRY_CODE="BR"
 MANUAL_LINK_TOKEN=""
+ADMIN_STATS_TOKEN=""
 YOUTUBE_API_KEY=""
 ```
 
@@ -91,6 +92,7 @@ YOUTUBE_API_KEY=""
 - `RAPIDAPI_DAILY_REQUEST_LIMIT` is a conservative per-instance guardrail for RapidAPI calls. The default is `8`; RapidAPI hard limits still apply globally.
 - `RAPIDAPI_COUNTRY_CODE` controls the fallback Spotify23 `gl` market parameter and defaults to `BR`. The selected app language can override it per request.
 - `MANUAL_LINK_TOKEN` publishes trusted manual corrections without relying only on metadata confidence.
+- `ADMIN_STATS_TOKEN` enables the read-only admin diagnostics endpoint at `GET /api/admin/library-stats`. Use an `Authorization: Bearer <token>` header when possible; `?token=<token>` also works for browser-only checks but can appear in browser history and platform logs.
 - `YOUTUBE_API_KEY` is optional; without it, YouTube and YouTube Music only appear when a trusted provider, Songlink/Odesli, input link, or manual correction returns a direct video link. When one trusted YouTube video ID is present, the app shows both YouTube and YouTube Music using the same ID. When enabled, YouTube search receives request-level `regionCode` and `relevanceLanguage` from the selected app language.
 
 The frontend sends catalog preferences with `POST /api/convert` based on the selected UI language:
@@ -120,6 +122,7 @@ The linked Vercel project uses `main` as the Production Branch. The Vercel CLI c
 - Rotate any key that is pasted into chat, logs, screenshots, or git by mistake.
 - Keep `STATSLC_BRIDGE_TOKEN` synchronized with the matching token on `stats-lc-api`.
 - Use `MANUAL_LINK_TOKEN` only for trusted/internal correction flows.
+- Use `ADMIN_STATS_TOKEN` only for trusted/internal diagnostics. Prefer an authorization header over a tokenized URL.
 - Use the kill switches when provider cost or abuse is suspected:
   - `YOUTUBE_MATCHING_ENABLED=false`
   - `DEEZER_MATCHING_ENABLED=false`

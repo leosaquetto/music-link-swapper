@@ -7,6 +7,7 @@ This app is not "blindado" by default. It has useful application-level safeguard
 - `POST /api/convert` accepts only `POST`.
 - `GET /api/track` accepts only `GET` and validates `trackId` with a strict `trk_...` pattern.
 - `GET /api/deezer/search` accepts only `GET`, validates query length/junk patterns, clamps pagination, and respects `DEEZER_MATCHING_ENABLED=false`.
+- `GET /api/admin/library-stats` accepts only `GET`, is read-only, requires `ADMIN_STATS_TOKEN`, and does not call external providers.
 - `POST /api/manual-link` validates platform, host, and URL shape before writing anything.
 - Search URLs and platform mismatches are rejected by the shared music contract.
 - Link inputs are length-limited and restricted to known music hosts.
@@ -17,7 +18,7 @@ This app is not "blindado" by default. It has useful application-level safeguard
   - after repeated strikes, the caller is blocked for 10 minutes.
 - `POST /api/convert` has an in-memory concurrency cap of 40 in-flight requests per instance.
 - Low-confidence manual corrections are stored as `pending` and are hidden from public cards.
-- `DATABASE_URL`, `YOUTUBE_API_KEY`, `RAPIDAPI_KEY`, `STATSLC_BRIDGE_TOKEN`, and `MANUAL_LINK_TOKEN` are server-side secrets and must not be exposed in frontend code.
+- `DATABASE_URL`, `YOUTUBE_API_KEY`, `RAPIDAPI_KEY`, `STATSLC_BRIDGE_TOKEN`, `MANUAL_LINK_TOKEN`, and `ADMIN_STATS_TOKEN` are server-side secrets and must not be exposed in frontend code.
 
 ## Remaining risk
 
@@ -67,6 +68,7 @@ The current app uses external image/media URLs and opens third-party music platf
 - Rotate leaked or pasted keys immediately.
 - Keep `STATSLC_BRIDGE_TOKEN` aligned with the corresponding token in `stats-lc-api`.
 - Use `MANUAL_LINK_TOKEN` only for trusted internal correction flows.
+- Use `ADMIN_STATS_TOKEN` only for trusted diagnostics. Prefer `Authorization: Bearer <token>` over URL query tokens because tokenized URLs can appear in history, referrers, and platform logs.
 
 ## Monitoring checklist
 
@@ -80,6 +82,7 @@ After deploys that touch matching or providers:
 - Watch for spikes in `429`, `5xx`, provider errors, and YouTube quota usage.
 - Watch for Deezer `QUOTA`/`SERVICE_BUSY` errors and local `deezer_api` provider attempts.
 - If RapidAPI is enabled, watch `rapidapi_spotify23`, `rapidapi_spotify_web_api3`, `rapidapi_shazam`, and `rapidapi_youtube_music_api3` provider attempts, include `rapidapi_musicdata_youtube_video` in provider probes, and monitor any RapidAPI `429` or quota exhaustion.
+- Use `GET /api/admin/library-stats` with `ADMIN_STATS_TOKEN` to review cache completeness, tracked input aliases, daily link sources, and provider issues without rerunning matching.
 - Check whether repeated cache misses are coming from the same IP, ASN, or user agent.
 
 ## Incident response
