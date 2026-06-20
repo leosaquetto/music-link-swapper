@@ -51,6 +51,14 @@ test("GET /api/admin/library-stats rejects wrong token and methods", async () =>
   }
 });
 
+test("GET /api/admin/library-stats supports CORS preflight for shortcut HTML", async () => {
+  const response = await callAdminStatsApi({ method: "OPTIONS" });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(response.headers["access-control-allow-origin"], "*");
+  assert.match(response.headers["access-control-allow-headers"], /Authorization/);
+});
+
 test("GET /api/admin/library-stats returns cache, daily, source, and provider diagnostics", async () => {
   const db = newDb();
   registerPgFunctions(db);
@@ -133,9 +141,17 @@ async function callAdminStatsApi({ method = "GET", query = {}, url = "/api/admin
   const req = { method, query, url, headers };
   const res = {
     statusCode: 200,
+    headers: {},
     body: null,
+    setHeader(key, value) {
+      this.headers[String(key).toLowerCase()] = value;
+      return this;
+    },
     status(code) {
       this.statusCode = code;
+      return this;
+    },
+    end() {
       return this;
     },
     json(payload) {

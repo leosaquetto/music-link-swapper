@@ -168,7 +168,7 @@
 
     .toolbar {
       display: grid;
-      grid-template-columns: minmax(220px, 1fr) 120px 120px auto auto;
+      grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) 120px 120px auto auto;
       align-items: end;
       gap: 12px;
       padding: 16px;
@@ -431,6 +431,14 @@
         </span>
       </label>
       <label>
+        API base
+        <input id="apiBase" name="apiBase" type="url" autocomplete="off" placeholder="https://seu-dominio.com">
+        <span class="save-row">
+          <input id="saveApiBase" type="checkbox">
+          <span>Salvar base</span>
+        </span>
+      </label>
+      <label>
         Dias
         <select id="days" name="days">
           <option value="1">1</option>
@@ -527,7 +535,8 @@
   </main>
 
   <script>
-    const STORAGE_KEY = "music-link-swapper:admin-stats-token";
+    const TOKEN_STORAGE_KEY = "music-link-swapper:admin-stats-token";
+    const API_BASE_STORAGE_KEY = "music-link-swapper:admin-stats-api-base";
     const state = {
       data: null,
       loading: false
@@ -537,6 +546,8 @@
       controls: document.getElementById("controls"),
       token: document.getElementById("token"),
       saveToken: document.getElementById("saveToken"),
+      apiBase: document.getElementById("apiBase"),
+      saveApiBase: document.getElementById("saveApiBase"),
       days: document.getElementById("days"),
       limit: document.getElementById("limit"),
       refresh: document.getElementById("refresh"),
@@ -559,10 +570,15 @@
     init();
 
     function init() {
-      const stored = localStorage.getItem(STORAGE_KEY) || "";
-      if (stored) {
-        refs.token.value = stored;
+      const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+      const storedApiBase = localStorage.getItem(API_BASE_STORAGE_KEY) || "";
+      if (storedToken) {
+        refs.token.value = storedToken;
         refs.saveToken.checked = true;
+      }
+      if (storedApiBase) {
+        refs.apiBase.value = storedApiBase;
+        refs.saveApiBase.checked = true;
       }
 
       refs.controls.addEventListener("submit", event => {
@@ -571,7 +587,7 @@
       });
 
       refs.clearToken.addEventListener("click", () => {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
         refs.token.value = "";
         refs.saveToken.checked = false;
         refs.token.focus();
@@ -584,16 +600,22 @@
       });
 
       renderEmpty();
-      if (stored) loadStats();
+      if (storedToken) loadStats();
     }
 
     async function loadStats() {
       const token = refs.token.value.trim();
+      const apiBase = normalizeApiBase(refs.apiBase.value);
       const days = refs.days.value;
       const limit = refs.limit.value;
       if (!token) {
         setStatus("Token ausente", "error");
         refs.token.focus();
+        return;
+      }
+      if (!apiBase) {
+        setStatus("Informe a API base", "error");
+        refs.apiBase.focus();
         return;
       }
 
@@ -602,7 +624,8 @@
       setStatus("Carregando", "idle");
 
       try {
-        const response = await fetch(`/api/admin/library-stats?days=${encodeURIComponent(days)}&limit=${encodeURIComponent(limit)}`, {
+        const endpoint = `${apiBase}/api/admin/library-stats?days=${encodeURIComponent(days)}&limit=${encodeURIComponent(limit)}`;
+        const response = await fetch(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json"
@@ -613,14 +636,16 @@
           throw new Error(payload.error || `HTTP ${response.status}`);
         }
 
-        if (refs.saveToken.checked) localStorage.setItem(STORAGE_KEY, token);
-        else localStorage.removeItem(STORAGE_KEY);
+        if (refs.saveToken.checked) localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        else localStorage.removeItem(TOKEN_STORAGE_KEY);
+        if (refs.saveApiBase.checked) localStorage.setItem(API_BASE_STORAGE_KEY, apiBase);
+        else localStorage.removeItem(API_BASE_STORAGE_KEY);
 
         state.data = payload.data;
         render(payload.data);
         setStatus("Atualizado", "ok");
       } catch (error) {
-        setStatus(error.message || "Erro", "error");
+        setStatus(formatLoadError(error), "error");
       } finally {
         state.loading = false;
         refs.refresh.disabled = false;
@@ -771,6 +796,21 @@
     function setStatus(text, mode) {
       refs.status.className = `status ${mode === "ok" ? "ok" : mode === "error" ? "error" : ""}`;
       refs.status.querySelector("span:last-child").textContent = text;
+    }
+
+    function normalizeApiBase(value) {
+      const raw = String(value || "").trim();
+      if (raw) return raw.replace(/\/+$/, "");
+      if (location.protocol === "http:" || location.protocol === "https:") return location.origin;
+      return "";
+    }
+
+    function formatLoadError(error) {
+      const message = String(error?.message || "Erro");
+      if (message.toLowerCase().includes("failed to fetch") || message.toLowerCase().includes("load failed")) {
+        return "Falha ao carregar: confira API base, deploy e token";
+      }
+      return message;
     }
 
     function platformName(key) {

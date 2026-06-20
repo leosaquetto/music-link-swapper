@@ -11,6 +11,12 @@ const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
 export default async function handler(req, res) {
+  setCorsHeaders(res);
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
   if (req.method !== "GET") {
     return res.status(405).json({ ok: false, error: "método não permitido" });
   }
@@ -85,4 +91,12 @@ function clampNumber(value, min, max, fallback) {
   const number = Number.parseInt(value, 10);
   if (!Number.isFinite(number)) return fallback;
   return Math.max(min, Math.min(max, number));
+}
+
+function setCorsHeaders(res) {
+  if (typeof res?.setHeader !== "function") return;
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept");
+  res.setHeader("Access-Control-Max-Age", "86400");
 }
