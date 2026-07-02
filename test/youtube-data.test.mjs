@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildYoutubePlatformLinks } from "../api/lib/music-contract.js";
+import { buildYoutubePlatformLinks } from "../server/lib/music-contract.js";
 import {
   scoreYoutubeCandidate,
   searchYoutubeVideoForTrackWithDiagnostics
-} from "../api/lib/youtube-data.js";
+} from "../server/lib/youtube-data.js";
 
 test("buildYoutubePlatformLinks mirrors one trusted video id across YouTube surfaces", () => {
   const links = buildYoutubePlatformLinks("V2G8ESoDXm8", {

@@ -1,7 +1,7 @@
 import {
   isDeezerMatchingEnabled,
   searchDeezerTracks
-} from "../lib/deezer.js";
+} from "../../server/lib/deezer.js";
 
 const MAX_QUERY_LENGTH = 160;
 const DEFAULT_LIMIT = 10;

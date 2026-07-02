@@ -13,7 +13,7 @@ import {
   recordProviderAttempt,
   upsertCachedResult,
   upsertManualLink
-} from "../api/lib/music-library.js";
+} from "../server/lib/music-library.js";
 
 test("music library schema supports cached links, aliases, idempotent upserts, and manual corrections", async () => {
   const db = newDb();

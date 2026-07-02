@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import {
   isMusicLibraryEnabled,
   readMusicLibraryStats
-} from "../lib/music-library.js";
+} from "../../server/lib/music-library.js";
 
 const DEFAULT_DAYS = 14;
 const MAX_DAYS = 90;

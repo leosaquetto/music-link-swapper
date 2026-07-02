@@ -9,7 +9,7 @@ import {
   __setMusicLibrarySqlClientForTests,
   upsertCachedResult,
   upsertManualLink
-} from "../api/lib/music-library.js";
+} from "../server/lib/music-library.js";
 
 test("GET /api/track returns a cached public card by trackId", async () => {
   const { trackId } = await seedPublicTrack();

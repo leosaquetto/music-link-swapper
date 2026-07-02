@@ -301,6 +301,7 @@ export function decorateResultForResponse(data, { cacheStatus = "miss", trackId 
   const canonicalKey = buildCanonicalTrackKey(data);
   const resolvedTrackId = trackId || buildTrackId(canonicalKey);
   const missingPlatforms = getMissingPlatforms(links);
+  const durationMs = normalizeDurationMs(data?.durationMs || data?.duration || 0);
 
   return {
     ...(data || {}),
@@ -308,11 +309,25 @@ export function decorateResultForResponse(data, { cacheStatus = "miss", trackId 
     description: String(data?.description || "").trim(),
     album: String(data?.album || "").trim(),
     image: String(data?.image || "").trim(),
+    durationMs,
+    releaseYear: normalizeReleaseYear(data?.releaseYear || data?.year || data?.releaseDate || data?.release_date || ""),
+    recordType: String(data?.recordType || "").trim(),
     links,
     trackId: resolvedTrackId,
     cacheStatus: cacheStatus === "hit" && missingPlatforms.length ? "partial" : cacheStatus,
     missingPlatforms
   };
+}
+
+function normalizeDurationMs(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number <= 0) return 0;
+  return Math.round(number < 10_000 ? number * 1000 : number);
+}
+
+function normalizeReleaseYear(value) {
+  const match = String(value || "").match(/\b(19\d{2}|20\d{2})\b/);
+  return match ? match[1] : "";
 }
 
 export function validatePlatformUrl(platform, url) {

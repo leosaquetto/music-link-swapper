@@ -2,7 +2,7 @@ import {
   isMusicLibraryEnabled,
   readCachedTrackById,
   upsertManualLink
-} from "./lib/music-library.js";
+} from "../server/lib/music-library.js";
 import {
   areCompatibleTrackTitles,
   canonicalizeMediaUrl,
@@ -10,11 +10,11 @@ import {
   isArtistCreditMatch,
   scoreTextAlignment,
   validatePlatformUrl
-} from "./lib/music-contract.js";
+} from "../server/lib/music-contract.js";
 import {
   extractDeezerTrackId,
   fetchDeezerTrackById
-} from "./lib/deezer.js";
+} from "../server/lib/deezer.js";
 
 const SPOTIFY_OEMBED_API_URL = "https://open.spotify.com/oembed";
 const ITUNES_LOOKUP_API_URL = "https://itunes.apple.com/lookup";

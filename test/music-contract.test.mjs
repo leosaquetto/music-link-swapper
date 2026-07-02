@@ -7,8 +7,8 @@ import {
   filterDisplayLinks,
   getMissingPlatforms,
   validatePlatformUrl
-} from "../api/lib/music-contract.js";
-import { scoreSpotifyCandidate } from "../api/lib/spotify-web.js";
+} from "../server/lib/music-contract.js";
+import { scoreSpotifyCandidate } from "../server/lib/spotify-web.js";
 
 test("filterDisplayLinks keeps only direct automatic platform links", () => {
   const links = filterDisplayLinks([

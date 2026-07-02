@@ -8,7 +8,7 @@ import {
   __resetMusicLibraryForTests,
   __setMusicLibrarySqlClientForTests,
   upsertCachedResult
-} from "../api/lib/music-library.js";
+} from "../server/lib/music-library.js";
 
 test("manual Spotify correction publishes when base title and artists match", async () => {
   const db = newDb();

@@ -103,7 +103,7 @@ export async function readCachedTrackById(trackId) {
   try {
     await ensureSchema();
     const rows = await sql`
-      select id, canonical_key, title, artist, album, image
+      select id, canonical_key, title, artist, album, image, duration_ms, release_year, record_type
       from tracks
       where id = ${id}
       limit 1
@@ -123,7 +123,7 @@ export async function readCachedResultByTrackId(trackId, { cacheStatus = "hit" }
   try {
     await ensureSchema();
     const tracks = await sql`
-      select id, canonical_key, title, artist, album, image
+      select id, canonical_key, title, artist, album, image, duration_ms, release_year, record_type
       from tracks
       where id = ${id}
       limit 1
@@ -145,6 +145,9 @@ export async function readCachedResultByTrackId(trackId, { cacheStatus = "hit" }
         description: track.artist,
         album: track.album,
         image: track.image,
+        durationMs: Number(track.duration_ms || 0) || 0,
+        releaseYear: track.release_year,
+        recordType: track.record_type,
         links: links.map(item => ({ ...item, source: "cache" }))
       },
       { cacheStatus, trackId: track.id }
@@ -193,18 +196,24 @@ export async function upsertCachedResult(result, { aliases = [], defaultSource =
   const artist = String(result?.description || result?.artist || "").trim();
   const album = String(result?.album || "").trim();
   const image = String(result?.image || "").trim();
+  const durationMs = normalizeDurationMs(result?.durationMs || result?.duration || 0);
+  const releaseYear = normalizeReleaseYear(result?.releaseYear || result?.year || result?.releaseDate || result?.release_date || album);
+  const recordType = normalizeRecordType(result?.recordType || "");
 
   try {
     await ensureSchema();
     await sql`
-      insert into tracks (id, canonical_key, title, artist, album, image, source)
-      values (${trackId}, ${canonicalKey}, ${title}, ${artist}, ${album}, ${image}, ${defaultSource})
+      insert into tracks (id, canonical_key, title, artist, album, image, duration_ms, release_year, record_type, source)
+      values (${trackId}, ${canonicalKey}, ${title}, ${artist}, ${album}, ${image}, ${durationMs}, ${releaseYear}, ${recordType}, ${defaultSource})
       on conflict (id) do update set
         canonical_key = excluded.canonical_key,
         title = coalesce(nullif(excluded.title, ''), tracks.title),
         artist = coalesce(nullif(excluded.artist, ''), tracks.artist),
         album = coalesce(nullif(excluded.album, ''), tracks.album),
         image = coalesce(nullif(excluded.image, ''), tracks.image),
+        duration_ms = greatest(tracks.duration_ms, excluded.duration_ms),
+        release_year = coalesce(nullif(excluded.release_year, ''), tracks.release_year),
+        record_type = coalesce(nullif(excluded.record_type, ''), tracks.record_type),
         updated_at = now()
     `;
 
@@ -422,11 +431,16 @@ async function createSchema(sql) {
       artist text default '',
       album text default '',
       image text default '',
+      duration_ms integer not null default 0,
+      release_year text default '',
+      record_type text default '',
       source text default 'provider',
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
     )
   `;
+
+  await ensureTrackPreviewColumns(sql);
 
   await sql`
     create table if not exists track_links (
@@ -486,9 +500,31 @@ async function createSchema(sql) {
   `;
 }
 
+async function ensureTrackPreviewColumns(sql) {
+  await sql`alter table tracks add column if not exists duration_ms integer not null default 0`;
+  await sql`alter table tracks add column if not exists release_year text default ''`;
+  await sql`alter table tracks add column if not exists record_type text default ''`;
+}
+
 function getPositiveIntegerEnv(name, fallback) {
   const parsed = Number.parseInt(process.env[name] || "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function normalizeDurationMs(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number <= 0) return 0;
+  return Math.round(number < 10_000 ? number * 1000 : number);
+}
+
+function normalizeReleaseYear(value) {
+  const match = String(value || "").match(/\b(19\d{2}|20\d{2})\b/);
+  return match ? match[1] : "";
+}
+
+function normalizeRecordType(value) {
+  const text = String(value || "").trim();
+  return text.length > 40 ? text.slice(0, 40) : text;
 }
 
 async function readMusicLibraryStorageStats(sql) {

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import convertHandler, { __testHooks } from "../api/convert.js";
-import { __resetRapidApiQuotaForTests } from "../api/lib/rapidapi-music.js";
+import { __resetRapidApiQuotaForTests } from "../server/lib/rapidapi-music.js";
 
 const SPOTIFY_TRACK_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT";
 process.env.DEEZER_MATCHING_ENABLED = "false";

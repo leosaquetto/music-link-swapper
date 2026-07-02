@@ -8,7 +8,7 @@ import {
   __resetMusicLibraryForTests,
   __setMusicLibrarySqlClientForTests,
   upsertCachedResult
-} from "../api/lib/music-library.js";
+} from "../server/lib/music-library.js";
 
 test("GET / injects track-specific Open Graph preview metadata", async () => {
   const db = newDb();
@@ -21,6 +21,7 @@ test("GET / injects track-specific Open Graph preview metadata", async () => {
       description: "Madonna & Feid",
       album: "Official FIFA World Cup 2026 Album",
       image: "https://is1-ssl.mzstatic.com/image/thumb/test/600x600bb.jpg",
+      durationMs: 166000,
       links: [
         {
           type: "spotify",
@@ -40,10 +41,12 @@ test("GET / injects track-specific Open Graph preview metadata", async () => {
     });
 
     assert.equal(response.statusCode, 200);
-    assert.match(response.body, /<meta property="og:title" content="Read My Lips \(FIFA Version\)" \/>/);
-    assert.match(response.body, /<meta property="og:description" content="Madonna &amp; Feid • Official FIFA World Cup 2026 Album" \/>/);
+    assert.match(response.body, /<meta property="og:title" content="Read My Lips \(FIFA Version\) de Madonna &amp; Feid no Music Swapper" \/>/);
+    assert.match(response.body, /<meta property="og:description" content="Música · 2026 · Duração 2:46" \/>/);
+    assert.match(response.body, /<meta property="og:logo" content="https:\/\/swapper\.leosaquetto\.com\/assets\/logo\.png" \/>/);
     assert.match(response.body, /<meta property="og:image" content="https:\/\/is1-ssl\.mzstatic\.com\/image\/thumb\/test\/600x600bb\.jpg" \/>/);
     assert.match(response.body, /<meta name="twitter:card" content="summary_large_image" \/>/);
+    assert.match(response.body, /<link rel="apple-touch-icon" href="https:\/\/swapper\.leosaquetto\.com\/assets\/logo\.png" \/>/);
     assert.match(response.body, new RegExp(`<link rel="canonical" href="https://swapper\\.leosaquetto\\.com/\\?track=${persisted.trackId}" />`));
   } finally {
     await __resetMusicLibraryForTests();

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   isStatslcBridgeConfigured,
   searchStatslcBridge
-} from "../api/lib/statslc-bridge.js";
+} from "../server/lib/statslc-bridge.js";
 
 test("stats-lc bridge provider calls configured backend with bearer token", async () => {
   const previousEnabled = process.env.STATSLC_BRIDGE_ENABLED;

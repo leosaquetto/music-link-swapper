@@ -4,13 +4,16 @@ import { resolve } from "node:path";
 import {
   isMusicLibraryEnabled,
   readCachedResultByTrackId
-} from "./lib/music-library.js";
+} from "../server/lib/music-library.js";
 
 const TRACK_ID_PATTERN = /^trk_[a-f0-9]{20}$/i;
 const DEFAULT_SITE_NAME = "music link swapper";
+const PREVIEW_APP_NAME = "Music Swapper";
+const PREVIEW_TYPE_LABEL = "Música";
 const DEFAULT_TITLE = "music link swapper";
 const DEFAULT_DESCRIPTION = "troque links de música entre plataformas.";
 const DEFAULT_IMAGE_PATH = "/assets/logo.png";
+const DEFAULT_ICON_PATH = "/assets/logo.png";
 
 let cachedIndexHtml = null;
 
@@ -90,27 +93,23 @@ async function readPreviewTrack(trackId) {
 
 function buildPreviewMeta({ origin, track, trackId }) {
   const canonicalUrl = trackId ? `${origin}/?track=${encodeURIComponent(trackId)}` : `${origin}/`;
-  const title = cleanText(track?.title) || DEFAULT_TITLE;
+  const trackTitle = cleanText(track?.title) || DEFAULT_TITLE;
   const artist = extractPrimaryArtist(track?.artist || track?.description);
-  const album = cleanText(track?.album);
   const image = absoluteUrl(cleanText(track?.image) || DEFAULT_IMAGE_PATH, origin);
-  const descriptionParts = [artist];
-  if (album && !normalizePreviewText(artist).includes(normalizePreviewText(album))) {
-    descriptionParts.push(album);
-  }
-  const description = track
-    ? descriptionParts.filter(Boolean).join(" • ") || "links desta música no music link swapper."
-    : DEFAULT_DESCRIPTION;
-  const documentTitle = track && title !== DEFAULT_TITLE
-    ? `${title}${artist ? ` - ${artist}` : ""} | ${DEFAULT_SITE_NAME}`
+  const icon = absoluteUrl(DEFAULT_ICON_PATH, origin);
+  const title = track ? buildTrackPreviewTitle(trackTitle, artist) : DEFAULT_TITLE;
+  const description = track ? buildTrackPreviewDescription(track) : DEFAULT_DESCRIPTION;
+  const documentTitle = track && trackTitle !== DEFAULT_TITLE
+    ? `${title} | ${DEFAULT_SITE_NAME}`
     : DEFAULT_TITLE;
 
   return {
     canonicalUrl,
     description,
     documentTitle,
+    icon,
     image,
-    imageAlt: track ? `${title}${artist ? ` - ${artist}` : ""}` : DEFAULT_SITE_NAME,
+    imageAlt: track ? `${trackTitle}${artist ? ` - ${artist}` : ""}` : DEFAULT_SITE_NAME,
     siteName: DEFAULT_SITE_NAME,
     title,
     type: track ? "music.song" : "website"
@@ -120,11 +119,14 @@ function buildPreviewMeta({ origin, track, trackId }) {
 export function injectSharePreviewMeta(html, meta) {
   const tags = [
     `<link rel="canonical" href="${escapeHtmlAttribute(meta.canonicalUrl)}" />`,
+    `<link rel="icon" href="${escapeHtmlAttribute(meta.icon || meta.image)}" />`,
+    `<link rel="apple-touch-icon" href="${escapeHtmlAttribute(meta.icon || meta.image)}" />`,
     `<meta property="og:url" content="${escapeHtmlAttribute(meta.canonicalUrl)}" />`,
     `<meta property="og:site_name" content="${escapeHtmlAttribute(meta.siteName)}" />`,
     `<meta property="og:type" content="${escapeHtmlAttribute(meta.type)}" />`,
     `<meta property="og:title" content="${escapeHtmlAttribute(meta.title)}" />`,
     `<meta property="og:description" content="${escapeHtmlAttribute(meta.description)}" />`,
+    `<meta property="og:logo" content="${escapeHtmlAttribute(meta.icon || meta.image)}" />`,
     `<meta property="og:image" content="${escapeHtmlAttribute(meta.image)}" />`,
     `<meta property="og:image:secure_url" content="${escapeHtmlAttribute(meta.image)}" />`,
     `<meta property="og:image:alt" content="${escapeHtmlAttribute(meta.imageAlt)}" />`,
@@ -187,8 +189,55 @@ function extractPrimaryArtist(value) {
   return cleanText(value).split(/\s+[•·]\s+/)[0]?.trim() || "";
 }
 
-function normalizePreviewText(value) {
-  return cleanText(value).toLowerCase();
+function buildTrackPreviewTitle(title, artist) {
+  return `${title}${artist ? ` de ${artist}` : ""} no ${PREVIEW_APP_NAME}`;
+}
+
+function buildTrackPreviewDescription(track) {
+  const type = normalizePreviewType(track?.recordType);
+  const year = extractPreviewYear(track);
+  const duration = formatPreviewDuration(track?.durationMs || track?.duration || 0);
+  const parts = [type, year, duration ? `Duração ${duration}` : ""].filter(Boolean);
+  return parts.join(" · ") || "links desta música no music link swapper.";
+}
+
+function normalizePreviewType(value) {
+  const text = cleanText(value).toLowerCase();
+  if (!text || ["song", "track", "music.song", "music", "música", "musica"].includes(text)) {
+    return PREVIEW_TYPE_LABEL;
+  }
+  return cleanText(value);
+}
+
+function extractPreviewYear(track) {
+  const candidates = [
+    track?.releaseYear,
+    track?.year,
+    track?.releaseDate,
+    track?.release_date,
+    track?.album,
+    track?.title,
+    track?.description,
+    track?.artist
+  ];
+  for (const candidate of candidates) {
+    const match = String(candidate || "").match(/\b(19\d{2}|20\d{2})\b/);
+    if (match) return match[1];
+  }
+  return "";
+}
+
+function formatPreviewDuration(value) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number <= 0) return "";
+  const totalSeconds = Math.max(1, Math.round((number < 10_000 ? number * 1000 : number) / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function escapeHtmlText(value) {

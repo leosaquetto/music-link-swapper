@@ -8,7 +8,7 @@ import {
   findBestDeezerTrack,
   scoreDeezerCandidate,
   searchDeezerTracks
-} from "../api/lib/deezer.js";
+} from "../server/lib/deezer.js";
 
 test("Deezer helpers parse direct track URLs and normalize search results", async () => {
   assert.equal(extractDeezerTrackId("https://www.deezer.com/br/track/3135553?utm=1"), "3135553");

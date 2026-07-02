@@ -15,18 +15,17 @@ O repositorio possui `package.json` com scripts de validacao e testes. A pasta `
 - `index.html`: shell HTML da aplicacao, metatags PWA, estrutura da UI, modais, footer e import de `app.js`.
 - `style.css`: todo o sistema visual do app, incluindo temas, layout mobile, cards, modais, listas de plataformas, botoes, estados e responsividade.
 - `app.js`: logica principal do frontend, traducoes, eventos, chamada da API, normalizacao de payload, renderizacao de resultados, historico local, clipboard, share e tema.
-- `api/convert.js`: endpoint serverless `POST /api/convert`, integracoes externas, cache persistente opcional, fallback de metadados, rate limit e normalizacao de links.
-- `api/lib/music-library.js`: persistencia Postgres/Neon/PGlite para biblioteca cacheada.
-- `api/lib/music-contract.js`: contrato de links diretos, plataformas automaticas e campos de resposta.
-- `api/lib/statslc-bridge.js`: cliente do bridge interno stats-lc/stats.fm para Spotify e Apple Music.
-- `api/lib/youtube-data.js`: matching opcional por YouTube Data API.
+- `api/`: somente entrypoints HTTP serverless. Helpers compartilhados nao devem ficar aqui para nao estourar o limite de funcoes da Vercel Hobby.
+- `api/convert.js`: endpoint `POST /api/convert`, integracoes externas, cache persistente opcional, fallback de metadados, rate limit e normalizacao de links.
+- `api/track.js`: endpoint read-only `GET /api/track` e renderer HTML da raiz `/` para Open Graph dinamico de `?track=...`.
+- `server/lib/`: helpers server-side compartilhados, incluindo biblioteca cacheada, contrato de links, Deezer, Spotify Web, YouTube Data, RapidAPI e stats-lc bridge.
 - `docs/link-matching.md`: contrato Tapelink-style, ordem de providers, cache e checklist de regressao.
 - `docs/environment.md`: setup local/producao e variaveis de ambiente.
 - `docs/security.md`: plano de seguranca, abuso, WAF, rate limit de borda, headers e resposta a incidente.
 - `docs/agent-rules.md`: regras para futuros agentes preservarem matching, UI, cache e seguranca.
 - `manifest.json`: manifesto PWA com nome, icones, display standalone, protocol handler `web+swapper` e launch handler.
 - `telegram.js`: helper para Telegram WebApp, mas nao esta importado por `index.html` no estado atual.
-- `vercel.json`: somente declara o schema da Vercel, sem rotas, rewrites, headers ou configuracoes adicionais.
+- `vercel.json`: roteia `/` para `/api/track` antes do filesystem, preservando arquivos estaticos e o preview social dinamico.
 - `.github/workflows/blank.yml`: workflow placeholder gerado pelo GitHub Actions, sem validacao real do projeto.
 - `assets/`: contem os logos do app, a marca de rodape `leo-saquetto-mark.svg`, icones PWA e demais assets visuais.
 - `reference/idonthavespotify/`: projeto de referencia vendorizado, com README, parsers, adapters, schemas, services e utils em TypeScript.
@@ -294,15 +293,26 @@ O historico recente salva dados suficientes para reabrir/copiar/refazer swaps, i
 
 ## Deploy e automacao
 
-O repositorio esta estruturado para Vercel por usar `api/convert.js` como funcao serverless e `vercel.json` na raiz. O arquivo `vercel.json` contem apenas:
+O repositorio esta estruturado para Vercel por usar entrypoints HTTP em `api/` e `vercel.json` na raiz. O arquivo `vercel.json` roteia a raiz para `api/track.js`, permitindo Open Graph dinamico para `/?track=...` antes de servir os arquivos estaticos:
 
 ```json
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "^/$",
+      "dest": "/api/track"
+    },
+    {
+      "handle": "filesystem"
+    }
+  ]
 }
 ```
 
-Nao ha configuracao explicita de build, headers, redirects, rewrites, regioes ou variaveis de ambiente no arquivo.
+Nao ha configuracao explicita de build, headers, redirects, regioes ou variaveis de ambiente no arquivo.
+
+A Vercel pode contar arquivos `.js` dentro de `api/` como Serverless Functions. Para evitar o limite do plano Hobby, `api/` deve conter apenas entrypoints HTTP; helpers compartilhados devem ficar fora de `api/`, em `server/lib/`.
 
 Protecoes de borda tambem nao estao declaradas no arquivo. A Vercel fornece DDoS automatico, mas Bot Protection, rate limit de borda, WAF customizado e headers de seguranca devem ser configurados conforme [`docs/security.md`](./docs/security.md).
 
@@ -326,7 +336,7 @@ Pontos mapeados:
 - O workflow GitHub Actions e placeholder e nao valida o projeto.
 - `telegram.js` existe, mas `index.html` importa somente `app.js`.
 - `assets/faveicon.png` existe, mas o HTML usa principalmente `assets/logo.svg` e `assets/logo.png` para favicon, apple touch icon, PWA e splash.
-- `vercel.json` nao configura nada alem do schema.
+- `vercel.json` configura somente a rota raiz dinamica e o fallback filesystem.
 - A camada de borda ainda depende principalmente do padrao da Vercel; faltam regras explicitas de WAF/rate limit/headers conforme [`docs/security.md`](./docs/security.md).
 - A API depende fortemente de provedores externos que podem mudar, bloquear scraping, alterar payloads ou sair do ar.
 - A API primaria `idonthavespotify.sjdonado.com` e externa ao repositorio; seu contrato real pode mudar sem controle local.

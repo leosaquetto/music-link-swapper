@@ -508,6 +508,7 @@ const SUPPORTED_PLATFORM_CHIPS = [
   "youtube"
 ];
 const AUTOMATIC_DISPLAY_PLATFORMS = new Set(["spotify", "appleMusic", "deezer", "youtube", "youtubeMusic"]);
+const AUTOMATIC_PLATFORM_ORDER = ["appleMusic", "spotify", "deezer", "youtubeMusic", "youtube"];
 const MADE_BY_SIGNATURE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" role="img" aria-label="Leo Saquetto signature"><g fill="currentColor"><path d="M147.7,27.1c-1.1,6.5-2.4,14.1-3.7,21.7-1.2,6.7-2.4,13.3-3.7,19.9-1.9,10.3-7.3,17-15.7,20.2-5.5,2.1-11.2,3.5-17.1,2.4-5-.9-8.2-5.2-8.4-11.1-.2-7.2,1.6-14.1,2.8-21.1,1.4-8.7,3-17.3,4.6-25.9,2.4-13.3,8.2-19.6,19.7-21.6,4.6-.8,9.1-.9,13.6.6,6.1,2.1,8.6,6.5,8,15.1ZM116.1,70.9c0,2.1-.4,3.9,1.2,4.7,1.6.8,3.2.4,4.6-1.1,1.4-1.5,1.9-3.6,2.3-5.7,1.8-10.1,3.6-20.2,5.4-30.3.6-3.2,1.2-6.4,1.6-9.6.3-2.7-.9-3.9-3.2-3.6-2.3.3-3.9,2.1-4.6,5.5-1,5.1-1.9,10.2-2.8,15.3-1.5,8.5-3.1,16.9-4.5,24.9Z"/><path d="M257.5,70.2c2.1,1.4,3.9.6,5.7,0,1.4-.5,1.7-.4,1.5,1.5-1.2,8-4.7,11.5-11.4,11.1-2.7-.2-5-1.4-6-4.5-.5-1.5-1.2-1.6-2.4-1.4-2.8.4-5.5.5-8.3-.2-6.6-1.6-9.8-6.9-8.5-14.7,1.8-11,4.2-21.9,6.2-32.9.7-3.8,1.4-7.6,3.1-11,1.9-3.9,4.5-6.6,8-8.3,6.7-3.1,13.7-3.6,20.6-1.6,6.1,1.8,8.5,6.9,7.2,14.2-2.3,11.9-4.5,23.8-6.9,35.7-1.4,6.7-3.4,9.4-8.7,12.3Z"/><path d="M472.5,74.9c-6.1.2-12.1.5-18.2.7-13.6.3-27.1.5-40.7,1-15.4.5-30.9,1-46.3,1.8-14.3.7-28.6,1.4-43,2.4-15.7,1-31.3,2.1-47,3.3-17.5,1.4-35.1,2.9-52.6,4.5-18.5,1.7-37,3.6-55.4,5.9-8.2,1-16.5,1.4-24.6,3.1-21.3,4.5-42.4,9.7-63.5,15.1-.8.2-1.8,0-2.9,1.4,38.8-6.3,77.3-12.4,115.9-16-17.4,3.9-34.9,7.8-52.6,11.8.8.9,1.3.7,1.8.6,16.1-2.4,32.3-3.8,48.4-5.7,2.4-.3,4.5-.4,6.3.5h0s4.3-.5,4.3-.5c-.1-.2-.3-.5-.4-.7,1.3-.8,2.1-.6,2.7.4l6.4-.8c-.1-.3-.3-.6-.5-1,4-.5,7.7-1,11.3-1.5l117.1-12.9c.3,0,.6-.1,1-.1.9,0,1.9,0,2.8-.2l2.8-.3c.7,0,1.4-.2,2.1-.2.6,0,1.3-.4,1.8-.2l15.7-1.4c13.9-1.3,27.8-2.9,41.8-4.1,22.5-1.9,44.9-4.4,67.4-5.7.4,0,.9.1,1-.7-.9-.6-1.9-.3-2.8-.3Z"/></g></svg>`;
 
 const state = {
@@ -1761,8 +1762,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
   softlyDismissKeyboard();
   hideStatus();
   setLoading(true);
-  hideResult();
-  startCoverShimmer();
+  renderLoadingResult(link);
 
   try {
     const localSamplePayload = getLocalSampleConversion(link, fromShuffle);
@@ -1770,6 +1770,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       const result = normalizeApiPayload(localSamplePayload, link, false);
       if (!result) {
         stopCoverShimmer();
+        hideResult();
         showStatus("não encontrei plataformas para esse link.", "error");
         return;
       }
@@ -1809,6 +1810,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
 
     if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.links)) {
       stopCoverShimmer();
+      hideResult();
       showStatus(
         payload?.error || "não consegui converter esse link agora. tente novamente em instantes.",
         "error"
@@ -1819,6 +1821,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     const result = normalizeApiPayload(payload.data, link, false);
     if (!result) {
       stopCoverShimmer();
+      hideResult();
       showStatus("não encontrei plataformas para esse link.", "error");
       return;
     }
@@ -1840,6 +1843,7 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     }
   } catch (_error) {
     stopCoverShimmer();
+    hideResult();
     showStatus("deu erro na conversão. tente novamente em instantes.", "error");
   } finally {
     if (fromShuffle && cleanText(els.input.value) === "sorteando um swap...") {
@@ -2072,9 +2076,97 @@ function renderSupportedChips() {
     .join("");
 }
 
+function renderLoadingResult(sourceLink = "") {
+  clearTimeout(state.hideResultTimer);
+  state.currentResult = null;
+  state.currentOriginalUrl = sourceLink || "";
+  state.publicTrackValidation = { trackId: "", status: "idle" };
+
+  els.resultCard.classList.remove("hidden", "is-exiting");
+  els.resultCard.classList.add("result-card-live", "is-loading-result");
+  els.platformGroups.innerHTML = "";
+
+  els.resultDescription.textContent = t("loadingCapturingSwaps");
+  els.resultDescription.classList.remove("hidden");
+  els.resultTitle.textContent = t("loadingFindingLinks");
+  els.resultMeta.textContent = t("loadingFinishingSwap");
+
+  startCoverShimmer();
+  els.copyPrimaryButton?.classList.add("hidden");
+  els.sharePrimaryButton?.classList.add("hidden");
+  els.copyOriginalButton?.classList.add("hidden");
+  renderPublicCardLoadingBar();
+
+  const section = document.createElement("section");
+  section.className = "platform-group-section platform-group-section-loading";
+  const list = document.createElement("div");
+  list.className = "platform-list";
+
+  getAutomaticPlatformMetas().forEach(({ key, meta }, index) => {
+    list.appendChild(createPlatformLoadingItem(key, meta, index));
+  });
+
+  section.appendChild(list);
+  els.platformGroups.appendChild(section);
+  hideCorrectionPrompt();
+  renderResultLegend();
+  syncResultPresentation({ openMobile: true });
+}
+
+function renderPublicCardLoadingBar() {
+  if (!els.publicCardBar) return;
+  els.publicCardBar.classList.remove("hidden", "is-public-card-ready", "is-public-card-unavailable");
+  els.publicCardBar.classList.add("is-validating", "is-public-card-loading-shell");
+  els.publicCardBar.setAttribute("aria-busy", "true");
+  if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
+  if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
+  if (els.publicCardStatusText) els.publicCardStatusText.textContent = t("publicCardChecking");
+  [
+    els.publicTrackCopyButton,
+    els.publicTrackShareButton,
+    els.publicTrackOpenButton
+  ].forEach(button => {
+    if (button) button.disabled = true;
+  });
+}
+
+function getAutomaticPlatformMetas() {
+  return AUTOMATIC_PLATFORM_ORDER
+    .filter(key => AUTOMATIC_DISPLAY_PLATFORMS.has(key) && PLATFORM_META[key])
+    .map(key => ({ key, meta: PLATFORM_META[key] }));
+}
+
+function createPlatformLoadingItem(key, meta, index = 0) {
+  const row = document.createElement("article");
+  row.className = "platform-item platform-item-loading";
+  row.style.setProperty("--platform-stagger", `${Math.min(index * 42, 180)}ms`);
+  row.setAttribute("aria-busy", "true");
+
+  row.innerHTML = `
+    <div class="platform-icon platform-icon-${escapeHtml(key)}">${meta.icon}</div>
+    <div class="platform-copy">
+      <div class="platform-name-row">
+        <div class="platform-name">${escapeHtml(meta.name)}</div>
+      </div>
+      <div class="platform-loading-label">
+        <span class="public-card-status-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span>${escapeHtml(t("loadingFindingLinks"))}</span>
+      </div>
+    </div>
+    <div class="platform-actions platform-actions-loading" aria-hidden="true">
+      <span class="platform-action-placeholder"></span>
+      <span class="platform-action-placeholder"></span>
+      <span class="platform-action-placeholder platform-action-placeholder-open"></span>
+    </div>
+  `;
+
+  return row;
+}
+
 function renderResult(result, { skipSave = false } = {}) {
   clearTimeout(state.hideResultTimer);
   els.resultCard.classList.remove("hidden", "is-exiting");
+  els.resultCard.classList.remove("is-loading-result");
   els.resultCard.classList.add("result-card-live");
   els.platformGroups.innerHTML = "";
 
@@ -2167,12 +2259,15 @@ function renderResult(result, { skipSave = false } = {}) {
     }
 
     visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
+    if (groupName === "primary") {
+      appendMissingPlatformItems(list, result);
+    }
     section.appendChild(list);
 
     els.platformGroups.appendChild(section);
   }
 
-  renderCorrectionPrompt(result);
+  renderCorrectionPrompt(result, { preferInline: true });
   renderResultLegend();
   if (!skipSave) saveRecentSwap(result);
   syncResultPresentation({ openMobile: true });
@@ -2182,6 +2277,7 @@ function renderPublicCardBar(result) {
   if (!els.publicCardBar) return;
   const trackId = cleanText(result?.trackId || "");
   const hasPublicTrack = TRACK_ID_PATTERN.test(trackId);
+  els.publicCardBar.classList.remove("is-public-card-loading-shell");
   els.publicCardBar.classList.toggle("hidden", !hasPublicTrack);
   if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
   if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
@@ -2269,14 +2365,103 @@ function createPlatformItem(item) {
   return row;
 }
 
-function renderCorrectionPrompt(result) {
-  if (!els.correctionCard) return;
+function appendMissingPlatformItems(list, result) {
+  if (!list || !result?.trackId) return;
+  const missing = getMissingDisplayPlatforms(result);
+  missing.forEach((key, index) => {
+    const meta = PLATFORM_META[key];
+    if (!meta) return;
+    list.appendChild(createMissingPlatformItem(key, meta, result, index));
+  });
+}
 
+function getMissingDisplayPlatforms(result) {
   const missing = Array.isArray(result?.missingPlatforms)
     ? result.missingPlatforms.filter(key => AUTOMATIC_DISPLAY_PLATFORMS.has(key) && !result.links.some(item => item.key === key))
     : [];
 
-  if (!result?.trackId || !missing.length) {
+  const seen = new Set();
+  return missing
+    .map(normalizePlatformKey)
+    .filter(key => {
+      if (!AUTOMATIC_DISPLAY_PLATFORMS.has(key) || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => (PLATFORM_META[a]?.order || 999) - (PLATFORM_META[b]?.order || 999));
+}
+
+function createMissingPlatformItem(key, meta, result, index = 0) {
+  const row = document.createElement("article");
+  row.className = "platform-item platform-item-missing";
+  row.style.setProperty("--platform-stagger", `${Math.min(index * 36, 144)}ms`);
+
+  row.innerHTML = `
+    <div class="platform-icon platform-icon-${escapeHtml(key)}">${meta.icon}</div>
+    <div class="platform-copy">
+      <div class="platform-name-row">
+        <div class="platform-name">${escapeHtml(meta.name)}</div>
+        <div class="platform-badge is-not-found" aria-label="${escapeHtml(t("notLocated"))}">
+          ${SVG_ICONS.notLocated}
+        </div>
+      </div>
+      <form class="inline-correction-form" novalidate>
+        <input class="correction-platform-input" type="hidden" name="platform" value="${escapeHtml(key)}" />
+        <label class="inline-correction-label">
+          <span class="sr-only">${escapeHtml(t("completeLinkUrl"))}</span>
+          <input class="correction-input inline-correction-input" name="url" type="url" inputmode="url" autocomplete="off" placeholder="${escapeHtml(t("completeLinkUrl"))}" required aria-describedby="inlineCorrectionError-${escapeHtml(key)}" />
+        </label>
+        <button class="correction-submit inline-correction-submit" type="submit" disabled>${escapeHtml(t("completeLinkSave"))}</button>
+        <p id="inlineCorrectionError-${escapeHtml(key)}" class="correction-error inline-correction-error" role="alert"></p>
+      </form>
+    </div>
+    <div class="platform-actions">
+      <button class="mini-action complete" type="button" data-action="complete" aria-label="${escapeHtml(t("completeLink"))}" title="${escapeHtml(t("completeLink"))}">
+        <span class="button-icon">${SVG_ICONS.link}</span>
+      </button>
+    </div>
+  `;
+
+  const form = row.querySelector(".inline-correction-form");
+  const urlInput = row.querySelector(".inline-correction-input");
+  const submitButton = row.querySelector(".inline-correction-submit");
+  const completeButton = row.querySelector('[data-action="complete"]');
+
+  const expand = () => {
+    row.classList.add("is-correction-open");
+    urlInput?.focus({ preventScroll: true });
+  };
+
+  const syncValidation = () => {
+    const validation = getManualLinkValidation(key, urlInput?.value);
+    setCorrectionError(form, validation.message, { invalid: !!validation.message && !!cleanText(urlInput?.value) });
+    if (submitButton) submitButton.disabled = !validation.ok;
+  };
+
+  completeButton?.addEventListener("click", event => {
+    pulseActionButton(event.currentTarget, "toggle");
+    triggerHaptic("light");
+    expand();
+  });
+
+  urlInput?.addEventListener("focus", expand);
+  urlInput?.addEventListener("input", syncValidation);
+  syncValidation();
+
+  form?.addEventListener("submit", event => {
+    event.preventDefault();
+    submitManualLink(event.currentTarget, result);
+  });
+
+  return row;
+}
+
+function renderCorrectionPrompt(result, { preferInline = false } = {}) {
+  if (!els.correctionCard) return;
+
+  const missing = getMissingDisplayPlatforms(result);
+
+  if (preferInline || !result?.trackId || !missing.length) {
     hideCorrectionPrompt();
     return;
   }
@@ -2411,7 +2596,9 @@ function renderCorrectionState(message, tone = "success") {
 }
 
 async function submitManualLink(form, result) {
-  if (!form || !result?.trackId || els.correctionCard?.classList.contains("is-saving")) return;
+  const savingContainer = form?.closest(".correction-card, .platform-item-missing");
+  if (!form || !result?.trackId || savingContainer?.classList.contains("is-saving")) return;
+  const isInlineCorrection = form.classList.contains("inline-correction-form");
 
   const formData = new FormData(form);
   const platform = normalizePlatformKey(formData.get("platform"));
@@ -2424,7 +2611,7 @@ async function submitManualLink(form, result) {
   }
 
   const submitButton = form.querySelector(".correction-submit");
-  els.correctionCard?.classList.add("is-saving");
+  savingContainer?.classList.add("is-saving");
   if (submitButton) {
     submitButton.disabled = true;
     submitButton.textContent = t("completeLinkSaving");
@@ -2460,22 +2647,47 @@ async function submitManualLink(form, result) {
         renderResult(nextResult, { skipSave: true });
       }
 
-      renderCorrectionState(t("completeLinkSaved"), "success");
+      if (!isInlineCorrection) renderCorrectionState(t("completeLinkSaved"), "success");
       showFloatingToast(t("completeLinkSaved"), "success");
       return;
     }
 
-    renderCorrectionState(t("completeLinkPending"), "pending");
+    if (isInlineCorrection) {
+      renderInlineCorrectionState(form, t("completeLinkPending"), "pending");
+    } else {
+      renderCorrectionState(t("completeLinkPending"), "pending");
+    }
     showFloatingToast(t("completeLinkPending"), "success");
   } catch (_error) {
     showFloatingToast(t("completeLinkError"), "error");
   } finally {
-    els.correctionCard?.classList.remove("is-saving");
+    savingContainer?.classList.remove("is-saving");
     if (form.isConnected && submitButton) {
       submitButton.textContent = t("completeLinkSave");
       submitButton.disabled = !getManualLinkValidation(platform, form.querySelector(".correction-input")?.value).ok;
     }
   }
+}
+
+function renderInlineCorrectionState(form, message, tone = "pending") {
+  const row = form?.closest(".platform-item-missing");
+  if (!row) return;
+  const copy = row.querySelector(".platform-copy");
+  const actions = row.querySelector(".platform-actions");
+  const icon = tone === "pending" ? SVG_ICONS.found : SVG_ICONS.verified;
+  if (copy) {
+    copy.innerHTML = `
+      <div class="platform-name-row">
+        <div class="platform-name">${escapeHtml(row.querySelector(".platform-name")?.textContent || t("completeLink"))}</div>
+        <div class="platform-badge is-found" aria-label="${escapeHtml(t("identified"))}">
+          ${icon}
+        </div>
+      </div>
+      <p class="inline-correction-state">${escapeHtml(message)}</p>
+    `;
+  }
+  actions?.remove();
+  row.classList.add("is-correction-complete");
 }
 
 function pulseActionButton(button, variant = "copy") {
@@ -2868,11 +3080,14 @@ function softlyDismissKeyboard() {
 }
 
 function clearResultSurface() {
+  els.resultCard?.classList.remove("is-loading-result");
   els.platformGroups.innerHTML = "";
   els.copyPrimaryButton?.classList.add("hidden");
   els.sharePrimaryButton?.classList.add("hidden");
   els.copyOriginalButton?.classList.add("hidden");
   els.publicCardBar?.classList.add("hidden");
+  els.publicCardBar?.classList.remove("is-validating", "is-public-card-ready", "is-public-card-unavailable", "is-public-card-loading-shell");
+  els.publicCardBar?.removeAttribute("aria-busy");
   hideCorrectionPrompt();
   els.resultLegend?.classList.add("hidden");
   if (els.resultLegend) els.resultLegend.innerHTML = "";

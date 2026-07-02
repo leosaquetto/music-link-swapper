@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { performance } from "node:perf_hooks";
 
-import { findBestDeezerTrack } from "../api/lib/deezer.js";
+import { findBestDeezerTrack } from "../server/lib/deezer.js";
 import {
   fetchRapidApiMusicDataYoutubeVideo,
   isRapidApiMusicDataEnabled,
@@ -13,9 +13,9 @@ import {
   searchRapidApiSpotifyTrack,
   searchRapidApiSpotifyWebApi3Track,
   searchRapidApiYoutubeMusicTrack
-} from "../api/lib/rapidapi-music.js";
-import { searchSpotifyWebTrack } from "../api/lib/spotify-web.js";
-import { searchYoutubeVideoForTrack } from "../api/lib/youtube-data.js";
+} from "../server/lib/rapidapi-music.js";
+import { searchSpotifyWebTrack } from "../server/lib/spotify-web.js";
+import { searchYoutubeVideoForTrack } from "../server/lib/youtube-data.js";
 
 const ITUNES_SEARCH_API_URL = "https://itunes.apple.com/search";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";

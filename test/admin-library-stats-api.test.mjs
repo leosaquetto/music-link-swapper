@@ -9,7 +9,7 @@ import {
   __setMusicLibrarySqlClientForTests,
   recordProviderAttempt,
   upsertCachedResult
-} from "../api/lib/music-library.js";
+} from "../server/lib/music-library.js";
 
 test("GET /api/admin/library-stats requires configured admin token", async () => {
   const previousToken = process.env.ADMIN_STATS_TOKEN;

@@ -9,7 +9,7 @@ import {
   searchRapidApiSpotifyTrack,
   searchRapidApiSpotifyWebApi3Track,
   searchRapidApiYoutubeMusicTrack
-} from "../api/lib/rapidapi-music.js";
+} from "../server/lib/rapidapi-music.js";
 
 test("RapidAPI fallbacks stay disabled unless explicitly enabled with a key", async () => {
   await withRapidApiEnv({ enabled: "", key: "" }, async () => {

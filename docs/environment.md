@@ -113,6 +113,18 @@ TIDAL support is temporarily paused. Do not add TIDAL env vars back unless the a
 
 The linked Vercel project uses `main` as the Production Branch. The Vercel CLI currently refuses Preview env vars scoped to `main` with `branch_not_found` / "Cannot set Production Branch `main` for a Preview Environment Variable." For this repo, configure server secrets in Production for live deploys and Development for local `vercel dev`/pull workflows. Only add Preview env vars when a real non-production preview branch exists.
 
+## Vercel function-count guardrail
+
+Vercel can count `.js` files inside `api/` as Serverless Functions. The Hobby plan currently allows no more than 12 Serverless Functions per deployment, and exceeding it causes `exceeded_serverless_functions_per_deployment`.
+
+Keep `api/` limited to HTTP entrypoints only. Shared server helpers must live outside `api/`, under `server/lib/`. Before deploys that add or move server files, verify the count with:
+
+```bash
+find api -type f -name '*.js' | sort
+vercel build
+find .vercel/output/functions -maxdepth 2 -type d -name '*.func' | sort
+```
+
 ## Production key care
 
 - Keep `.env.local` out of commits.

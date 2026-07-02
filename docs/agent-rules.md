@@ -58,6 +58,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 
 ## Backend validation rules
 
+- Keep `api/` for HTTP entrypoints only. Put shared server helpers in `server/lib/`; Vercel can count `.js` files inside `api/` as Serverless Functions and fail Hobby deploys with `exceeded_serverless_functions_per_deployment`.
 - Run `npm run check` before calling a matching change done.
 - Add or update tests for:
   - URL normalization;

@@ -4,7 +4,7 @@ import {
   readCachedResultByTrackKey,
   recordProviderAttempt,
   upsertCachedResult
-} from "./lib/music-library.js";
+} from "../server/lib/music-library.js";
 import {
   buildCanonicalTrackKey,
   buildYoutubePlatformLinks,
@@ -17,22 +17,22 @@ import {
   isAutomaticPlatform,
   normalizePlatformKey as normalizeContractPlatformKey,
   withYoutubePlatformPairs
-} from "./lib/music-contract.js";
-import { searchSpotifyWebTrack } from "./lib/spotify-web.js";
+} from "../server/lib/music-contract.js";
+import { searchSpotifyWebTrack } from "../server/lib/spotify-web.js";
 import {
   isStatslcBridgeConfigured,
   searchStatslcBridge
-} from "./lib/statslc-bridge.js";
+} from "../server/lib/statslc-bridge.js";
 import {
   extractDeezerTrackId,
   fetchDeezerTrackById,
   findBestDeezerTrack,
   isDeezerMatchingEnabled
-} from "./lib/deezer.js";
+} from "../server/lib/deezer.js";
 import {
   isYoutubeDataMatchingConfigured,
   searchYoutubeVideoForTrackWithDiagnostics
-} from "./lib/youtube-data.js";
+} from "../server/lib/youtube-data.js";
 import {
   fetchRapidApiMusicDataYoutubeVideo,
   isRapidApiShazamEnabled,
@@ -43,7 +43,7 @@ import {
   searchRapidApiSpotifyTrack,
   searchRapidApiSpotifyWebApi3Track,
   searchRapidApiYoutubeMusicTrack
-} from "./lib/rapidapi-music.js";
+} from "../server/lib/rapidapi-music.js";
 
 const PRIMARY_API_URL = "https://idonthavespotify.sjdonado.com/api/search?v=1";
 const SONGLINK_API_URL = "https://api.song.link/v1-alpha.1/links";
