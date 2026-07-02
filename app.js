@@ -97,8 +97,8 @@ const CATALOG_PREFERENCES_BY_LANGUAGE = {
 };
 const TRANSLATIONS = {
   "pt-br": {
-    loadingSwap: "swappando...",
-    platformSwapping: "swapando...",
+    loadingSwap: "swappando",
+    platformSwapping: "swapando",
     loadingFindingLinks: "buscando swaps...",
     loadingCapturingSwaps: "capturando swaps...",
     loadingFinishingSwap: "finalizando swap...",
@@ -108,7 +108,7 @@ const TRANSLATIONS = {
     byline: "por leo saquetto",
     subtitle: "crossover entre plataformas",
     availableAs: "Disponível como",
-    madeBy: "feito por 🇧🇷",
+    madeBy: "🇧🇷 feito por",
     languageSelected: "português-brasil selecionado.",
     themeLight: "modo claro",
     themeDark: "modo escuro",
@@ -156,13 +156,13 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiado.",
     publicCardShared: "card swap compartilhado.",
     publicCardUnavailable: "card swap indisponível.",
-    publicCardChecking: "preparando...",
+    publicCardChecking: "preparando",
     publicCardLoading: "abrindo card swap...",
     publicCardNotFound: "não encontrei esse card swap."
   },
   en: {
-    loadingSwap: "swapping...",
-    platformSwapping: "swapping...",
+    loadingSwap: "swapping",
+    platformSwapping: "swapping",
     loadingFindingLinks: "finding swaps...",
     loadingCapturingSwaps: "capturing swaps...",
     loadingFinishingSwap: "finishing swap...",
@@ -172,7 +172,7 @@ const TRANSLATIONS = {
     byline: "by leo saquetto",
     subtitle: "crossover between platforms",
     availableAs: "Available as",
-    madeBy: "made by 🇧🇷",
+    madeBy: "🇧🇷 made by",
     languageSelected: "english selected.",
     themeLight: "light mode",
     themeDark: "dark mode",
@@ -220,13 +220,13 @@ const TRANSLATIONS = {
     publicCardCopied: "swap card copied.",
     publicCardShared: "swap card shared.",
     publicCardUnavailable: "swap card unavailable.",
-    publicCardChecking: "preparing...",
+    publicCardChecking: "preparing",
     publicCardLoading: "opening swap card...",
     publicCardNotFound: "could not find this swap card."
   },
   "es-es": {
-    loadingSwap: "convirtiendo...",
-    platformSwapping: "intercambiando...",
+    loadingSwap: "convirtiendo",
+    platformSwapping: "intercambiando",
     loadingFindingLinks: "buscando swaps...",
     loadingCapturingSwaps: "capturando swaps...",
     loadingFinishingSwap: "finalizando swap...",
@@ -236,7 +236,7 @@ const TRANSLATIONS = {
     byline: "por leo saquetto",
     subtitle: "crossover entre plataformas",
     availableAs: "Disponible como",
-    madeBy: "hecho por 🇧🇷",
+    madeBy: "🇧🇷 hecho por",
     languageSelected: "español seleccionado.",
     themeLight: "modo claro",
     themeDark: "modo oscuro",
@@ -284,13 +284,13 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiado.",
     publicCardShared: "card swap compartido.",
     publicCardUnavailable: "card swap no disponible.",
-    publicCardChecking: "preparando...",
+    publicCardChecking: "preparando",
     publicCardLoading: "abriendo card swap...",
     publicCardNotFound: "no encontré este card swap."
   },
   "it-it": {
-    loadingSwap: "conversione...",
-    platformSwapping: "scambio...",
+    loadingSwap: "conversione",
+    platformSwapping: "scambio",
     loadingFindingLinks: "ricerca swap...",
     loadingCapturingSwaps: "cattura swap...",
     loadingFinishingSwap: "finalizzazione swap...",
@@ -300,7 +300,7 @@ const TRANSLATIONS = {
     byline: "di leo saquetto",
     subtitle: "crossover tra piattaforme",
     availableAs: "Disponibile come",
-    madeBy: "fatto da 🇧🇷",
+    madeBy: "🇧🇷 fatto da",
     languageSelected: "italiano selezionato.",
     themeLight: "tema chiaro",
     themeDark: "tema scuro",
@@ -348,13 +348,13 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiato.",
     publicCardShared: "card swap condiviso.",
     publicCardUnavailable: "card swap non disponibile.",
-    publicCardChecking: "preparazione...",
+    publicCardChecking: "preparazione",
     publicCardLoading: "apertura card swap...",
     publicCardNotFound: "non ho trovato questo card swap."
   },
   "fr-fr": {
-    loadingSwap: "conversion...",
-    platformSwapping: "échange...",
+    loadingSwap: "conversion",
+    platformSwapping: "échange",
     loadingFindingLinks: "recherche de swaps...",
     loadingCapturingSwaps: "capture de swaps...",
     loadingFinishingSwap: "finalisation du swap...",
@@ -364,7 +364,7 @@ const TRANSLATIONS = {
     byline: "par leo saquetto",
     subtitle: "crossover entre plateformes",
     availableAs: "Disponible en",
-    madeBy: "fait par 🇧🇷",
+    madeBy: "🇧🇷 fait par",
     languageSelected: "français sélectionné.",
     themeLight: "mode clair",
     themeDark: "mode sombre",
@@ -412,7 +412,7 @@ const TRANSLATIONS = {
     publicCardCopied: "carte swap copiée.",
     publicCardShared: "carte swap partagée.",
     publicCardUnavailable: "carte swap indisponible.",
-    publicCardChecking: "préparation...",
+    publicCardChecking: "préparation",
     publicCardLoading: "ouverture de la carte swap...",
     publicCardNotFound: "carte swap introuvable."
   }
@@ -2241,7 +2241,7 @@ function createPlatformLoadingItem(key, meta, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-loading";
   row.dataset.platform = key;
-  row.style.setProperty("--platform-stagger", `${index * 90}ms`);
+  row.style.setProperty("--platform-stagger", `${index * 55}ms`);
   row.setAttribute("aria-busy", "true");
 
   row.innerHTML = `
@@ -2260,8 +2260,56 @@ function createPlatformLoadingItem(key, meta, index = 0) {
   return row;
 }
 
+function transitionPlatformControls(currentRow, nextRow, delay = 0) {
+  const startTransition = () => {
+    if (!currentRow.isConnected) return;
+    currentRow.classList.add("is-platform-controls-leaving");
+    window.setTimeout(() => {
+      if (!currentRow.isConnected) return;
+      const badge = nextRow.querySelector(".platform-badge");
+      const actionsTemplate = nextRow.querySelector(".platform-actions");
+      const actions = actionsTemplate?.cloneNode(true);
+      const item = nextRow.__platformItem;
+      const nameRow = currentRow.querySelector(".platform-name-row");
+      const loadingTrailing = currentRow.querySelector(".platform-loading-trailing");
+      if (!badge || !actions || !item || !nameRow || !loadingTrailing) {
+        currentRow.replaceWith(nextRow);
+        return;
+      }
+
+      nameRow.appendChild(badge);
+      loadingTrailing.replaceWith(actions);
+      currentRow.classList.remove("platform-item-loading", "is-platform-controls-leaving");
+      currentRow.classList.add(
+        "platform-item-ready",
+        "platform-item-already-visible",
+        "is-platform-controls-entering",
+        "is-platform-actions-entering"
+      );
+      currentRow.removeAttribute("aria-busy");
+      bindPlatformActionEvents(currentRow, item);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => currentRow.classList.remove("is-platform-controls-entering"));
+      });
+      window.setTimeout(() => currentRow.classList.remove("is-platform-actions-entering"), 480);
+    }, 130);
+  };
+
+  if (delay > 0) window.setTimeout(startTransition, delay);
+  else startTransition();
+}
+
 function transitionPlatformRow(currentRow, nextRow, { delay = 0, remove = false } = {}) {
   if (!currentRow) return;
+  if (
+    !remove
+    && nextRow
+    && currentRow.classList.contains("platform-item-loading")
+    && nextRow.classList.contains("platform-item-ready")
+  ) {
+    transitionPlatformControls(currentRow, nextRow, delay);
+    return;
+  }
   const startTransition = () => {
     currentRow.classList.add("is-platform-state-leaving");
     window.setTimeout(() => {
@@ -2299,15 +2347,15 @@ function reconcileLoadingPlatformGroups(result) {
     const item = primaryByKey.get(key);
     if (item) {
       if (row.classList.contains("platform-item-loading")) {
-        transitionPlatformRow(row, createPlatformItem(item, index), { delay: index * 45 });
+        transitionPlatformRow(row, createPlatformItem(item, index), { delay: index * 32 });
       }
       return;
     }
     if (missingKeys.has(key)) {
-      transitionPlatformRow(row, createMissingPlatformItem(key, PLATFORM_META[key], result, index), { delay: index * 45 });
+      transitionPlatformRow(row, createMissingPlatformItem(key, PLATFORM_META[key], result, index), { delay: index * 32 });
       return;
     }
-    transitionPlatformRow(row, null, { delay: index * 45, remove: true });
+    transitionPlatformRow(row, null, { delay: index * 32, remove: true });
   });
 
   primaryItems.forEach((item, index) => {
@@ -2521,41 +2569,7 @@ function getSectionGroup(sectionName = "") {
     : "others";
 }
 
-function createPlatformItem(item, index = 0) {
-  const badgeClass = item.isVerified ? "is-verified" : "is-found";
-  const badgeLabel = item.isVerified ? t("verified") : t("identified");
-  const badgeIcon = item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
-  const openLabel = "abrir";
-
-  const row = document.createElement("article");
-  const wasAlreadyRevealed = state.revealedPlatformKeys.has(item.key);
-  row.className = `platform-item platform-item-ready${wasAlreadyRevealed ? " platform-item-already-visible" : ""}`;
-  row.dataset.platform = item.key;
-  row.style.setProperty("--platform-stagger", `${Math.min(300 + index * 140, 860)}ms`);
-
-  row.innerHTML = `
-    <div class="platform-icon platform-icon-${escapeHtml(item.key)}">${item.icon}</div>
-    <div class="platform-copy">
-      <div class="platform-name-row">
-        <div class="platform-name">${escapeHtml(item.name)}</div>
-        <div class="platform-badge ${badgeClass}" aria-label="${badgeLabel}">
-          ${badgeIcon}
-        </div>
-      </div>
-    </div>
-    <div class="platform-actions">
-      <button class="mini-action copy" type="button" data-action="copy" aria-label="copiar" title="copiar">
-        <span class="button-icon">${SVG_ICONS.copy}</span>
-      </button>
-      <button class="mini-action share" type="button" data-action="share" aria-label="compartilhar" title="compartilhar">
-        <span class="button-icon">${SVG_ICONS.share}</span>
-      </button>
-      <button class="mini-action open" type="button" data-action="open" aria-label="${openLabel}" title="${openLabel}">
-        <span class="button-icon">${SVG_ICONS.open}</span>
-      </button>
-    </div>
-  `;
-
+function bindPlatformActionEvents(row, item) {
   row.querySelector('[data-action="copy"]').addEventListener("click", async event => {
     const copied = await copyText(item.url);
     if (!copied) {
@@ -2589,6 +2603,45 @@ function createPlatformItem(item, index = 0) {
     triggerHaptic("light");
     openPlatformUrl(item);
   });
+}
+
+function createPlatformItem(item, index = 0) {
+  const badgeClass = item.isVerified ? "is-verified" : "is-found";
+  const badgeLabel = item.isVerified ? t("verified") : t("identified");
+  const badgeIcon = item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
+  const openLabel = "abrir";
+
+  const row = document.createElement("article");
+  const wasAlreadyRevealed = state.revealedPlatformKeys.has(item.key);
+  row.className = `platform-item platform-item-ready${wasAlreadyRevealed ? " platform-item-already-visible" : ""}`;
+  row.dataset.platform = item.key;
+  row.__platformItem = item;
+  row.style.setProperty("--platform-stagger", `${Math.min(100 + index * 75, 400)}ms`);
+
+  row.innerHTML = `
+    <div class="platform-icon platform-icon-${escapeHtml(item.key)}">${item.icon}</div>
+    <div class="platform-copy">
+      <div class="platform-name-row">
+        <div class="platform-name">${escapeHtml(item.name)}</div>
+        <div class="platform-badge ${badgeClass}" aria-label="${badgeLabel}">
+          ${badgeIcon}
+        </div>
+      </div>
+    </div>
+    <div class="platform-actions">
+      <button class="mini-action copy" type="button" data-action="copy" aria-label="copiar" title="copiar">
+        <span class="button-icon">${SVG_ICONS.copy}</span>
+      </button>
+      <button class="mini-action share" type="button" data-action="share" aria-label="compartilhar" title="compartilhar">
+        <span class="button-icon">${SVG_ICONS.share}</span>
+      </button>
+      <button class="mini-action open" type="button" data-action="open" aria-label="${openLabel}" title="${openLabel}">
+        <span class="button-icon">${SVG_ICONS.open}</span>
+      </button>
+    </div>
+  `;
+
+  bindPlatformActionEvents(row, item);
 
   return row;
 }
@@ -2623,7 +2676,7 @@ function createMissingPlatformItem(key, meta, result, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-missing";
   row.dataset.platform = key;
-  row.style.setProperty("--platform-stagger", `${Math.min(300 + index * 140, 860)}ms`);
+  row.style.setProperty("--platform-stagger", `${Math.min(100 + index * 75, 400)}ms`);
 
   row.innerHTML = `
     <div class="platform-icon platform-icon-${escapeHtml(key)}">${meta.icon}</div>

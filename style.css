@@ -1120,7 +1120,7 @@ h2 {
 .public-card-bar {
   margin-top: 18px;
   min-height: 42px;
-  padding: 5px 9px;
+  padding: 5px 14px;
   border: 1.5px solid rgba(52, 199, 89, 0.66);
   border-radius: 999px;
   background:
@@ -1196,7 +1196,7 @@ h2 {
 .public-card-trailing {
   position: relative;
   flex: 0 0 auto;
-  width: 96px;
+  width: 104px;
   min-height: 30px;
   display: grid;
   place-items: center end;
@@ -1306,6 +1306,17 @@ h2 {
 
 .public-card-status-equalizer span:nth-child(3) {
   animation-delay: 180ms;
+}
+
+.public-card-status .public-card-status-equalizer {
+  width: 14px;
+  height: 12px;
+  gap: 1.5px;
+}
+
+.public-card-status .public-card-status-equalizer span {
+  width: 3px;
+  min-height: 4px;
 }
 
 .public-card-bar.is-public-card-unavailable .public-card-status-equalizer {
@@ -1591,7 +1602,7 @@ h2 {
 .platform-item-ready,
 .platform-item-loading,
 .platform-item-missing {
-  animation: platformRowIn 360ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  animation: platformRowIn 440ms cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: var(--platform-stagger, 0ms);
 }
 
@@ -1620,6 +1631,25 @@ h2 {
   transition:
     opacity 190ms ease,
     transform 230ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.platform-item .platform-loading-trailing,
+.platform-item .platform-badge,
+.platform-item .platform-actions {
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.platform-item.is-platform-controls-leaving .platform-loading-trailing {
+  opacity: 0;
+  transform: translateX(5px) scale(0.96);
+}
+
+.platform-item.is-platform-controls-entering .platform-badge,
+.platform-item.is-platform-controls-entering .platform-actions {
+  opacity: 0;
+  transform: translateX(5px) scale(0.96);
 }
 
 .platform-item.is-platform-actions-entering .platform-actions .mini-action {
@@ -2701,7 +2731,7 @@ body.legal-modal-open {
 @keyframes platformRowIn {
   from {
     opacity: 0;
-    transform: translateY(9px) scale(0.985);
+    transform: translateY(5px) scale(0.995);
   }
   to {
     opacity: 1;
@@ -2846,6 +2876,11 @@ body.legal-modal-open {
 
   .ios-badges {
     margin-bottom: 18px;
+  }
+
+  .footer,
+  body.needs-viewport-fill .footer {
+    margin-top: 34px;
   }
 
   .footer-made-by {
