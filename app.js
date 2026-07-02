@@ -98,6 +98,7 @@ const CATALOG_PREFERENCES_BY_LANGUAGE = {
 const TRANSLATIONS = {
   "pt-br": {
     loadingSwap: "swappando...",
+    platformSwapping: "swapando...",
     loadingFindingLinks: "buscando swaps...",
     loadingCapturingSwaps: "capturando swaps...",
     loadingFinishingSwap: "finalizando swap...",
@@ -155,12 +156,13 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiado.",
     publicCardShared: "card swap compartilhado.",
     publicCardUnavailable: "card swap indisponível.",
-    publicCardChecking: "preparando card...",
+    publicCardChecking: "preparando...",
     publicCardLoading: "abrindo card swap...",
     publicCardNotFound: "não encontrei esse card swap."
   },
   en: {
     loadingSwap: "swapping...",
+    platformSwapping: "swapping...",
     loadingFindingLinks: "finding swaps...",
     loadingCapturingSwaps: "capturing swaps...",
     loadingFinishingSwap: "finishing swap...",
@@ -218,12 +220,13 @@ const TRANSLATIONS = {
     publicCardCopied: "swap card copied.",
     publicCardShared: "swap card shared.",
     publicCardUnavailable: "swap card unavailable.",
-    publicCardChecking: "preparing card...",
+    publicCardChecking: "preparing...",
     publicCardLoading: "opening swap card...",
     publicCardNotFound: "could not find this swap card."
   },
   "es-es": {
     loadingSwap: "convirtiendo...",
+    platformSwapping: "intercambiando...",
     loadingFindingLinks: "buscando swaps...",
     loadingCapturingSwaps: "capturando swaps...",
     loadingFinishingSwap: "finalizando swap...",
@@ -281,12 +284,13 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiado.",
     publicCardShared: "card swap compartido.",
     publicCardUnavailable: "card swap no disponible.",
-    publicCardChecking: "preparando card...",
+    publicCardChecking: "preparando...",
     publicCardLoading: "abriendo card swap...",
     publicCardNotFound: "no encontré este card swap."
   },
   "it-it": {
     loadingSwap: "conversione...",
+    platformSwapping: "scambio...",
     loadingFindingLinks: "ricerca swap...",
     loadingCapturingSwaps: "cattura swap...",
     loadingFinishingSwap: "finalizzazione swap...",
@@ -344,12 +348,13 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiato.",
     publicCardShared: "card swap condiviso.",
     publicCardUnavailable: "card swap non disponibile.",
-    publicCardChecking: "preparazione card...",
+    publicCardChecking: "preparazione...",
     publicCardLoading: "apertura card swap...",
     publicCardNotFound: "non ho trovato questo card swap."
   },
   "fr-fr": {
     loadingSwap: "conversion...",
+    platformSwapping: "échange...",
     loadingFindingLinks: "recherche de swaps...",
     loadingCapturingSwaps: "capture de swaps...",
     loadingFinishingSwap: "finalisation du swap...",
@@ -407,7 +412,7 @@ const TRANSLATIONS = {
     publicCardCopied: "carte swap copiée.",
     publicCardShared: "carte swap partagée.",
     publicCardUnavailable: "carte swap indisponible.",
-    publicCardChecking: "préparation de la carte...",
+    publicCardChecking: "préparation...",
     publicCardLoading: "ouverture de la carte swap...",
     publicCardNotFound: "carte swap introuvable."
   }
@@ -523,6 +528,7 @@ const state = {
   activeButtonResetTimers: new WeakMap(),
   scrollAfterConvert: false,
   hideResultTimer: null,
+  resultRevealTimer: null,
   themeSwitchTimer: null,
   languageSwitchTimer: null,
   currentLanguage: "pt-br",
@@ -545,6 +551,7 @@ const state = {
   },
   loadingStageTimers: [],
   loadingStatusLabel: "",
+  revealedPlatformKeys: new Set(),
   recentSwaps: [],
   shuffleInProgress: false
 };
@@ -1266,7 +1273,8 @@ function closeResultSheet({ immediate = false, preserveResult = true } = {}) {
 }
 
 function syncResultPresentation({ openMobile = false } = {}) {
-  if (!state.currentResult || els.resultCard?.classList.contains("hidden")) {
+  const hasLoadingResult = els.resultCard?.classList.contains("is-loading-result");
+  if ((!state.currentResult && !hasLoadingResult) || els.resultCard?.classList.contains("hidden")) {
     closeResultSheet({ immediate: true, preserveResult: true });
     return;
   }
@@ -1802,11 +1810,12 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
       body: JSON.stringify({
         link,
         adapters: REQUESTED_ADAPTERS,
+        stream: true,
         ...getCatalogPreferences()
       })
     });
 
-    const payload = await response.json();
+    const payload = await readConversionResponse(response, link);
 
     if (!response.ok || !payload?.ok || !Array.isArray(payload?.data?.links)) {
       stopCoverShimmer();
@@ -1856,6 +1865,82 @@ async function onConvert({ shouldScrollToStatus = false, forcedLink = "", fromSh
     setLoading(false);
     state.autoConvertedFromQuery = false;
     state.scrollAfterConvert = false;
+  }
+}
+
+async function readConversionResponse(response, sourceLink) {
+  const contentType = cleanText(response?.headers?.get?.("content-type") || "").toLowerCase();
+  if (!contentType.includes("application/x-ndjson") || !response?.body?.getReader) {
+    return response.json();
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let completedData = null;
+  let streamError = "";
+
+  const consumeLine = line => {
+    const text = cleanText(line);
+    if (!text) return;
+    let event;
+    try {
+      event = JSON.parse(text);
+    } catch (_error) {
+      return;
+    }
+
+    if (event?.type === "progress" && event.data) {
+      applyConversionProgress(event.data, sourceLink);
+    } else if (event?.type === "complete" && event.data) {
+      completedData = event.data;
+    } else if (event?.type === "error") {
+      streamError = cleanText(event.error || "erro ao converter");
+    }
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    lines.forEach(consumeLine);
+    if (done) break;
+  }
+  consumeLine(buffer);
+
+  if (completedData) return { ok: true, data: completedData };
+  return { ok: false, error: streamError || "a conversão foi interrompida" };
+}
+
+function applyConversionProgress(data, sourceLink) {
+  const partial = normalizeApiPayload(data, sourceLink, false);
+  if (!partial) return;
+
+  const merged = state.currentResult
+    ? mergeCurrentResultWithPublicRefresh(state.currentResult, partial)
+    : partial;
+  state.currentResult = merged;
+  state.currentOriginalUrl = sourceLink || state.currentOriginalUrl;
+  els.resultCard.classList.add("is-streaming-partial");
+
+  els.resultTitle.textContent = merged.title || "resultado";
+  els.resultMeta.textContent = buildMeta(merged);
+  els.resultMeta.classList.remove("hidden");
+  if (merged.artist) {
+    els.resultDescription.textContent = merged.artist;
+    els.resultDescription.classList.remove("hidden");
+  }
+  if (merged.image) showCoverImage(merged.image);
+
+  for (const item of partial.links) {
+    if (!item?.key || state.revealedPlatformKeys.has(item.key)) continue;
+    const loadingRow = els.platformGroups.querySelector(`.platform-item-loading[data-platform="${item.key}"]`);
+    if (!loadingRow) continue;
+    const readyRow = createPlatformItem(item, 0);
+    readyRow.style.setProperty("--platform-stagger", "0ms");
+    loadingRow.replaceWith(readyRow);
+    state.revealedPlatformKeys.add(item.key);
   }
 }
 
@@ -2078,18 +2163,26 @@ function renderSupportedChips() {
 
 function renderLoadingResult(sourceLink = "") {
   clearTimeout(state.hideResultTimer);
+  clearTimeout(state.resultRevealTimer);
   state.currentResult = null;
+  state.revealedPlatformKeys.clear();
   state.currentOriginalUrl = sourceLink || "";
   state.publicTrackValidation = { trackId: "", status: "idle" };
 
-  els.resultCard.classList.remove("hidden", "is-exiting");
-  els.resultCard.classList.add("result-card-live", "is-loading-result");
+  els.resultCard.classList.remove("hidden", "is-exiting", "result-card-live");
+  els.resultCard.classList.add("is-loading-result");
   els.platformGroups.innerHTML = "";
 
-  els.resultDescription.textContent = t("loadingCapturingSwaps");
-  els.resultDescription.classList.remove("hidden");
-  els.resultTitle.textContent = t("loadingFindingLinks");
-  els.resultMeta.textContent = t("loadingFinishingSwap");
+  els.resultDescription.textContent = "";
+  els.resultDescription.classList.add("hidden");
+  els.resultMeta.textContent = "";
+  els.resultMeta.classList.add("hidden");
+  els.resultTitle.innerHTML = `
+    <span class="result-header-loader">
+      <span class="public-card-status-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span>${escapeHtml(t("platformSwapping"))}</span>
+    </span>
+  `;
 
   startCoverShimmer();
   els.copyPrimaryButton?.classList.add("hidden");
@@ -2110,7 +2203,15 @@ function renderLoadingResult(sourceLink = "") {
   els.platformGroups.appendChild(section);
   hideCorrectionPrompt();
   renderResultLegend();
+  restartResultCardEntrance();
   syncResultPresentation({ openMobile: true });
+}
+
+function restartResultCardEntrance() {
+  if (!els.resultCard) return;
+  els.resultCard.classList.remove("result-card-live", "is-exiting");
+  void els.resultCard.offsetWidth;
+  els.resultCard.classList.add("result-card-live");
 }
 
 function renderPublicCardLoadingBar() {
@@ -2139,7 +2240,8 @@ function getAutomaticPlatformMetas() {
 function createPlatformLoadingItem(key, meta, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-loading";
-  row.style.setProperty("--platform-stagger", `${Math.min(index * 42, 180)}ms`);
+  row.dataset.platform = key;
+  row.style.setProperty("--platform-stagger", `${Math.min(index * 80, 320)}ms`);
   row.setAttribute("aria-busy", "true");
 
   row.innerHTML = `
@@ -2148,15 +2250,10 @@ function createPlatformLoadingItem(key, meta, index = 0) {
       <div class="platform-name-row">
         <div class="platform-name">${escapeHtml(meta.name)}</div>
       </div>
-      <div class="platform-loading-label">
-        <span class="public-card-status-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
-        <span>${escapeHtml(t("loadingFindingLinks"))}</span>
-      </div>
     </div>
-    <div class="platform-actions platform-actions-loading" aria-hidden="true">
-      <span class="platform-action-placeholder"></span>
-      <span class="platform-action-placeholder"></span>
-      <span class="platform-action-placeholder platform-action-placeholder-open"></span>
+    <div class="platform-loading-trailing" aria-label="${escapeHtml(t("platformSwapping"))}">
+      <span class="public-card-status-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span>${escapeHtml(t("platformSwapping"))}</span>
     </div>
   `;
 
@@ -2165,13 +2262,19 @@ function createPlatformLoadingItem(key, meta, index = 0) {
 
 function renderResult(result, { skipSave = false } = {}) {
   clearTimeout(state.hideResultTimer);
+  clearTimeout(state.resultRevealTimer);
+  const wasLoadingResult = els.resultCard.classList.contains("is-loading-result");
+  const hadStreamingProgress = state.revealedPlatformKeys.size > 0;
+  const shouldAnimateCardEntrance = els.resultCard.classList.contains("hidden")
+    || !els.resultCard.classList.contains("result-card-live");
   els.resultCard.classList.remove("hidden", "is-exiting");
-  els.resultCard.classList.remove("is-loading-result");
-  els.resultCard.classList.add("result-card-live");
+  els.resultCard.classList.remove("is-loading-result", "is-streaming-partial");
+  if (shouldAnimateCardEntrance) restartResultCardEntrance();
   els.platformGroups.innerHTML = "";
 
   els.resultTitle.textContent = result.title || "resultado";
   els.resultMeta.textContent = buildMeta(result);
+  els.resultMeta.classList.remove("hidden");
 
   if (result.artist) {
     els.resultDescription.textContent = result.artist;
@@ -2258,9 +2361,9 @@ function renderResult(result, { skipSave = false } = {}) {
       section.appendChild(title);
     }
 
-    visibleItems.forEach(item => list.appendChild(createPlatformItem(item)));
+    visibleItems.forEach((item, index) => list.appendChild(createPlatformItem(item, index)));
     if (groupName === "primary") {
-      appendMissingPlatformItems(list, result);
+      appendMissingPlatformItems(list, result, visibleItems.length);
     }
     section.appendChild(list);
 
@@ -2269,6 +2372,15 @@ function renderResult(result, { skipSave = false } = {}) {
 
   renderCorrectionPrompt(result, { preferInline: true });
   renderResultLegend();
+  if (wasLoadingResult && !hadStreamingProgress) {
+    els.resultCard.classList.remove("is-revealing-result");
+    void els.resultCard.offsetWidth;
+    els.resultCard.classList.add("is-revealing-result");
+    state.resultRevealTimer = setTimeout(() => {
+      els.resultCard?.classList.remove("is-revealing-result");
+      state.resultRevealTimer = null;
+    }, 1500);
+  }
   if (!skipSave) saveRecentSwap(result);
   syncResultPresentation({ openMobile: true });
 }
@@ -2296,14 +2408,17 @@ function getSectionGroup(sectionName = "") {
     : "others";
 }
 
-function createPlatformItem(item) {
+function createPlatformItem(item, index = 0) {
   const badgeClass = item.isVerified ? "is-verified" : "is-found";
   const badgeLabel = item.isVerified ? t("verified") : t("identified");
   const badgeIcon = item.isVerified ? SVG_ICONS.verified : SVG_ICONS.found;
   const openLabel = "abrir";
 
   const row = document.createElement("article");
-  row.className = "platform-item";
+  const wasAlreadyRevealed = state.revealedPlatformKeys.has(item.key);
+  row.className = `platform-item platform-item-ready${wasAlreadyRevealed ? " platform-item-already-visible" : ""}`;
+  row.dataset.platform = item.key;
+  row.style.setProperty("--platform-stagger", `${Math.min(300 + index * 140, 860)}ms`);
 
   row.innerHTML = `
     <div class="platform-icon platform-icon-${escapeHtml(item.key)}">${item.icon}</div>
@@ -2365,13 +2480,13 @@ function createPlatformItem(item) {
   return row;
 }
 
-function appendMissingPlatformItems(list, result) {
+function appendMissingPlatformItems(list, result, startIndex = 0) {
   if (!list || !result?.trackId) return;
   const missing = getMissingDisplayPlatforms(result);
   missing.forEach((key, index) => {
     const meta = PLATFORM_META[key];
     if (!meta) return;
-    list.appendChild(createMissingPlatformItem(key, meta, result, index));
+    list.appendChild(createMissingPlatformItem(key, meta, result, startIndex + index));
   });
 }
 
@@ -2394,7 +2509,8 @@ function getMissingDisplayPlatforms(result) {
 function createMissingPlatformItem(key, meta, result, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-missing";
-  row.style.setProperty("--platform-stagger", `${Math.min(index * 36, 144)}ms`);
+  row.dataset.platform = key;
+  row.style.setProperty("--platform-stagger", `${Math.min(300 + index * 140, 860)}ms`);
 
   row.innerHTML = `
     <div class="platform-icon platform-icon-${escapeHtml(key)}">${meta.icon}</div>
@@ -2843,6 +2959,7 @@ function setPublicTrackCardState(status = "idle") {
 function buildPublicTrackUrl(trackId) {
   const url = new URL(window.location.pathname || "/", window.location.origin);
   url.searchParams.set("track", trackId);
+  url.searchParams.set("preview", "2");
   return url.href;
 }
 
@@ -3080,7 +3197,12 @@ function softlyDismissKeyboard() {
 }
 
 function clearResultSurface() {
+  clearTimeout(state.resultRevealTimer);
+  state.resultRevealTimer = null;
+  state.revealedPlatformKeys.clear();
   els.resultCard?.classList.remove("is-loading-result");
+  els.resultCard?.classList.remove("is-revealing-result");
+  els.resultCard?.classList.remove("is-streaming-partial");
   els.platformGroups.innerHTML = "";
   els.copyPrimaryButton?.classList.add("hidden");
   els.sharePrimaryButton?.classList.add("hidden");
@@ -3100,12 +3222,13 @@ function hideResult() {
 
   if (!els.resultCard.classList.contains("hidden")) {
     els.resultCard.classList.remove("result-card-live");
+    void els.resultCard.offsetWidth;
     els.resultCard.classList.add("is-exiting");
     state.hideResultTimer = setTimeout(() => {
       clearResultSurface();
       els.resultCard.classList.remove("is-exiting");
       els.resultCard.classList.add("hidden");
-    }, 220);
+    }, 300);
     return;
   }
 

@@ -151,6 +151,7 @@ function normalizeCountryCode(value) {
 export default async function handler(req, res) {
   metrics.requests += 1;
   emitMetricsHeartbeat();
+  let progressStream = null;
 
   if (req.method !== "POST") {
     return res.status(405).json({
@@ -168,7 +169,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { link, adapters, queryMode, query, locale, countryCode } = req.body || {};
+    const { link, adapters, queryMode, query, locale, countryCode, stream } = req.body || {};
+    progressStream = createConversionProgressStream(res, stream === true && !queryMode);
     const requestContext = buildRequestContext({ locale, countryCode });
     const mode = queryMode ? "query" : "link";
     const rateLimit = enforceRateLimit(req, res, mode);
@@ -296,7 +298,7 @@ export default async function handler(req, res) {
         : primaryResult.data;
 
       const groundedData = await enforceInputTrackGroundTruth(mergedData, link);
-      const finalizedData = await finalizeResultData(groundedData, requestContext);
+      const finalizedData = await finalizeResultData(groundedData, requestContext, progressStream.emit);
       const data = await finalizeAndPersistResult(finalizedData, {
         cacheStatus: "miss",
         aliases: [inputAlias],
@@ -306,7 +308,7 @@ export default async function handler(req, res) {
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data });
+      return sendConversionSuccess(res, data, progressStream);
     }
 
     const fallbackResult = shouldUseSongLinkFirst
@@ -315,7 +317,7 @@ export default async function handler(req, res) {
 
     if (fallbackResult.ok) {
       const groundedData = await enforceInputTrackGroundTruth(fallbackResult.data, link);
-      const finalizedData = await finalizeResultData(groundedData, requestContext);
+      const finalizedData = await finalizeResultData(groundedData, requestContext, progressStream.emit);
       const data = await finalizeAndPersistResult(finalizedData, {
         cacheStatus: "miss",
         aliases: [inputAlias],
@@ -325,14 +327,14 @@ export default async function handler(req, res) {
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data });
+      return sendConversionSuccess(res, data, progressStream);
     }
 
     if (platform === "spotify") {
       const spotifyFallback = await buildSpotifySearchFallback(link, requestContext);
       if (spotifyFallback.ok) {
         const groundedData = await enforceInputTrackGroundTruth(spotifyFallback.data, link);
-        const finalizedData = await finalizeResultData(groundedData, requestContext);
+        const finalizedData = await finalizeResultData(groundedData, requestContext, progressStream.emit);
         const data = await finalizeAndPersistResult(finalizedData, {
           cacheStatus: "miss",
           aliases: [inputAlias],
@@ -342,13 +344,13 @@ export default async function handler(req, res) {
         if (sampleCacheKey) {
           writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
         }
-        return res.status(200).json({ ok: true, data });
+        return sendConversionSuccess(res, data, progressStream);
       }
     }
 
     const directInputFallback = buildDirectInputFallback(link, inputContext);
     if (directInputFallback.ok) {
-      const finalizedData = await finalizeResultData(directInputFallback.data, requestContext);
+      const finalizedData = await finalizeResultData(directInputFallback.data, requestContext, progressStream.emit);
       const data = await finalizeAndPersistResult(finalizedData, {
         cacheStatus: "miss",
         aliases: [inputAlias],
@@ -358,7 +360,7 @@ export default async function handler(req, res) {
       if (sampleCacheKey) {
         writeSampleResultCache(sampleCacheKey, data, SAMPLE_RESULT_CACHE_TTL_MS);
       }
-      return res.status(200).json({ ok: true, data });
+      return sendConversionSuccess(res, data, progressStream);
     }
 
     return res.status(primaryResult.status || 502).json({
@@ -367,6 +369,9 @@ export default async function handler(req, res) {
     });
   } catch (_error) {
     metrics.errors += 1;
+    if (progressStream?.started) {
+      return progressStream.fail("erro interno ao converter");
+    }
     return res.status(500).json({
       ok: false,
       error: "erro interno ao converter"
@@ -374,6 +379,68 @@ export default async function handler(req, res) {
   } finally {
     releaseInFlightSlot();
   }
+}
+
+function createConversionProgressStream(res, enabled = false) {
+  let started = false;
+  let lastSignature = "";
+
+  const start = () => {
+    if (!enabled || typeof res?.write !== "function") return false;
+    if (started) return true;
+    res.status?.(200);
+    res.setHeader?.("Content-Type", "application/x-ndjson; charset=utf-8");
+    res.setHeader?.("Cache-Control", "no-cache, no-transform");
+    res.setHeader?.("X-Accel-Buffering", "no");
+    res.flushHeaders?.();
+    started = true;
+    return true;
+  };
+
+  const writeEvent = event => {
+    if (!start()) return false;
+    res.write(`${JSON.stringify(event)}\n`);
+    return true;
+  };
+
+  return {
+    get enabled() {
+      return enabled;
+    },
+    get started() {
+      return started;
+    },
+    emit(data) {
+      if (!enabled || !data) return;
+      const partial = decorateResultForResponse(data, { cacheStatus: "partial" });
+      const signature = JSON.stringify({
+        title: partial.title,
+        description: partial.description,
+        image: partial.image,
+        links: (partial.links || []).map(item => `${item.type}:${item.url}`)
+      });
+      if (signature === lastSignature) return;
+      lastSignature = signature;
+      writeEvent({ type: "progress", data: partial });
+    },
+    complete(data) {
+      if (!started) return false;
+      res.write(`${JSON.stringify({ type: "complete", data })}\n`);
+      res.end();
+      return true;
+    },
+    fail(error) {
+      if (!started) return false;
+      res.write(`${JSON.stringify({ type: "error", error })}\n`);
+      res.end();
+      return true;
+    }
+  };
+}
+
+function sendConversionSuccess(res, data, progressStream) {
+  if (progressStream?.complete(data)) return;
+  return res.status(200).json({ ok: true, data });
 }
 
 async function buildSpotifySearchFallback(link, requestContext = {}) {
@@ -1534,7 +1601,7 @@ function pickBestMetadata(baseData, enrichedData, fallback = {}) {
   };
 }
 
-async function finalizeResultData(data, requestContext = {}) {
+async function finalizeResultData(data, requestContext = {}, onProgress = null) {
   const payload = data || {};
   const normalizedLinks = dedupeAndNormalizeLinks(Array.isArray(payload.links) ? payload.links : []);
   const youtubeAdjustedLinks = withYoutubePlatformPairs(refineYoutubePlatformsWithCandidates(normalizedLinks, payload));
@@ -1547,26 +1614,41 @@ async function finalizeResultData(data, requestContext = {}) {
     image: payload.image || imageFromLinks || "",
     links: youtubeAdjustedLinks
   };
+  emitConversionProgress(onProgress, base);
 
-  const spotifyEnriched = await enrichWithSpotifyFallback(base);
-  const secondaryEnriched = await enrichWithSecondaryFallbacks(spotifyEnriched);
-  const deezerEnriched = await enrichWithDeezerMatch(secondaryEnriched);
-  const statslcEnriched = await enrichWithStatslcBridge(deezerEnriched);
-  const spotifyWebEnriched = await enrichWithSpotifyWebMatch(statslcEnriched);
-  const rapidSpotifyEnriched = await enrichWithRapidApiSpotifyMatch(spotifyWebEnriched, requestContext);
-  const postSpotifyStatslcEnriched = await enrichWithStatslcBridge(rapidSpotifyEnriched);
-  const postSpotifyWebFallbackEnriched = await enrichWithSpotifyFallback(postSpotifyStatslcEnriched);
-  const postSpotifyDeezerEnriched = await enrichWithDeezerMatch(postSpotifyWebFallbackEnriched);
-  const shazamAppleEnriched = await enrichWithRapidApiShazamAppleMusic(postSpotifyDeezerEnriched, requestContext);
-  const appleBridgeEnriched = await enrichWithAppleBridgeFallback(shazamAppleEnriched);
-  const postAppleDeezerEnriched = await enrichWithDeezerMatch(appleBridgeEnriched);
-  const songLinkEnriched = await enrichWithSongLinkDirectLinks(postAppleDeezerEnriched);
+  const spotifyEnriched = await runEnrichmentStep(base, enrichWithSpotifyFallback, onProgress);
+  const secondaryEnriched = await runEnrichmentStep(spotifyEnriched, enrichWithSecondaryFallbacks, onProgress);
+  const deezerEnriched = await runEnrichmentStep(secondaryEnriched, enrichWithDeezerMatch, onProgress);
+  const statslcEnriched = await runEnrichmentStep(deezerEnriched, enrichWithStatslcBridge, onProgress);
+  const spotifyWebEnriched = await runEnrichmentStep(statslcEnriched, enrichWithSpotifyWebMatch, onProgress);
+  const rapidSpotifyEnriched = await runEnrichmentStep(spotifyWebEnriched, value => enrichWithRapidApiSpotifyMatch(value, requestContext), onProgress);
+  const postSpotifyStatslcEnriched = await runEnrichmentStep(rapidSpotifyEnriched, enrichWithStatslcBridge, onProgress);
+  const postSpotifyWebFallbackEnriched = await runEnrichmentStep(postSpotifyStatslcEnriched, enrichWithSpotifyFallback, onProgress);
+  const postSpotifyDeezerEnriched = await runEnrichmentStep(postSpotifyWebFallbackEnriched, enrichWithDeezerMatch, onProgress);
+  const shazamAppleEnriched = await runEnrichmentStep(postSpotifyDeezerEnriched, value => enrichWithRapidApiShazamAppleMusic(value, requestContext), onProgress);
+  const appleBridgeEnriched = await runEnrichmentStep(shazamAppleEnriched, enrichWithAppleBridgeFallback, onProgress);
+  const postAppleDeezerEnriched = await runEnrichmentStep(appleBridgeEnriched, enrichWithDeezerMatch, onProgress);
+  const songLinkEnriched = await runEnrichmentStep(postAppleDeezerEnriched, enrichWithSongLinkDirectLinks, onProgress);
   const youtubePaired = {
     ...songLinkEnriched,
     links: withYoutubePlatformPairs(Array.isArray(songLinkEnriched?.links) ? songLinkEnriched.links : [])
   };
-  const youtubeDataEnriched = await enrichWithYoutubeDataMatch(youtubePaired, requestContext);
-  return enrichWithRapidApiYoutubeMusicMatch(youtubeDataEnriched, requestContext);
+  emitConversionProgress(onProgress, youtubePaired);
+  const youtubeDataEnriched = await runEnrichmentStep(youtubePaired, value => enrichWithYoutubeDataMatch(value, requestContext), onProgress);
+  return runEnrichmentStep(youtubeDataEnriched, value => enrichWithRapidApiYoutubeMusicMatch(value, requestContext), onProgress);
+}
+
+async function runEnrichmentStep(data, enrich, onProgress) {
+  const next = await enrich(data);
+  emitConversionProgress(onProgress, next);
+  return next;
+}
+
+function emitConversionProgress(onProgress, data) {
+  if (typeof onProgress !== "function") return;
+  try {
+    onProgress(data);
+  } catch (_error) {}
 }
 
 function refineYoutubePlatformsWithCandidates(links, payload) {
@@ -3345,6 +3427,7 @@ function isSearchLikeUrl(url, type = "") {
 export const __testHooks = {
   buildInputCacheContext,
   buildDirectInputFallback,
+  createConversionProgressStream,
   prepareCachedResultForUpgrade,
   finalizeResultData,
   enrichWithDeezerMatch,

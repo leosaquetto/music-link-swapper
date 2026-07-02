@@ -7,6 +7,55 @@ import { __resetRapidApiQuotaForTests } from "../server/lib/rapidapi-music.js";
 const SPOTIFY_TRACK_URL = "https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT";
 process.env.DEEZER_MATCHING_ENABLED = "false";
 
+test("conversion progress stream emits only changed partial results before completion", () => {
+  const chunks = [];
+  const headers = {};
+  const response = {
+    statusCode: 0,
+    ended: false,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    setHeader(name, value) {
+      headers[name.toLowerCase()] = value;
+    },
+    write(chunk) {
+      chunks.push(String(chunk));
+    },
+    end() {
+      this.ended = true;
+    }
+  };
+  const stream = __testHooks.createConversionProgressStream(response, true);
+  const appleOnly = {
+    title: "Choka Choka",
+    description: "Anitta & Shakira",
+    links: [{ type: "appleMusic", url: "https://music.apple.com/br/album/choka-choka/1891400123?i=1891400226" }]
+  };
+  const withSpotify = {
+    ...appleOnly,
+    links: [
+      ...appleOnly.links,
+      { type: "spotify", url: "https://open.spotify.com/track/3aRCjlhDyStousHqYnGZ5G" }
+    ]
+  };
+
+  stream.emit(appleOnly);
+  stream.emit(appleOnly);
+  stream.emit(withSpotify);
+  stream.complete(withSpotify);
+
+  const events = chunks.join("").trim().split("\n").map(line => JSON.parse(line));
+  assert.equal(response.statusCode, 200);
+  assert.equal(headers["content-type"], "application/x-ndjson; charset=utf-8");
+  assert.equal(events.length, 3);
+  assert.deepEqual(events.map(event => event.type), ["progress", "progress", "complete"]);
+  assert.equal(events[0].data.links.length, 1);
+  assert.equal(events[1].data.links.length, 2);
+  assert.equal(response.ended, true);
+});
+
 test("Apple input metadata preserves duration for cached provider upgrades", async () => {
   const appleUrl = "https://music.apple.com/us/album/golden/1820264137?i=1820264150&uo=4";
   await withMockFetch(async input => {

@@ -916,6 +916,48 @@ h1 {
   animation: loadingTextBreath 1.35s ease-in-out infinite;
 }
 
+.result-header-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: clamp(18px, 2.3vw, 24px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.result-header-loader .public-card-status-equalizer {
+  width: 21px;
+  height: 18px;
+  color: var(--accent);
+}
+
+.result-card.is-revealing-result .cover-wrap {
+  animation: resultBlockIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.result-card.is-revealing-result .result-description {
+  animation: resultBlockIn 360ms cubic-bezier(0.16, 1, 0.3, 1) 70ms both;
+}
+
+.result-card.is-revealing-result .result-title-stack h2 {
+  animation: resultBlockIn 380ms cubic-bezier(0.16, 1, 0.3, 1) 130ms both;
+}
+
+.result-card.is-revealing-result .result-meta {
+  animation: resultBlockIn 380ms cubic-bezier(0.16, 1, 0.3, 1) 190ms both;
+}
+
+.result-card.is-revealing-result .public-card-bar {
+  animation: resultBlockIn 400ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+}
+
+.result-card.is-streaming-partial .result-description,
+.result-card.is-streaming-partial .result-title-stack h2,
+.result-card.is-streaming-partial .result-meta {
+  animation: resultBlockIn 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 :root:not([data-theme="dark"]) .result-card {
   background: rgba(255, 255, 255, 0.70);
   border-color: rgba(18, 22, 35, 0.11);
@@ -1009,6 +1051,10 @@ h2 {
   font-weight: 800;
 }
 
+#resultTitle {
+  font-size: 18px;
+}
+
 .result-meta {
   color: var(--muted);
   margin-top: 3px;
@@ -1073,8 +1119,8 @@ h2 {
 
 .public-card-bar {
   margin-top: 18px;
-  min-height: 76px;
-  padding: 10px 12px 10px 14px;
+  min-height: 42px;
+  padding: 4px 6px;
   border: 1.5px solid rgba(52, 199, 89, 0.66);
   border-radius: 999px;
   background:
@@ -1083,7 +1129,7 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   box-shadow:
     0 18px 38px rgba(4, 11, 8, 0.18),
     0 0 0 1px rgba(52, 199, 89, 0.12) inset;
@@ -1098,36 +1144,33 @@ h2 {
   display: flex;
   align-items: center;
   flex: 1 1 auto;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
 .public-card-icon {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  border-radius: 16px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 0;
   display: grid;
   place-items: center;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .public-card-icon .button-icon,
 .public-card-icon .button-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
 }
 
 .public-card-icon svg path:nth-child(1),
-.public-card-icon svg path:nth-child(2) {
-  fill: #34c759;
-}
-
+.public-card-icon svg path:nth-child(2),
 .public-card-icon svg path:nth-child(3) {
-  fill: #ed474c;
+  fill: #ffffff;
 }
 
 .public-card-copy {
@@ -1136,16 +1179,16 @@ h2 {
 
 .public-card-label {
   color: var(--text);
-  font-size: 15px;
+  font-size: 12px;
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: 0;
 }
 
 .public-card-hint {
-  margin-top: 3px;
+  margin-top: 1px;
   color: var(--accent);
-  font-size: 13px;
+  font-size: 9.5px;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -1153,8 +1196,8 @@ h2 {
 .public-card-trailing {
   position: relative;
   flex: 0 0 auto;
-  width: 128px;
-  min-height: 40px;
+  width: 96px;
+  min-height: 30px;
   display: grid;
   place-items: center end;
 }
@@ -1172,6 +1215,11 @@ h2 {
     opacity 180ms ease,
     transform 220ms ease,
     visibility 0s linear 220ms;
+}
+
+.public-card-actions .mini-action {
+  width: 30px;
+  height: 30px;
 }
 
 .public-card-bar.is-public-card-ready .public-card-actions {
@@ -1540,10 +1588,15 @@ h2 {
   overflow: hidden;
 }
 
+.platform-item-ready,
 .platform-item-loading,
 .platform-item-missing {
   animation: platformRowIn 360ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
   animation-delay: var(--platform-stagger, 0ms);
+}
+
+.platform-item-already-visible {
+  animation: none;
 }
 
 .platform-item-loading {
@@ -1671,26 +1724,23 @@ h2 {
   flex-shrink: 0;
 }
 
-.platform-loading-label {
-  margin-top: 7px;
+.platform-loading-trailing {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-self: end;
+  gap: 6px;
   min-width: 0;
   color: var(--soft);
   font-size: 11px;
   line-height: 1;
   font-weight: 800;
   white-space: nowrap;
+  animation: loadingTextBreath 1.35s ease-in-out infinite;
 }
 
-.platform-loading-label .public-card-status-equalizer {
+.platform-loading-trailing .public-card-status-equalizer {
   width: 18px;
   height: 14px;
-}
-
-.platform-actions-loading {
-  opacity: 0.7;
 }
 
 .platform-action-placeholder {
@@ -2406,11 +2456,11 @@ body.legal-modal-open {
 }
 
 .result-card-live {
-  animation: resultCardIn 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: resultCardIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .result-card.is-exiting {
-  animation: resultCardOut 170ms ease both;
+  animation: resultCardOut 280ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 @keyframes reveal {
@@ -2468,11 +2518,11 @@ body.legal-modal-open {
 @keyframes resultCardIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(18px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -2490,11 +2540,11 @@ body.legal-modal-open {
 @keyframes resultCardOut {
   from {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px) scale(0.985);
   }
 }
 
@@ -2616,6 +2666,17 @@ body.legal-modal-open {
   }
 }
 
+@keyframes resultBlockIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes loadingTextBreath {
   0%,
   100% {
@@ -2671,6 +2732,12 @@ body.legal-modal-open {
   .loading-equalizer span,
   .public-card-status-equalizer span,
   .public-card-bar.is-public-card-ready .public-card-actions .mini-action,
+  .result-card.is-revealing-result .cover-wrap,
+  .result-card.is-revealing-result .result-description,
+  .result-card.is-revealing-result .result-title-stack h2,
+  .result-card.is-revealing-result .result-meta,
+  .result-card.is-revealing-result .public-card-bar,
+  .platform-item-ready,
   .platform-item-loading,
   .platform-item-missing,
   .platform-action-placeholder,
@@ -2836,10 +2903,10 @@ body.legal-modal-open {
   }
 
   .platform-icon {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 13px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 12px;
   }
 
   .platform-icon svg,
@@ -2874,25 +2941,56 @@ body.legal-modal-open {
   }
 
   .public-card-bar {
-    margin-top: 10px;
-    min-height: 74px;
-    padding: 10px 10px 10px 12px;
+    margin-top: 8px;
+    min-height: 38px;
+    padding: 3px 8px;
+    gap: 10px;
+  }
+
+  .public-card-main {
+    gap: 9px;
   }
 
   .public-card-icon {
-    width: 46px;
-    height: 46px;
-    min-width: 46px;
-    border-radius: 13px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 7px;
+  }
+
+  .public-card-icon .button-icon,
+  .public-card-icon .button-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .public-card-label {
+    font-size: 11px;
+  }
+
+  .public-card-hint {
+    margin-top: 0;
+    font-size: 8.5px;
+    line-height: 1.15;
   }
 
   .public-card-trailing {
-    width: 118px;
+    width: 86px;
+    min-height: 24px;
+  }
+
+  .public-card-actions {
+    gap: 5px;
+  }
+
+  .public-card-actions .mini-action {
+    width: 24px;
+    height: 24px;
   }
 
   .public-card-status {
-    font-size: 10.5px;
-    gap: 6px;
+    font-size: 9px;
+    gap: 4px;
   }
 
   .platform-item-missing.is-correction-open {
@@ -2973,10 +3071,10 @@ body.legal-modal-open {
   }
 
   .platform-icon {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    border-radius: 12px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 11px;
   }
 
   .platform-icon svg,
@@ -3020,14 +3118,14 @@ body.legal-modal-open {
 
   .public-card-bar {
     align-items: center;
-    min-height: 72px;
+    min-height: 38px;
   }
 
   .public-card-icon {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 12px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 7px;
   }
 
   .public-card-actions {
@@ -3035,7 +3133,7 @@ body.legal-modal-open {
   }
 
   .public-card-trailing {
-    width: 108px;
+    width: 86px;
   }
 
   .app-logo {
@@ -3121,17 +3219,15 @@ body.legal-modal-open {
 }
 
 :root[data-theme="dark"] .public-card-icon {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.13);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 :root[data-theme="dark"] .public-card-icon svg path:nth-child(1),
-:root[data-theme="dark"] .public-card-icon svg path:nth-child(2) {
-  fill: #34c759;
-}
-
+:root[data-theme="dark"] .public-card-icon svg path:nth-child(2),
 :root[data-theme="dark"] .public-card-icon svg path:nth-child(3) {
-  fill: #ed474c;
+  fill: #ffffff;
 }
 
 /* KEYFRAME ÚNICO PARA O BRILHO */
@@ -3239,38 +3335,52 @@ body.legal-modal-open {
 
 :root:not([data-theme="dark"]) .public-card-bar {
   background:
-    radial-gradient(circle at 16% 50%, rgba(52, 199, 89, 0.28), transparent 44%),
-    linear-gradient(90deg, rgba(52, 199, 89, 0.16), rgba(255, 255, 255, 0.9));
-  border-color: rgba(36, 174, 73, 0.62);
+    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.22), transparent 44%),
+    linear-gradient(105deg, rgba(237, 71, 76, 0.96), rgba(218, 48, 77, 0.88));
+  border-color: rgba(255, 255, 255, 0.66);
   box-shadow:
-    0 14px 34px rgba(39, 72, 48, 0.12),
-    0 0 0 1px rgba(255, 255, 255, 0.76) inset;
+    0 14px 34px rgba(173, 38, 55, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.32) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.42) inset;
+  backdrop-filter: blur(16px) saturate(1.16);
+  -webkit-backdrop-filter: blur(16px) saturate(1.16);
 }
 
 :root:not([data-theme="dark"]) .public-card-label {
-  color: #111827;
+  color: #ffffff;
 }
 
 :root:not([data-theme="dark"]) .public-card-hint {
-  color: #1faa4f;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+:root:not([data-theme="dark"]) .public-card-status,
+:root:not([data-theme="dark"]) .public-card-bar .public-card-status-equalizer {
+  color: #ffffff;
+}
+
+:root:not([data-theme="dark"]) .platform-loading-trailing .public-card-status-equalizer,
+:root:not([data-theme="dark"]) .result-header-loader .public-card-status-equalizer {
+  color: #ed474c;
 }
 
 :root:not([data-theme="dark"]) .public-card-icon {
-  background: rgba(255, 255, 255, 0.82);
-  border-color: rgba(36, 174, 73, 0.16);
-  color: #111827;
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  box-shadow: none;
 }
 
 :root:not([data-theme="dark"]) .public-card-actions .mini-action.copy,
 :root:not([data-theme="dark"]) .public-card-actions .mini-action.share {
-  background: rgba(17, 24, 39, 0.07);
-  color: #343a46;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
 }
 
 :root:not([data-theme="dark"]) .public-card-actions .mini-action.open {
-  background: #34c759;
-  color: #071208;
-  box-shadow: 0 8px 20px rgba(26, 158, 65, 0.22);
+  background: #ffffff;
+  color: #d93449;
+  box-shadow: 0 8px 20px rgba(129, 18, 40, 0.18);
 }
 
 :root:not([data-theme="dark"]) .platform-action-placeholder {

@@ -55,6 +55,7 @@ This repo is sensitive to small contract changes. Future agents should treat the
 - Result counts, copy actions, and share payloads must count only visible direct links.
 - Validate desktop and mobile when touching result layout, especially `390x844`.
 - If the app uses cached public cards, validate that copy/share still works after `/api/track` refresh.
+- Preserve the optional NDJSON progress path in `POST /api/convert`: resolved platform rows should leave loading independently, while the final `complete` event remains contract-compatible with the JSON response.
 
 ## Backend validation rules
 

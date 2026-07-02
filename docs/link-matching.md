@@ -9,6 +9,8 @@ The product follows a Tapelink-style regular link promise:
 
 Agent-facing rules for preserving this behavior live in [`agent-rules.md`](./agent-rules.md).
 
+For link conversions, the frontend requests optional NDJSON progress with `stream: true`. Cache hits may return the normal JSON response immediately. On cache misses, `progress` events expose newly resolved direct links during enrichment and a final `complete` event carries the normal normalized result. This is presentation progress only; it does not weaken matching or publish search URLs.
+
 ## Provider order
 
 `POST /api/convert` checks cheap and trusted sources before expensive or fragile lookups:

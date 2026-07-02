@@ -43,12 +43,73 @@ test("GET / injects track-specific Open Graph preview metadata", async () => {
     assert.equal(response.statusCode, 200);
     assert.match(response.body, /<meta property="og:title" content="Read My Lips \(FIFA Version\) de Madonna &amp; Feid no Music Swapper" \/>/);
     assert.match(response.body, /<meta property="og:description" content="Música · 2026 · Duração 2:46" \/>/);
-    assert.match(response.body, /<meta property="og:logo" content="https:\/\/swapper\.leosaquetto\.com\/assets\/logo\.png" \/>/);
+    assert.match(response.body, /<meta property="og:logo" content="https:\/\/swapper\.leosaquetto\.com\/assets\/faveicon\.png" \/>/);
     assert.match(response.body, /<meta property="og:image" content="https:\/\/is1-ssl\.mzstatic\.com\/image\/thumb\/test\/600x600bb\.jpg" \/>/);
     assert.match(response.body, /<meta name="twitter:card" content="summary_large_image" \/>/);
-    assert.match(response.body, /<link rel="apple-touch-icon" href="https:\/\/swapper\.leosaquetto\.com\/assets\/logo\.png" \/>/);
-    assert.match(response.body, new RegExp(`<link rel="canonical" href="https://swapper\\.leosaquetto\\.com/\\?track=${persisted.trackId}" />`));
+    assert.match(response.body, /<link rel="apple-touch-icon" sizes="180x180" href="https:\/\/swapper\.leosaquetto\.com\/assets\/faveicon\.png" \/>/);
+    assert.match(response.body, new RegExp(`<link rel="canonical" href="https://swapper\\.leosaquetto\\.com/\\?track=${persisted.trackId}&amp;preview=2" />`));
   } finally {
+    await __resetMusicLibraryForTests();
+  }
+});
+
+test("GET / enriches legacy Apple preview duration when cache metadata is incomplete", async () => {
+  const db = newDb();
+  registerPgFunctions(db);
+  __setMusicLibrarySqlClientForTests(createPgMemSqlTag(db));
+  const originalFetch = globalThis.fetch;
+
+  try {
+    const appleUrl = "https://music.apple.com/br/album/read-my-lips-fifa-version/6783929033?i=6783929486";
+    const persisted = await upsertCachedResult({
+      title: "Read My Lips (FIFA Version)",
+      description: "Madonna & Feid",
+      album: "Official FIFA World Cup 2026 Album",
+      image: "https://is1-ssl.mzstatic.com/image/thumb/test/600x600bb.jpg",
+      durationMs: 0,
+      links: [
+        {
+          type: "appleMusic",
+          url: appleUrl,
+          isVerified: true,
+          source: "cache"
+        }
+      ]
+    });
+
+    globalThis.fetch = async input => {
+      const url = new URL(String(input));
+      assert.equal(url.origin + url.pathname, "https://itunes.apple.com/lookup");
+      assert.equal(url.searchParams.get("id"), "6783929486");
+      assert.equal(url.searchParams.get("country"), "BR");
+      return new Response(JSON.stringify({
+        results: [
+          {
+            kind: "song",
+            trackId: 6783929486,
+            trackTimeMillis: 166957,
+            releaseDate: "2026-06-25T12:00:00Z"
+          }
+        ]
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    };
+
+    const response = await callPageApi({
+      query: { track: persisted.trackId },
+      headers: {
+        host: "swapper.leosaquetto.com",
+        "x-forwarded-proto": "https"
+      }
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /<meta property="og:description" content="Música · 2026 · Duração 2:47" \/>/);
+    assert.match(response.body, /<link rel="shortcut icon" type="image\/png" href="https:\/\/swapper\.leosaquetto\.com\/assets\/faveicon\.png" \/>/);
+  } finally {
+    globalThis.fetch = originalFetch;
     await __resetMusicLibraryForTests();
   }
 });

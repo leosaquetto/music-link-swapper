@@ -88,8 +88,10 @@ A superficie inicial atual inclui:
 
 O endpoint exportado por `api/convert.js` aceita somente `POST`. O corpo esperado pode ter dois modos:
 
-- Modo link: `{ link, adapters }`
+- Modo link: `{ link, adapters, stream?: true }`
 - Modo pesquisa: `{ queryMode: true, query, adapters }`
+
+No app, o modo link envia `stream: true`. Em cache hits a API pode continuar respondendo o JSON final diretamente. Em misses, `api/convert.js` usa `application/x-ndjson`: eventos `progress` entregam metadados e links assim que cada etapa de enrichment os encontra, e `complete` fecha com o mesmo objeto final do contrato JSON. O frontend substitui apenas a linha da plataforma resolvida; as demais continuam em loading.
 
 Resposta de sucesso esperada:
 
