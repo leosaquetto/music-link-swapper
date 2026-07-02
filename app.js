@@ -155,6 +155,7 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiado.",
     publicCardShared: "card swap compartilhado.",
     publicCardUnavailable: "card swap indisponível.",
+    publicCardChecking: "preparando card...",
     publicCardLoading: "abrindo card swap...",
     publicCardNotFound: "não encontrei esse card swap."
   },
@@ -217,6 +218,7 @@ const TRANSLATIONS = {
     publicCardCopied: "swap card copied.",
     publicCardShared: "swap card shared.",
     publicCardUnavailable: "swap card unavailable.",
+    publicCardChecking: "preparing card...",
     publicCardLoading: "opening swap card...",
     publicCardNotFound: "could not find this swap card."
   },
@@ -279,6 +281,7 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiado.",
     publicCardShared: "card swap compartido.",
     publicCardUnavailable: "card swap no disponible.",
+    publicCardChecking: "preparando card...",
     publicCardLoading: "abriendo card swap...",
     publicCardNotFound: "no encontré este card swap."
   },
@@ -341,6 +344,7 @@ const TRANSLATIONS = {
     publicCardCopied: "card swap copiato.",
     publicCardShared: "card swap condiviso.",
     publicCardUnavailable: "card swap non disponibile.",
+    publicCardChecking: "preparazione card...",
     publicCardLoading: "apertura card swap...",
     publicCardNotFound: "non ho trovato questo card swap."
   },
@@ -403,6 +407,7 @@ const TRANSLATIONS = {
     publicCardCopied: "carte swap copiée.",
     publicCardShared: "carte swap partagée.",
     publicCardUnavailable: "carte swap indisponible.",
+    publicCardChecking: "préparation de la carte...",
     publicCardLoading: "ouverture de la carte swap...",
     publicCardNotFound: "carte swap introuvable."
   }
@@ -572,6 +577,8 @@ const els = {
   publicCardIcon: document.getElementById("publicCardIcon"),
   publicCardLabel: document.getElementById("publicCardLabel"),
   publicCardHint: document.getElementById("publicCardHint"),
+  publicCardStatus: document.getElementById("publicCardStatus"),
+  publicCardStatusText: document.getElementById("publicCardStatusText"),
   publicTrackCopyButton: document.getElementById("publicTrackCopyButton"),
   publicTrackShareButton: document.getElementById("publicTrackShareButton"),
   publicTrackOpenButton: document.getElementById("publicTrackOpenButton"),
@@ -743,6 +750,10 @@ function updateLocalizedStaticCopy() {
   if (els.clearRecentSwapsText) els.clearRecentSwapsText.textContent = t("clearSwaps");
   if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
   if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
+  if (els.publicCardStatusText) {
+    const status = state.publicTrackValidation.status;
+    els.publicCardStatusText.textContent = status === "invalid" ? t("publicCardUnavailable") : t("publicCardChecking");
+  }
   if (els.publicTrackCopyButton) {
     els.publicTrackCopyButton.setAttribute("aria-label", t("publicCardCopyAction"));
     els.publicTrackCopyButton.removeAttribute("title");
@@ -1606,7 +1617,7 @@ async function hydratePublicTrack(trackId) {
     state.currentOriginalUrl = null;
     state.currentResult = result;
     state.publicTrackValidation = { trackId: id, status: "valid" };
-    setPublicTrackActionsBusy(false);
+    setPublicTrackCardState("valid");
     renderResult(result, { skipSave: true });
     hideStatus();
   } catch (_error) {
@@ -2174,7 +2185,12 @@ function renderPublicCardBar(result) {
   els.publicCardBar.classList.toggle("hidden", !hasPublicTrack);
   if (els.publicCardLabel) els.publicCardLabel.textContent = t("publicCard");
   if (els.publicCardHint) els.publicCardHint.textContent = t("publicCardHint");
-  if (hasPublicTrack) validatePublicTrackAvailability(trackId);
+  if (!hasPublicTrack) {
+    setPublicTrackCardState("idle");
+    return;
+  }
+  setPublicTrackCardState("loading");
+  validatePublicTrackAvailability(trackId);
 }
 
 function getSectionGroup(sectionName = "") {
@@ -2538,12 +2554,12 @@ async function validatePublicTrackAvailability(trackId) {
 
   const current = state.publicTrackValidation;
   if (current.trackId === id && (current.status === "loading" || current.status === "valid")) {
-    if (current.status === "valid") setPublicTrackActionsBusy(false);
+    setPublicTrackCardState(current.status);
     return;
   }
 
   state.publicTrackValidation = { trackId: id, status: "loading" };
-  setPublicTrackActionsBusy(true);
+  setPublicTrackCardState("loading");
 
   const refreshed = await fetchPublicTrack(id).catch(() => null);
   if (cleanText(state.currentResult?.trackId || "") !== id) return;
@@ -2552,7 +2568,7 @@ async function validatePublicTrackAvailability(trackId) {
     trackId: id,
     status: refreshed ? "valid" : "invalid"
   };
-  setPublicTrackActionsBusy(false);
+  setPublicTrackCardState(refreshed ? "valid" : "invalid");
 
   if (refreshed) {
     state.currentResult = mergeCurrentResultWithPublicRefresh(state.currentResult, refreshed);
@@ -2592,15 +2608,23 @@ function mergeCurrentResultWithPublicRefresh(current, refreshed) {
   };
 }
 
-function setPublicTrackActionsBusy(busy) {
+function setPublicTrackCardState(status = "idle") {
+  const busy = status === "loading";
+  const valid = status === "valid";
+  const invalid = status === "invalid";
   els.publicCardBar?.classList.toggle("is-validating", busy);
+  els.publicCardBar?.classList.toggle("is-public-card-ready", valid);
+  els.publicCardBar?.classList.toggle("is-public-card-unavailable", invalid);
   els.publicCardBar?.setAttribute("aria-busy", busy ? "true" : "false");
+  if (els.publicCardStatusText) {
+    els.publicCardStatusText.textContent = invalid ? t("publicCardUnavailable") : t("publicCardChecking");
+  }
   [
     els.publicTrackCopyButton,
     els.publicTrackShareButton,
     els.publicTrackOpenButton
   ].forEach(button => {
-    if (button) button.disabled = busy;
+    if (button) button.disabled = !valid;
   });
 }
 

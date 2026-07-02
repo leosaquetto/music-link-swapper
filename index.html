@@ -214,16 +214,22 @@
                 <p id="publicCardHint" class="public-card-hint">link compartilhável deste resultado</p>
               </div>
             </div>
-            <div class="public-card-actions">
-              <button id="publicTrackCopyButton" class="mini-action copy" type="button" aria-label="copiar card público">
-                <span class="button-icon"></span>
-              </button>
-              <button id="publicTrackShareButton" class="mini-action share" type="button" aria-label="compartilhar card público">
-                <span class="button-icon"></span>
-              </button>
-              <button id="publicTrackOpenButton" class="mini-action open" type="button" aria-label="abrir card público">
-                <span class="button-icon"></span>
-              </button>
+            <div class="public-card-trailing">
+              <div id="publicCardStatus" class="public-card-status" aria-live="polite">
+                <span class="public-card-status-equalizer" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span id="publicCardStatusText">preparando card</span>
+              </div>
+              <div class="public-card-actions">
+                <button id="publicTrackCopyButton" class="mini-action copy" type="button" aria-label="copiar card público">
+                  <span class="button-icon"></span>
+                </button>
+                <button id="publicTrackShareButton" class="mini-action share" type="button" aria-label="compartilhar card público">
+                  <span class="button-icon"></span>
+                </button>
+                <button id="publicTrackOpenButton" class="mini-action open" type="button" aria-label="abrir card público">
+                  <span class="button-icon"></span>
+                </button>
+              </div>
             </div>
           </section>
 
