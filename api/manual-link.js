@@ -4,7 +4,10 @@ import {
   upsertManualLink
 } from "./lib/music-library.js";
 import {
+  areCompatibleTrackTitles,
   canonicalizeMediaUrl,
+  cleanArtistName,
+  isArtistCreditMatch,
   scoreTextAlignment,
   validatePlatformUrl
 } from "./lib/music-contract.js";
@@ -51,12 +54,7 @@ export default async function handler(req, res) {
     Boolean(process.env.MANUAL_LINK_TOKEN) &&
     String(correctionToken || "") === process.env.MANUAL_LINK_TOKEN;
   const metadata = await fetchManualLinkMetadata(validation.platform, validation.url);
-  const confidence = metadata
-    ? scoreTextAlignment(
-        { title: track.title, artist: track.artist },
-        { title: metadata.title, artist: metadata.artist, description: metadata.description }
-      )
-    : 0;
+  const confidence = metadata ? scoreManualLinkConfidence(track, metadata) : 0;
   const shouldPublish = isTrustedToken || confidence >= 70;
   const result = await upsertManualLink({
     trackId: id,
@@ -75,6 +73,25 @@ export default async function handler(req, res) {
       result
     }
   });
+}
+
+function scoreManualLinkConfidence(track, metadata) {
+  const target = {
+    title: String(track?.title || "").trim(),
+    artist: cleanArtistName(track?.artist || "")
+  };
+  const candidate = {
+    title: String(metadata?.title || "").trim(),
+    artist: cleanArtistName(metadata?.artist || ""),
+    description: metadata?.description
+  };
+  const baseScore = scoreTextAlignment(target, candidate);
+  const titleCompatible = areCompatibleTrackTitles(target.title, candidate.title);
+  const artistCompatible = isArtistCreditMatch(target.artist, candidate.artist);
+
+  if (titleCompatible && artistCompatible) return Math.max(baseScore, 88);
+  if (titleCompatible && baseScore >= 55) return Math.max(baseScore, 72);
+  return baseScore;
 }
 
 async function fetchManualLinkMetadata(platform, url) {

@@ -102,6 +102,33 @@ export function normalizeSearchText(value) {
     .trim();
 }
 
+export function cleanArtistName(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const firstChunk = raw
+    .split(/[•·|]/)
+    .map(item => item.trim())
+    .find(Boolean);
+  return firstChunk || raw;
+}
+
+export function getBaseTrackTitle(value) {
+  return String(value || "")
+    .replace(/\s*\([^)]*\)/g, " ")
+    .replace(/\s*\[[^\]]*]/g, " ")
+    .replace(/\s+-\s+(?:single|album|ep|bonus track)$/i, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function areCompatibleTrackTitles(left, right) {
+  const leftBase = normalizeSearchText(getBaseTrackTitle(left));
+  const rightBase = normalizeSearchText(getBaseTrackTitle(right));
+  if (!leftBase || !rightBase) return false;
+  if (leftBase === rightBase) return true;
+  return leftBase.length >= 8 && rightBase.length >= 8 && (leftBase.includes(rightBase) || rightBase.includes(leftBase));
+}
+
 export function tokenize(value) {
   return normalizeSearchText(value)
     .split(" ")

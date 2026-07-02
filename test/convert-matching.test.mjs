@@ -306,6 +306,16 @@ test("RapidAPI Spotify Web API3 fallback runs after Spotify23 misses", async () 
   });
 });
 
+test("Spotify Web matching builds a simplified retry for alternate version titles", () => {
+  const attempts = __testHooks.buildSpotifyWebMatchAttempts({
+    title: "Read My Lips (FIFA Version)",
+    artist: "Madonna & Feid • Official FIFA World Cup 2026™ Album (Bonus Edition)"
+  });
+
+  assert.equal(attempts[0].query, "Read My Lips (FIFA Version) Madonna & Feid");
+  assert.equal(attempts[1].query, "Read My Lips Madonna Feid");
+});
+
 test("RapidAPI Shazam fallback adds a direct Apple Music link when enabled", async () => {
   const previousEnabled = process.env.RAPIDAPI_FALLBACKS_ENABLED;
   const previousKey = process.env.RAPIDAPI_KEY;

@@ -220,6 +220,7 @@ export async function upsertCachedResult(result, { aliases = [], defaultSource =
           confidence = greatest(track_links.confidence, excluded.confidence),
           updated_at = now()
       `;
+      await deletePendingLinksForPlatform(sql, trackId, link.type);
     }
 
     await attachAliasesToTrack(trackId, aliases);
@@ -249,6 +250,7 @@ export async function upsertManualLink({ trackId, platform, url, isVerified = fa
           confidence = excluded.confidence,
           updated_at = now()
       `;
+      await deletePendingLinksForPlatform(sql, id, platform);
     } else {
       await sql`
         insert into track_links (track_id, platform, url, source, is_verified, status, confidence)
@@ -261,6 +263,15 @@ export async function upsertManualLink({ trackId, platform, url, isVerified = fa
     logLibraryWarning("upsert_manual_link", error);
     return null;
   }
+}
+
+async function deletePendingLinksForPlatform(sql, trackId, platform) {
+  await sql`
+    delete from track_links
+    where track_id = ${trackId}
+      and platform = ${platform}
+      and status = 'pending'
+  `;
 }
 
 export async function recordProviderAttempt({ trackKey = "", provider, status, latencyMs = 0, message = "" }) {

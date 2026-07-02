@@ -9,8 +9,10 @@ import {
   buildCanonicalTrackKey,
   buildYoutubePlatformLinks,
   canonicalizeMediaUrl as canonicalizeContractMediaUrl,
+  cleanArtistName,
   decorateResultForResponse,
   filterDisplayLinks,
+  getBaseTrackTitle,
   getMissingPlatforms,
   isAutomaticPlatform,
   normalizePlatformKey as normalizeContractPlatformKey,
@@ -1748,7 +1750,7 @@ function scoreQualifierAlignment(sourceQualifiers, candidateQualifiers) {
 
 function extractArtistFromPayload(payload) {
   const directArtist = String(payload?.artist || payload?.artistName || "").trim();
-  if (directArtist && !isWeakArtistText(directArtist)) return directArtist;
+  if (directArtist && !isWeakArtistText(directArtist)) return cleanArtistName(directArtist);
 
   const description = String(payload?.description || "").trim();
   if (!description) return "";
@@ -1761,7 +1763,7 @@ function extractArtistFromPayload(payload) {
   if (!firstChunk) return "";
   if (isNoisyMetadataText(normalizeSearchText(firstChunk))) return "";
   if (isWeakArtistText(firstChunk)) return "";
-  return firstChunk;
+  return cleanArtistName(firstChunk);
 }
 
 function buildYoutubeCandidateHintText(candidate) {
@@ -2405,14 +2407,22 @@ async function enrichWithSpotifyWebMatch(data) {
   if (hasDirectSpotify) return { ...next, links };
 
   const title = String(next.title || "").trim();
-  const artist = extractArtistFromPayload(next);
-  const query = [title, artist].filter(Boolean).join(" ").trim();
-  if (!query) return { ...next, links };
+  const artist = cleanArtistName(extractArtistFromPayload(next));
+  const attempts = buildSpotifyWebMatchAttempts({ title, artist });
+  if (!attempts.length) return { ...next, links };
 
   const startedAt = Date.now();
   const trackKey = buildCanonicalTrackKey({ title, artist });
   try {
-    const match = await searchSpotifyWebTrack(query, { title, artist });
+    let match = null;
+    for (const attempt of attempts) {
+      match = await searchSpotifyWebTrack(attempt.query, {
+        title: attempt.title,
+        artist: attempt.artist,
+        query: attempt.query
+      });
+      if (match?.url) break;
+    }
     await recordProviderAttempt({
       trackKey,
       provider: "spotify_web",
@@ -2445,6 +2455,33 @@ async function enrichWithSpotifyWebMatch(data) {
     });
     return { ...next, links };
   }
+}
+
+function buildSpotifyWebMatchAttempts({ title, artist }) {
+  const originalTitle = String(title || "").trim();
+  const cleanArtist = cleanArtistName(artist);
+  const baseTitle = getBaseTrackTitle(originalTitle);
+  const artistForSearch = cleanArtist.replace(/\s*&\s*/g, " ");
+  const attempts = [
+    {
+      query: [originalTitle, cleanArtist].filter(Boolean).join(" ").trim(),
+      title: originalTitle,
+      artist: cleanArtist
+    },
+    {
+      query: [baseTitle, artistForSearch].filter(Boolean).join(" ").trim(),
+      title: baseTitle || originalTitle,
+      artist: cleanArtist
+    }
+  ];
+
+  const seen = new Set();
+  return attempts.filter(attempt => {
+    const key = normalizeSearchText(attempt.query);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function enrichWithRapidApiSpotifyMatch(data, requestContext = {}) {
@@ -3313,6 +3350,7 @@ export const __testHooks = {
   enrichWithDeezerMatch,
   enrichWithSongLinkDirectLinks,
   enrichWithSpotifyFallback,
+  buildSpotifyWebMatchAttempts,
   enrichWithRapidApiSpotifyMatch,
   enrichWithRapidApiShazamAppleMusic,
   enrichWithRapidApiYoutubeMusicMatch,
