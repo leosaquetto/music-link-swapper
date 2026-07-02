@@ -1120,7 +1120,7 @@ h2 {
 .public-card-bar {
   margin-top: 18px;
   min-height: 42px;
-  padding: 4px 6px;
+  padding: 5px 9px;
   border: 1.5px solid rgba(52, 199, 89, 0.66);
   border-radius: 999px;
   background:
@@ -1144,14 +1144,14 @@ h2 {
   display: flex;
   align-items: center;
   flex: 1 1 auto;
-  gap: 8px;
+  gap: 9px;
   min-width: 0;
 }
 
 .public-card-icon {
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
   border-radius: 0;
   display: grid;
   place-items: center;
@@ -1163,8 +1163,8 @@ h2 {
 
 .public-card-icon .button-icon,
 .public-card-icon .button-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .public-card-icon svg path:nth-child(1),
@@ -1597,6 +1597,49 @@ h2 {
 
 .platform-item-already-visible {
   animation: none;
+}
+
+.platform-item.is-platform-state-leaving {
+  pointer-events: none;
+}
+
+.platform-item.is-platform-state-leaving > * {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  transition:
+    opacity 140ms ease,
+    transform 150ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.platform-item.is-platform-state-entering > * {
+  opacity: 0;
+  transform: translateY(5px) scale(0.98);
+}
+
+.platform-item > * {
+  transition:
+    opacity 190ms ease,
+    transform 230ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.platform-item.is-platform-actions-entering .platform-actions .mini-action {
+  animation: publicCardActionIn 320ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.platform-item.is-platform-actions-entering .platform-actions .mini-action:nth-child(2) {
+  animation-delay: 54ms;
+}
+
+.platform-item.is-platform-actions-entering .platform-actions .mini-action:nth-child(3) {
+  animation-delay: 108ms;
+}
+
+.platform-item.is-platform-state-leaving .platform-actions .mini-action:nth-child(1) {
+  transition-delay: 70ms;
+}
+
+.platform-item.is-platform-state-leaving .platform-actions .mini-action:nth-child(2) {
+  transition-delay: 35ms;
 }
 
 .platform-item-loading {
@@ -2677,6 +2720,22 @@ body.legal-modal-open {
   }
 }
 
+.result-card.is-resolving-result .result-header,
+.result-card.is-resolving-result .public-card-bar {
+  animation: resultResolveIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes resultResolveIn {
+  from {
+    opacity: 0.72;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes loadingTextBreath {
   0%,
   100% {
@@ -2732,15 +2791,20 @@ body.legal-modal-open {
   .loading-equalizer span,
   .public-card-status-equalizer span,
   .public-card-bar.is-public-card-ready .public-card-actions .mini-action,
+  .platform-item.is-platform-actions-entering .platform-actions .mini-action,
   .result-card.is-revealing-result .cover-wrap,
   .result-card.is-revealing-result .result-description,
   .result-card.is-revealing-result .result-title-stack h2,
   .result-card.is-revealing-result .result-meta,
   .result-card.is-revealing-result .public-card-bar,
+  .result-card.is-resolving-result .result-header,
+  .result-card.is-resolving-result .public-card-bar,
   .platform-item-ready,
   .platform-item-loading,
   .platform-item-missing,
   .platform-action-placeholder,
+  .platform-item.is-platform-state-leaving > *,
+  .platform-item.is-platform-state-entering > *,
   .result-card.is-loading-result .result-description,
   .result-card.is-loading-result .result-title-stack h2,
   .result-card.is-loading-result .result-meta {
@@ -2943,7 +3007,7 @@ body.legal-modal-open {
   .public-card-bar {
     margin-top: 8px;
     min-height: 38px;
-    padding: 3px 8px;
+    padding: 4px 10px;
     gap: 10px;
   }
 
@@ -2952,16 +3016,16 @@ body.legal-modal-open {
   }
 
   .public-card-icon {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     border-radius: 7px;
   }
 
   .public-card-icon .button-icon,
   .public-card-icon .button-icon svg {
-    width: 13px;
-    height: 13px;
+    width: 17px;
+    height: 17px;
   }
 
   .public-card-label {
@@ -3122,9 +3186,9 @@ body.legal-modal-open {
   }
 
   .public-card-icon {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     border-radius: 7px;
   }
 
@@ -3337,11 +3401,11 @@ body.legal-modal-open {
   background:
     radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.22), transparent 44%),
     linear-gradient(105deg, rgba(237, 71, 76, 0.96), rgba(218, 48, 77, 0.88));
-  border-color: rgba(255, 255, 255, 0.66);
+  border-color: rgba(255, 255, 255, 0.38);
   box-shadow:
     0 14px 34px rgba(173, 38, 55, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.32) inset,
-    0 -1px 0 rgba(255, 255, 255, 0.42) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.24) inset;
   backdrop-filter: blur(16px) saturate(1.16);
   -webkit-backdrop-filter: blur(16px) saturate(1.16);
 }

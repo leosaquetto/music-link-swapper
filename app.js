@@ -1939,7 +1939,7 @@ function applyConversionProgress(data, sourceLink) {
     if (!loadingRow) continue;
     const readyRow = createPlatformItem(item, 0);
     readyRow.style.setProperty("--platform-stagger", "0ms");
-    loadingRow.replaceWith(readyRow);
+    transitionPlatformRow(loadingRow, readyRow);
     state.revealedPlatformKeys.add(item.key);
   }
 }
@@ -2241,7 +2241,7 @@ function createPlatformLoadingItem(key, meta, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-loading";
   row.dataset.platform = key;
-  row.style.setProperty("--platform-stagger", `${Math.min(index * 80, 320)}ms`);
+  row.style.setProperty("--platform-stagger", `${index * 90}ms`);
   row.setAttribute("aria-busy", "true");
 
   row.innerHTML = `
@@ -2260,6 +2260,120 @@ function createPlatformLoadingItem(key, meta, index = 0) {
   return row;
 }
 
+function transitionPlatformRow(currentRow, nextRow, { delay = 0, remove = false } = {}) {
+  if (!currentRow) return;
+  const startTransition = () => {
+    currentRow.classList.add("is-platform-state-leaving");
+    window.setTimeout(() => {
+      if (!currentRow.isConnected) return;
+      if (remove || !nextRow) {
+        currentRow.remove();
+        return;
+      }
+      nextRow.classList.add("platform-item-already-visible", "is-platform-state-entering", "is-platform-actions-entering");
+      currentRow.replaceWith(nextRow);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => nextRow.classList.remove("is-platform-state-entering"));
+      });
+      window.setTimeout(() => nextRow.classList.remove("is-platform-actions-entering"), 520);
+    }, 150);
+  };
+
+  if (delay > 0) window.setTimeout(startTransition, delay);
+  else startTransition();
+}
+
+function reconcileLoadingPlatformGroups(result) {
+  const loadingSection = els.platformGroups.querySelector(".platform-group-section-loading");
+  const list = loadingSection?.querySelector(".platform-list");
+  if (!loadingSection || !list) return false;
+
+  loadingSection.classList.remove("platform-group-section-loading");
+  const primaryItems = result.links.filter(item => getSectionGroup(item.section) === "primary");
+  const primaryByKey = new Map(primaryItems.map(item => [item.key, item]));
+  const missingKeys = new Set(getMissingDisplayPlatforms(result));
+  const retainedKeys = new Set([...primaryByKey.keys(), ...missingKeys]);
+
+  Array.from(list.querySelectorAll(".platform-item")).forEach((row, index) => {
+    const key = row.dataset.platform || "";
+    const item = primaryByKey.get(key);
+    if (item) {
+      if (row.classList.contains("platform-item-loading")) {
+        transitionPlatformRow(row, createPlatformItem(item, index), { delay: index * 45 });
+      }
+      return;
+    }
+    if (missingKeys.has(key)) {
+      transitionPlatformRow(row, createMissingPlatformItem(key, PLATFORM_META[key], result, index), { delay: index * 45 });
+      return;
+    }
+    transitionPlatformRow(row, null, { delay: index * 45, remove: true });
+  });
+
+  primaryItems.forEach((item, index) => {
+    if (list.querySelector(`.platform-item[data-platform="${item.key}"]`)) return;
+    const row = createPlatformItem(item, index);
+    row.classList.add("is-platform-state-entering", "is-platform-actions-entering");
+    list.appendChild(row);
+    requestAnimationFrame(() => row.classList.remove("is-platform-state-entering"));
+    window.setTimeout(() => row.classList.remove("is-platform-actions-entering"), 520);
+  });
+
+  missingKeys.forEach((key, index) => {
+    if (list.querySelector(`.platform-item[data-platform="${key}"]`) || !PLATFORM_META[key]) return;
+    const row = createMissingPlatformItem(key, PLATFORM_META[key], result, primaryItems.length + index);
+    row.classList.add("is-platform-state-entering");
+    list.appendChild(row);
+    requestAnimationFrame(() => row.classList.remove("is-platform-state-entering"));
+  });
+
+  const others = result.links.filter(item => getSectionGroup(item.section) === "others");
+  if (others.length) {
+    const section = document.createElement("section");
+    section.className = "platform-group-section platform-group-section-others";
+    const controlsWrap = document.createElement("div");
+    controlsWrap.className = "see-more-wrap";
+    const expandButton = document.createElement("button");
+    expandButton.type = "button";
+    expandButton.className = "tiny-button see-more-button";
+    expandButton.textContent = t("seeMore");
+    const othersList = document.createElement("div");
+    othersList.className = "platform-list";
+    othersList.style.maxHeight = "0px";
+    othersList.style.opacity = "0";
+    expandButton.addEventListener("click", event => {
+      const expanded = othersList.classList.toggle("is-expanded");
+      pulseActionButton(event.currentTarget);
+      if (expanded) {
+        others.forEach((item, index) => othersList.appendChild(createPlatformItem(item, index)));
+        requestAnimationFrame(() => {
+          othersList.style.maxHeight = `${othersList.scrollHeight}px`;
+          othersList.style.opacity = "1";
+        });
+        window.setTimeout(() => {
+          if (othersList.classList.contains("is-expanded")) othersList.style.maxHeight = "none";
+        }, 260);
+        expandButton.textContent = t("seeLess");
+      } else {
+        othersList.style.maxHeight = `${othersList.scrollHeight}px`;
+        requestAnimationFrame(() => {
+          othersList.style.maxHeight = "0px";
+          othersList.style.opacity = "0";
+        });
+        window.setTimeout(() => {
+          if (!othersList.classList.contains("is-expanded")) othersList.replaceChildren();
+        }, 240);
+        expandButton.textContent = t("seeMore");
+      }
+    });
+    controlsWrap.appendChild(expandButton);
+    section.append(controlsWrap, othersList);
+    els.platformGroups.appendChild(section);
+  }
+
+  return retainedKeys.size > 0;
+}
+
 function renderResult(result, { skipSave = false } = {}) {
   clearTimeout(state.hideResultTimer);
   clearTimeout(state.resultRevealTimer);
@@ -2270,7 +2384,8 @@ function renderResult(result, { skipSave = false } = {}) {
   els.resultCard.classList.remove("hidden", "is-exiting");
   els.resultCard.classList.remove("is-loading-result", "is-streaming-partial");
   if (shouldAnimateCardEntrance) restartResultCardEntrance();
-  els.platformGroups.innerHTML = "";
+  const reconciledLoadingRows = wasLoadingResult && reconcileLoadingPlatformGroups(result);
+  if (!reconciledLoadingRows) els.platformGroups.innerHTML = "";
 
   els.resultTitle.textContent = result.title || "resultado";
   els.resultMeta.textContent = buildMeta(result);
@@ -2296,7 +2411,7 @@ function renderResult(result, { skipSave = false } = {}) {
   els.copyOriginalButton?.classList.add("hidden");
   renderPublicCardBar(result);
 
-  const groups = ["primary", "others"];
+  const groups = reconciledLoadingRows ? [] : ["primary", "others"];
   for (const groupName of groups) {
     const items = result.links.filter(item => getSectionGroup(item.section) === groupName);
     if (!items.length) continue;
@@ -2373,13 +2488,11 @@ function renderResult(result, { skipSave = false } = {}) {
   renderCorrectionPrompt(result, { preferInline: true });
   renderResultLegend();
   if (wasLoadingResult && !hadStreamingProgress) {
-    els.resultCard.classList.remove("is-revealing-result");
-    void els.resultCard.offsetWidth;
-    els.resultCard.classList.add("is-revealing-result");
+    els.resultCard.classList.add("is-resolving-result");
     state.resultRevealTimer = setTimeout(() => {
-      els.resultCard?.classList.remove("is-revealing-result");
+      els.resultCard?.classList.remove("is-resolving-result");
       state.resultRevealTimer = null;
-    }, 1500);
+    }, 520);
   }
   if (!skipSave) saveRecentSwap(result);
   syncResultPresentation({ openMobile: true });
