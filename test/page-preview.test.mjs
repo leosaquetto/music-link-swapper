@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { newDb } from "pg-mem";
 
-import pageHandler, { injectSharePreviewMeta } from "../api/page.js";
+import trackHandler, { injectSharePreviewMeta } from "../api/track.js";
 import {
   __resetMusicLibraryForTests,
   __setMusicLibrarySqlClientForTests,
@@ -90,7 +90,7 @@ async function callPageApi({ method = "GET", query = {}, headers = {}, url = "/"
     }
   };
 
-  await pageHandler(req, res);
+  await trackHandler(req, res);
   return res;
 }
 
