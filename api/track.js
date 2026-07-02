@@ -91,11 +91,15 @@ async function readPreviewTrack(trackId) {
 function buildPreviewMeta({ origin, track, trackId }) {
   const canonicalUrl = trackId ? `${origin}/?track=${encodeURIComponent(trackId)}` : `${origin}/`;
   const title = cleanText(track?.title) || DEFAULT_TITLE;
-  const artist = cleanText(track?.description || track?.artist);
+  const artist = extractPrimaryArtist(track?.artist || track?.description);
   const album = cleanText(track?.album);
   const image = absoluteUrl(cleanText(track?.image) || DEFAULT_IMAGE_PATH, origin);
+  const descriptionParts = [artist];
+  if (album && !normalizePreviewText(artist).includes(normalizePreviewText(album))) {
+    descriptionParts.push(album);
+  }
   const description = track
-    ? [artist, album].filter(Boolean).join(" • ") || "links desta música no music link swapper."
+    ? descriptionParts.filter(Boolean).join(" • ") || "links desta música no music link swapper."
     : DEFAULT_DESCRIPTION;
   const documentTitle = track && title !== DEFAULT_TITLE
     ? `${title}${artist ? ` - ${artist}` : ""} | ${DEFAULT_SITE_NAME}`
@@ -177,6 +181,14 @@ function absoluteUrl(value, origin) {
 
 function cleanText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function extractPrimaryArtist(value) {
+  return cleanText(value).split(/\s+[•·]\s+/)[0]?.trim() || "";
+}
+
+function normalizePreviewText(value) {
+  return cleanText(value).toLowerCase();
 }
 
 function escapeHtmlText(value) {
