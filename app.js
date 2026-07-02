@@ -2241,7 +2241,7 @@ function createPlatformLoadingItem(key, meta, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-loading";
   row.dataset.platform = key;
-  row.style.setProperty("--platform-stagger", `${index * 55}ms`);
+  row.style.setProperty("--platform-stagger", "0ms");
   row.setAttribute("aria-busy", "true");
 
   row.innerHTML = `
@@ -2347,15 +2347,15 @@ function reconcileLoadingPlatformGroups(result) {
     const item = primaryByKey.get(key);
     if (item) {
       if (row.classList.contains("platform-item-loading")) {
-        transitionPlatformRow(row, createPlatformItem(item, index), { delay: index * 32 });
+        transitionPlatformRow(row, createPlatformItem(item, index));
       }
       return;
     }
     if (missingKeys.has(key)) {
-      transitionPlatformRow(row, createMissingPlatformItem(key, PLATFORM_META[key], result, index), { delay: index * 32 });
+      transitionPlatformRow(row, createMissingPlatformItem(key, PLATFORM_META[key], result, index));
       return;
     }
-    transitionPlatformRow(row, null, { delay: index * 32, remove: true });
+    transitionPlatformRow(row, null, { remove: true });
   });
 
   primaryItems.forEach((item, index) => {
@@ -2616,7 +2616,7 @@ function createPlatformItem(item, index = 0) {
   row.className = `platform-item platform-item-ready${wasAlreadyRevealed ? " platform-item-already-visible" : ""}`;
   row.dataset.platform = item.key;
   row.__platformItem = item;
-  row.style.setProperty("--platform-stagger", `${Math.min(100 + index * 75, 400)}ms`);
+  row.style.setProperty("--platform-stagger", "0ms");
 
   row.innerHTML = `
     <div class="platform-icon platform-icon-${escapeHtml(item.key)}">${item.icon}</div>
@@ -2676,7 +2676,7 @@ function createMissingPlatformItem(key, meta, result, index = 0) {
   const row = document.createElement("article");
   row.className = "platform-item platform-item-missing";
   row.dataset.platform = key;
-  row.style.setProperty("--platform-stagger", `${Math.min(100 + index * 75, 400)}ms`);
+  row.style.setProperty("--platform-stagger", "0ms");
 
   row.innerHTML = `
     <div class="platform-icon platform-icon-${escapeHtml(key)}">${meta.icon}</div>
